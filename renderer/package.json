@@ -21,6 +21,9 @@
   },
   "scripts": {
     "dev": "remotion studio",
+    "studio": "remotion studio src/index.ts",
+    "render": "node scripts/render.mjs",
+    "test": "node --experimental-strip-types test/timing.test.ts",
     "build": "remotion bundle",
     "upgrade": "remotion upgrade",
     "lint": "eslint src && tsc"
