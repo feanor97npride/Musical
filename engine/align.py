@@ -26,13 +26,17 @@ def align(audio: Path, lyrics_text: str, out_dir: Path, language: str = "pt",
     return Song(language=language, audio=audio_info, lines=build_lines(lyrics, _groups(result, lyrics), total))
 
 
+def _timed(words) -> list[tuple[str, float, float]]:
+    """Palavras do stable-ts viram tuplas com float puro (o stable-ts devolve numpy) e sem espaço no texto."""
+    return [(w.word.strip(), float(w.start), float(w.end)) for w in words]
+
+
 def _groups(result, lyrics: list[dict]) -> list[list[tuple[str, float, float]]]:
     """Agrupa as palavras por verso: pelos segmentos do alinhador, ou pela contagem se não baterem."""
     if len(result.segments) == len(lyrics):
-        return [[(w.word, w.start, w.end) for w in segment.words] for segment in result.segments]
-    flat = [(w.word, w.start, w.end) for w in result.all_words()]
+        return [_timed(segment.words) for segment in result.segments]
     counts = [len(verse["text"].split()) for verse in lyrics]
-    return split_by_counts(flat, counts)
+    return split_by_counts(_timed(result.all_words()), counts)
 
 
 def print_table(song: Song) -> None:

@@ -1,6 +1,8 @@
 # Testes da agrupagem de palavras por verso em align.py, com resultado falso e sem modelo.
 from types import SimpleNamespace
 
+import numpy as np
+
 from engine.align import _groups
 
 
@@ -15,6 +17,16 @@ def test_usa_os_segmentos_quando_batem_com_os_versos():
         SimpleNamespace(words=[word("três", 2.5, 3.5)]),
     ])
     assert _groups(result, lyrics) == [[("um", 1.0, 1.4), ("dois", 1.4, 2.0)], [("três", 2.5, 3.5)]]
+
+
+def test_converte_numpy_para_float_e_tira_o_espaco_do_texto():
+    lyrics = [{"text": "um"}]
+    result = SimpleNamespace(segments=[
+        SimpleNamespace(words=[word(" um", np.float64(0.52), np.float64(1.16))]),
+    ])
+    (text, start, end), = _groups(result, lyrics)[0]
+    assert (text, start, end) == ("um", 0.52, 1.16)
+    assert type(start) is float and type(end) is float
 
 
 def test_sem_correspondencia_distribui_pela_contagem_de_palavras():
