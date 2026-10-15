@@ -64,7 +64,8 @@ def _ask(client: anthropic.Anthropic, lines_text: str) -> str:
         system=SYSTEM,
         messages=[{"role": "user", "content": lines_text}],
     )
-    return message.content[0].text
+    # o modelo pode enviar bloco "thinking" antes do texto; junta só os blocos de texto
+    return "".join(block.text for block in message.content if block.type == "text")
 
 
 def _parse(text: str) -> object:

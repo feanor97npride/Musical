@@ -34,12 +34,16 @@ class FakeClient:
         reply = self.replies.pop(0)
         if isinstance(reply, Exception):
             raise reply
-        return SimpleNamespace(content=[SimpleNamespace(text=reply)])
+        # igual à API real: um bloco "thinking" vem antes do bloco de texto
+        thinking = SimpleNamespace(type="thinking", thinking="...")
+        return SimpleNamespace(content=[thinking, SimpleNamespace(type="text", text=reply)])
 
 
 @pytest.fixture
 def no_key(monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    # sem isto, o .env do projeto repõe a chave e o teste chamaria a API de verdade
+    monkeypatch.setattr("engine.theme.load_dotenv", lambda *_args, **_kwargs: None)
 
 
 def test_default_theme_passa_na_validacao_do_tema():
