@@ -1,0 +1,1 @@
+// Legenda no estilo karaoke.

@@ -1,0 +1,9 @@
+.venv/
+node_modules/
+.env
+samples/*.mp3
+samples/*.wav
+output/
+renderer/public/audio/
+__pycache__/
+.pytest_cache/

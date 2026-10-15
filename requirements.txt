@@ -1,0 +1,9 @@
+stable-ts
+demucs
+librosa
+anthropic
+fastapi
+uvicorn
+python-multipart
+python-dotenv
+pytest
