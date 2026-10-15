@@ -4,7 +4,7 @@ import re
 
 SECTIONS = {"intro", "verse", "chorus", "bridge", "outro", "other"}
 FONTS = {"Inter", "Bebas Neue", "Playfair Display", "Poppins", "Montserrat"}
-HEX_COLOR = re.compile(r"#[0-9A-Fa-f]{6}")
+HEX_COLOR = re.compile(r"#(?:[0-9A-Fa-f]{3,4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})")  # #RGB, #RGBA, #RRGGBB, #RRGGBBAA
 END_TOLERANCE = 0.05  # segundos de folga no fim em relação à duração do áudio
 
 
@@ -24,8 +24,9 @@ def check_audio(audio: object, errors: list[str]) -> float | None:
         return None
     if not isinstance(audio.get("file"), str):
         errors.append("audio.file deve ser texto")
-    if not is_num(audio.get("bpm")):
-        errors.append("audio.bpm deve ser um número")
+    bpm = audio.get("bpm")
+    if not is_num(bpm) or bpm <= 0:
+        errors.append("audio.bpm deve ser um número maior que zero")
     duration = audio.get("duration")
     if not is_num(duration) or duration <= 0:
         errors.append("audio.duration deve ser um número maior que zero")

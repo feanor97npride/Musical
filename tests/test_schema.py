@@ -104,6 +104,39 @@ def test_entrada_malformada_devolve_erros_sem_quebrar():
         assert validate_song(bad), f"deveria reprovar: {bad!r}"
 
 
+def test_cores_hexadecimais_de_3_4_6_e_8_digitos_sao_aceitas():
+    song = valid_song()
+    song["theme"] = {
+        "title": "T", "mood": "m", "keywords": [], "font": "Inter", "visual_concept": "v",
+        "palette": ["#000", "#FFF8", "#1B1B3A", "#A74482FF"],
+    }
+    assert validate_song(song) == []
+
+
+def test_cor_fora_do_formato_hexadecimal_e_recusada():
+    song = valid_song()
+    song["theme"] = {
+        "title": "T", "mood": "m", "keywords": [], "font": "Inter", "visual_concept": "v",
+        "palette": ["#GGG", "#12", "#1234567"],
+    }
+    assert any(error.startswith("theme.palette") for error in validate_song(song))
+
+
+def test_version_1_ponto_zero_e_aceita_e_outro_numero_nao():
+    song = valid_song()
+    song["version"] = 1.0
+    assert validate_song(song) == []
+    song["version"] = 2
+    assert any(error.startswith("version") for error in validate_song(song))
+
+
+def test_bpm_precisa_ser_maior_que_zero():
+    for bpm in (0, -120.0):
+        song = valid_song()
+        song["audio"]["bpm"] = bpm
+        assert validate_song(song) == ["audio.bpm deve ser um número maior que zero"]
+
+
 def test_numeros_absurdos_nao_lancam_excecao():
     huge = valid_song()
     huge["audio"]["duration"] = 10**400

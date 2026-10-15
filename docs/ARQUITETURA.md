@@ -100,6 +100,7 @@ Mapeamento de seções: Verso/Verse → `verse`, Refrão/Chorus → `chorus`, Po
 Regras que `validate_song()` verifica:
 - `version == 1`; `lines` não vazio; ids sequenciais a partir de 0.
 - Tempos em segundos (float), com `0 <= start < end <= audio.duration` (tolerância de 0,05 s no fim).
+- `audio.bpm` é número maior que zero.
 - Dentro de uma linha, palavras em ordem, com `start` não decrescente e `end >= start`.
 - `line.start` = início da primeira palavra e `line.end` = fim da última.
 - Entre linhas, `start` da próxima ≥ `start` da anterior.
@@ -117,7 +118,7 @@ Regras que `validate_song()` verifica:
   "visual_concept": "Gradiente lento em tons de crepúsculo com partículas lentas"
 }
 ```
-- `palette`: de 3 a 5 cores hexadecimais, da mais escura para a mais clara.
+- `palette`: de 3 a 5 cores hexadecimais (`#RGB`, `#RGBA`, `#RRGGBB` ou `#RRGGBBAA`), da mais escura para a mais clara. A ordem é orientação e não é validada.
 - `font`: uma de `Inter`, `Bebas Neue`, `Playfair Display`, `Poppins`, `Montserrat`.
 - Se a API falhar ou não houver chave, usar tema padrão definido em `theme.py` (função `default_theme()`).
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from engine.checks import check_audio, check_line, check_theme
+from engine.checks import check_audio, check_line, check_theme, is_num
 
 
 @dataclass
@@ -112,7 +112,7 @@ def validate_song(data: dict) -> list[str]:
     if not isinstance(data, dict):
         return ["song.json deve ser um objeto"]
     errors: list[str] = []
-    if type(data.get("version")) is not int or data["version"] != 1:
+    if not is_num(data.get("version")) or data["version"] != 1:
         errors.append("version deve ser 1")
     if not isinstance(data.get("language"), str):
         errors.append("language deve ser texto")
