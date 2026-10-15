@@ -10,6 +10,8 @@ SECTION_BY_MARKER = {
     "bridge": "bridge",
     "intro": "intro",
     "outro": "outro",
+    "pre-chorus": "verse",
+    "final chorus": "chorus",
 }
 MARKER = re.compile(r"\[(.*)\]")
 
@@ -24,7 +26,8 @@ def parse_lyrics(text: str) -> list[dict]:
             continue
         marker = MARKER.fullmatch(line)
         if marker:
-            section = SECTION_BY_MARKER.get(marker.group(1).strip().lower(), "other")
+            name = re.sub(r"\s*\d+$", "", marker.group(1).strip().lower())  # "Verse 1" é "Verse"
+            section = SECTION_BY_MARKER.get(name, "other")
             continue
         lines.append({"text": line, "section": section})
     return lines

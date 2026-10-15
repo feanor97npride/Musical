@@ -70,7 +70,7 @@ Arquivo `.txt` em UTF-8.
 - Sem marcador, a seção é `verse`.
 - Escreva a letra completa, sem abreviações como "(2x)", porque o alinhador se perde em repetições abreviadas.
 
-Mapeamento de seções: Verso/Verse → `verse`, Refrão/Chorus → `chorus`, Ponte/Bridge → `bridge`, Intro → `intro`, Outro → `outro`, qualquer outro → `other`.
+Mapeamento de seções: Verso/Verse → `verse`, Refrão/Chorus/Final Chorus → `chorus`, Ponte/Bridge → `bridge`, Intro → `intro`, Outro → `outro`, Pre-Chorus → `verse`, qualquer outro → `other`. Número no fim do marcador é ignorado (`[Verse 1]` vale como `[Verse]`).
 
 ## Contrato: `song.json` (versão 1)
 

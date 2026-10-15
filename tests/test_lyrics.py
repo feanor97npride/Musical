@@ -16,6 +16,11 @@ def test_marcadores_em_portugues_e_ingles():
     ]
 
 
+def test_numero_no_marcador_pre_chorus_e_final_chorus():
+    text = "[Verse 1]\nA\n[Pre-Chorus]\nB\n[Final Chorus]\nC\n[Refrão 2]\nD"
+    assert [line["section"] for line in parse_lyrics(text)] == ["verse", "verse", "chorus", "chorus"]
+
+
 def test_marcador_desconhecido_vira_other():
     assert parse_lyrics("[Solo]\nNota") == [{"text": "Nota", "section": "other"}]
 
