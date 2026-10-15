@@ -1,20 +1,40 @@
-// Composição LyricVideo: fundo sólido, linha ativa no centro da área segura e palavra atual destacada.
+// Composição LyricVideo: fundo sólido ou gradiente com partículas, e a legenda no estilo escolhido.
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
-import { activeLine, activeWordIndex } from "./timing";
+import { Gradient } from "./backgrounds/Gradient";
+import { Particles } from "./backgrounds/Particles";
+import { fontFor } from "./fonts";
+import { Highlight } from "./subtitles/Highlight";
+import { Karaoke } from "./subtitles/Karaoke";
+import { OneWord } from "./subtitles/OneWord";
+import { activeLine, activeWordIndex, beatPulse, chorusWeight, lightFactor } from "./timing";
 import type { LyricProps } from "./types";
 
-const HIGHLIGHT = "#FFD60A";
+const SUBTITLES = { highlight: Highlight, oneword: OneWord, karaoke: Karaoke };
+const DEFAULT_PALETTE = ["#111111", "#1B1B3A", "#3A1F4A"];
 
-export const LyricVideo: React.FC<LyricProps> = ({ song, audioFile, clip }) => {
+export const LyricVideo: React.FC<LyricProps> = ({ song, audioFile, style, clip }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const t = (clip ? clip.start : 0) + frame / fps; // tempo da música, não do vídeo
   const line = activeLine(song.lines, t);
   const current = line ? activeWordIndex(line, t) : -1;
-  const background = song.theme?.palette[0] ?? "#111111";
+  const intensity = chorusWeight(song.lines, t);
+  const pulse = beatPulse(t, song.audio.bpm);
+  const palette = song.theme?.palette ?? DEFAULT_PALETTE;
+  const Subtitle = SUBTITLES[style.subtitle];
 
   return (
-    <AbsoluteFill style={{ backgroundColor: background }}>
+    <AbsoluteFill>
+      {style.background === "gradient" ? (
+        <>
+          <Gradient palette={palette} intensity={intensity} pulse={pulse} />
+          <Particles intensity={intensity} />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{ backgroundColor: palette[0], filter: `brightness(${lightFactor(pulse, intensity)})` }}
+        />
+      )}
       {audioFile && (
         <Audio
           src={staticFile(audioFile)}
@@ -22,32 +42,7 @@ export const LyricVideo: React.FC<LyricProps> = ({ song, audioFile, clip }) => {
           durationInFrames={clip ? Math.round((clip.end - clip.start) * fps) : undefined}
         />
       )}
-      {line && (
-        <div
-          style={{
-            position: "absolute",
-            top: "12%",
-            bottom: "22%",
-            left: 80,
-            right: 80,
-            display: "flex",
-            flexWrap: "wrap",
-            alignContent: "center",
-            justifyContent: "center",
-            textAlign: "center",
-            fontFamily: "sans-serif",
-            fontSize: 88,
-            fontWeight: 700,
-            lineHeight: 1.25,
-          }}
-        >
-          {line.words.map((word, index) => (
-            <span key={index} style={{ color: index === current ? HIGHLIGHT : "#FFFFFF", marginRight: 18 }}>
-              {word.text}
-            </span>
-          ))}
-        </div>
-      )}
+      <Subtitle line={line} current={current} t={t} font={fontFor(song.theme?.font)} />
     </AbsoluteFill>
   );
 };

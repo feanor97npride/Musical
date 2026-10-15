@@ -37,3 +37,9 @@ export type LyricProps = {
   style: { subtitle: "highlight" | "oneword" | "karaoke"; background: "solid" | "gradient" };
   clip: Clip | null;
 };
+
+// Fonte já carregada: família e peso que ela realmente tem.
+export type FontSpec = { fontFamily: string; fontWeight: number };
+
+// Dados que cada estilo de legenda recebe a cada frame.
+export type SubtitleProps = { line: Line | null; current: number; t: number; font: FontSpec };
