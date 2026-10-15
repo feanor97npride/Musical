@@ -6,7 +6,7 @@ Ferramenta (CLI + web simples) que recebe um MP3 e a letra da música e gera um 
 Pipeline: MP3 + letra → separação de vocais (Demucs) → alinhamento forçado (stable-ts) → `song.json` → tema via Claude API → render (Remotion) → MP4.
 
 ## Estado atual
-- **Fase atual:** F1 — parser da letra, separação de vocais e alinhamento  <!-- atualize esta linha ao concluir cada fase -->
+- **Fase atual:** F2 — composição Remotion básica  <!-- atualize esta linha ao concluir cada fase -->
 - Escopo e critérios de aceite: `docs/ESCOPO.md`
 - Contratos de dados, pastas e CLI: `docs/ARQUITETURA.md`
 - Prompts de cada fase: `docs/PROMPTS.md`
