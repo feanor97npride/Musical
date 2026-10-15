@@ -39,11 +39,11 @@ Passam a existir conforme as fases avançam. Quando um comando mudar, atualize e
 - Testes: `pytest`
 
 ## Convenções
-- Código, nomes de variáveis, funções e chaves de JSON em inglês. Comentários, docs, mensagens de commit e textos de interface em português.
+- Código, nomes de variáveis, funções e chaves de JSON em inglês. Comentários, docs e textos de interface em português. Mensagens de commit: ver "Regras de trabalho com o usuário".
 - Python: type hints, funções pequenas, `pathlib` em vez de strings de caminho.
 - TypeScript: modo `strict`, componentes pequenos, um componente por arquivo.
 - Arquivos com menos de 200 linhas. Se passar disso, divida.
-- Commits no formato `tipo(Fx): descrição` (ex.: `feat(F1): alinhamento forçado`).
+- Commits no formato `tipo(Fx): description` (ex.: `feat(F1): add forced alignment`), assunto no imperativo em inglês.
 
 ## Regras (o que NÃO fazer)
 - Não avance para a próxima fase sem eu pedir. Uma fase por vez.
@@ -62,8 +62,33 @@ Passam a existir conforme as fases avançam. Quando um comando mudar, atualize e
 2. Escreva um plano de 3 a 5 linhas antes de mexer em código.
 3. Implemente só o que a tarefa pede.
 4. Rode o critério de aceite e os testes.
-5. Faça commit e atualize "Fase atual" acima.
-6. Responda em no máximo 10 linhas: o que foi feito, como testar, o que falta.
+5. Mostre o resultado e espere o "ok". Só após o "ok": faça commit, push e atualize "Fase atual" acima.
+6. Responda no formato de "Como responder".
+
+## Regras de trabalho com o usuário
+- Responda em português.
+- Um item por vez: implemente, verifique, mostre o resultado e espere o "ok". Só então faça commit e push.
+- Nunca faça commit nem push sem "ok" explícito. O aviso do hook de parada ("há mudanças não commitadas") é automático e não conta como confirmação.
+- Push só nos branches combinados: `codex/nav-area-estudos-categorias-20261004` e `claude/roadmap-volta-10-carrossel`. O branch designado da sessão é `claude/vulnerability-analysis-escnh0`. Sem PR, a menos que peçam. Force-push só com autorização explícita, e sempre com `--force-with-lease`.
+- Commits: assunto no imperativo em inglês, corpo curto, e trailer só `Claude-Session`. Sem identificador de modelo e sem `Co-Authored-By`.
+- Para trazer algo de outro branch, use `git cherry-pick --no-commit`, confira conflitos e só então faça commit.
+- Nunca use `| tail` (ou outro pipe) numa condição: o pipe esconde a falha. Guarde o código de saída (`rc=$?`) e siga só se for zero.
+- Diga o que não foi testado no ambiente da sessão. Hoje, por exemplo: os modelos do alinhador e do Demucs, se os pesos não puderem ser baixados; e o áudio real, até você enviar uma música em `samples/`.
+
+## Como responder
+Explique como se falasse com uma pessoa de 15 anos que nunca programou. Em toda resposta, inclua:
+- **O que eu fiz:** em português simples, sem jargão.
+- **O que você precisa fazer:** passo a passo, supondo que a pessoa nunca viu aquilo antes.
+- **Por quê:** uma frase dizendo o que aquilo faz ou por que importa.
+- **Próximo passo:** uma única ação clara.
+- **Erros:** se algo deu errado, explique de forma simples e diga exatamente como corrigir.
+
+Quando houver ferramenta externa ou termo que quem não programa não conhece:
+- Diga onde achar o que precisa (ex.: "painel do serviço → Configurações → Variáveis").
+- Explique em uma frase o que cada chave ou configuração faz.
+- Se houver SQL ou comando para rodar, explique o que faz antes de rodar.
+- Se for preciso criar à mão uma pasta ou configuração, explique o que é e por que existe.
+- Seja conciso. Menos é mais.
 
 ## Notas para modelos pequenos (Haiku)
 - Trabalhe em passos curtos e confirme cada comando antes do próximo.
