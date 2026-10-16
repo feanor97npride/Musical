@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -113,7 +114,10 @@ def _render(job: Job) -> str | None:
     tmp_video = job.out / "video.tmp.mp4"
     tmp_props.write_text(job.new_props, encoding="utf-8")
     try:
-        subprocess.run(["npm", "run", "render", "--", str(tmp_props), str(tmp_video)], cwd=RENDERER, check=True)
+        npm = shutil.which("npm")  # no Windows é npm.CMD; sem o caminho completo o Windows não acha
+        if npm is None:
+            raise RuntimeError("npm não encontrado: instale o Node.js 18 ou superior")
+        subprocess.run([npm, "run", "render", "--", str(tmp_props), str(tmp_video)], cwd=RENDERER, check=True)
         os.replace(tmp_video, job.video)  # vídeo antes do props: se cair no meio, a próxima rodada refaz
         os.replace(tmp_props, job.props)
     finally:
