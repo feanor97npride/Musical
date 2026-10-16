@@ -48,10 +48,11 @@ Registre os resultados na tabela de baixo.
 | 4 |  |  |  |  |  |  |
 | 5 |  |  |  |  |  |  |
 
-## Medidas de desempenho (preencher na F5)
-- Máquina (CPU/GPU, RAM):
-- Música de ~3 min, pipeline completa:
-- Demucs sozinho:
-- Alinhamento sozinho:
-- Render de 30 s:
-- Render da música inteira:
+## Medidas de desempenho (F5)
+- Máquina: 4 vCPU, 15 GB de RAM, sem GPU.
+- Música de ~4 min (242 s, "O Deserto Vai Florir"), pipeline completa do zero: ~12 min (separar 124 s + alinhar 55 s + tema 4 s + render 539 s).
+- Demucs sozinho: 124 s.
+- Alinhamento sozinho: 55 s.
+- Render de 30 s: não medido.
+- Render da música inteira: 539 s (7277 quadros).
+- Trocar só o `--style` (cache): 520 s. Pulou Demucs, alinhamento e tema; o render continua sendo quase todo o tempo.
