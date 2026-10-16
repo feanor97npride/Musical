@@ -53,8 +53,10 @@ def run_pipeline(job: Job) -> int:
                "--lyrics", str(job.lyrics), "--style", job.style]
     if job.clip:
         command += ["--clip", f"{job.clip[0]}:{job.clip[1]}"]
-    process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                               text=True, encoding="utf-8", env={**os.environ, "PYTHONUNBUFFERED": "1"})
+    # no Windows o filho escreve em cp1252 por padrão; forçamos UTF-8 para o texto com acento não quebrar a leitura
+    process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                               encoding="utf-8", errors="replace",
+                               env={**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONIOENCODING": "utf-8"})
     for line in process.stdout:
         job.read_line(line.rstrip("\r\n"))
     return process.wait()
