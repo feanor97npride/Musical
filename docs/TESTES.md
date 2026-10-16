@@ -42,7 +42,7 @@ Registre os resultados na tabela de baixo.
 ## Resultados
 | # | Música | Modelo | Separou vocais? | Bom/Aceitável/Falha | Observações | Tempo total |
 |---|--------|--------|-----------------|---------------------|-------------|-------------|
-| 1 |  |  |  |  |  |  |
+| 1 | O Deserto Vai Florir | small | Sim (Demucs) | Bom (relatado pelo autor) | 56 versos, sem sobreposição; 3 pontos conferidos de ouvido (5,84 s, 98,26 s, 219,72 s) | não medido |
 | 2 |  |  |  |  |  |  |
 | 3 |  |  |  |  |  |  |
 | 4 |  |  |  |  |  |  |
