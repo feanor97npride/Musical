@@ -72,7 +72,7 @@ class JobQueue:
         folder.mkdir(parents=True)
         job = Job(job_id, folder, folder / f"{clean_name(Path(filename).stem)}.mp3", style, clip)
         job.audio.write_bytes(audio)
-        job.lyrics.write_text(lyrics, encoding="utf-8")
+        job.lyrics.write_text(lyrics, encoding="utf-8", newline="")  # no Windows, sem isso cada \n vira \r\n
         # lê o arquivo de volta: o navegador manda \r\n e o pipeline normaliza, o nome da pasta tem que bater
         job.video = OUTPUT / make_slug(job.audio, job.lyrics.read_text(encoding="utf-8")) / "video.mp4"
         self.jobs[job_id] = job
