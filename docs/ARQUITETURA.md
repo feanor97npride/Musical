@@ -151,6 +151,6 @@ Regras que `validate_song()` verifica:
 - `cd renderer && npm run render -- <props.json> <saida.mp4>`
 
 ## Variáveis de ambiente (`.env`)
-- `ANTHROPIC_API_KEY` — chave da API (opcional; sem ela usa tema padrão)
+- `THEME_API_KEY` — chave da Claude API para o tema (opcional; aceita `ANTHROPIC_API_KEY` como reserva; sem nenhuma usa tema padrão)
 - `THEME_MODEL` — modelo para a análise de tema (padrão `claude-haiku-5-5`)
 - `WHISPER_MODEL` — modelo do alinhador (padrão `small`)

@@ -39,9 +39,10 @@ def default_theme() -> Theme:
 def analyze_theme(lines_text: str, client: anthropic.Anthropic | None = None) -> Theme:
     load_dotenv(ROOT / ".env")
     if client is None:
-        if not os.getenv("ANTHROPIC_API_KEY"):
+        api_key = os.getenv("THEME_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
             return default_theme()
-        client = anthropic.Anthropic()
+        client = anthropic.Anthropic(api_key=api_key)
     reason = "sem resposta"
     for _ in range(2):  # uma tentativa e mais uma
         try:

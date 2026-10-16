@@ -41,6 +41,7 @@ class FakeClient:
 
 @pytest.fixture
 def no_key(monkeypatch):
+    monkeypatch.delenv("THEME_API_KEY", raising=False)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     # sem isto, o .env do projeto repõe a chave e o teste chamaria a API de verdade
     monkeypatch.setattr("engine.theme.load_dotenv", lambda *_args, **_kwargs: None)
