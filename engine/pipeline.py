@@ -52,11 +52,14 @@ class StepError(Exception):
         self.cause = cause
 
 
+def clean_name(name: str) -> str:
+    stem = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]+", "-", stem.lower()).strip("-") or "musica"
+
+
 def make_slug(audio: Path, lyrics: str) -> str:
-    stem = unicodedata.normalize("NFKD", audio.stem).encode("ascii", "ignore").decode()
-    stem = re.sub(r"[^a-z0-9]+", "-", stem.lower()).strip("-") or "musica"
     digest = hashlib.sha1(audio.read_bytes() + lyrics.encode("utf-8")).hexdigest()[:8]
-    return f"{stem}-{digest}"
+    return f"{clean_name(audio.stem)}-{digest}"
 
 
 def _write_song(path: Path, song: dict) -> None:
