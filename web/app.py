@@ -1,16 +1,26 @@
 # Web mínima com FastAPI: envio de MP3 + letra, progresso por job e download do MP4.
+import os
+import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from dotenv import load_dotenv
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from engine.pipeline import ROOT
 from web.jobs import Job, JobQueue
 
+load_dotenv(ROOT / ".env")
 MAX_BYTES = 25 * 1024 * 1024
 STYLES = {"highlight", "oneword", "karaoke"}
 STATIC = Path(__file__).resolve().parent / "static"
+# senha opcional: sem ela, qualquer um que acessa o servidor usa (uso local)
+ACCESS_TOKEN = os.getenv("ACCESS_TOKEN", "").strip()
+# sites que podem chamar o servidor de outra origem, ex.: a página na Vercel
+ALLOWED_ORIGINS = [origin.strip() for origin in os.getenv("ALLOWED_ORIGINS", "").split(",") if origin.strip()]
 queue = JobQueue()
 
 
@@ -21,6 +31,14 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="Lyric Video Generator", lifespan=lifespan)
+if ALLOWED_ORIGINS:
+    app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_methods=["GET", "POST"],
+                       allow_headers=["X-Access-Token"])
+
+
+def _check_token(x_access_token: str | None = Header(None)) -> None:
+    if ACCESS_TOKEN and not secrets.compare_digest(x_access_token or "", ACCESS_TOKEN):
+        raise HTTPException(401, "senha de acesso incorreta")
 
 
 def _clip(start: str, end: str) -> tuple[float, float] | None:
@@ -51,7 +69,7 @@ def _find(job_id: str) -> Job:
     return job
 
 
-@app.post("/jobs")
+@app.post("/jobs", dependencies=[Depends(_check_token)])
 async def create_job(audio: UploadFile = File(...), lyrics: str = Form(""), style: str = Form("karaoke"),
                      clip_start: str = Form(""), clip_end: str = Form(""), confirm: bool = Form(False)) -> dict:
     if not confirm:
@@ -67,12 +85,12 @@ async def create_job(audio: UploadFile = File(...), lyrics: str = Form(""), styl
     return {"id": job.id}
 
 
-@app.get("/jobs/{job_id}")
+@app.get("/jobs/{job_id}", dependencies=[Depends(_check_token)])
 def job_status(job_id: str) -> dict:
     return _find(job_id).to_dict()
 
 
-@app.get("/jobs/{job_id}/video")
+@app.get("/jobs/{job_id}/video", dependencies=[Depends(_check_token)])
 def job_video(job_id: str) -> FileResponse:
     job = _find(job_id)
     if job.status != "done" or job.video is None:

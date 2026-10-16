@@ -154,3 +154,11 @@ Regras que `validate_song()` verifica:
 - `THEME_API_KEY` — chave da Claude API para o tema (opcional; aceita `ANTHROPIC_API_KEY` como reserva; sem nenhuma usa tema padrão)
 - `THEME_MODEL` — modelo para a análise de tema (padrão `claude-haiku-5-5`)
 - `WHISPER_MODEL` — modelo do alinhador (padrão `small`)
+- `ACCESS_TOKEN` — senha da web; a página envia no cabeçalho `X-Access-Token`. Vazio = sem senha (uso local)
+- `ALLOWED_ORIGINS` — sites que podem chamar a API de outro endereço (CORS), separados por vírgula. Vazio = só a própria web
+
+## Publicação em duas partes (opção B1)
+- A página `web/static/` vai para a Vercel (pasta raiz do projeto na Vercel: `web/static`, sem build).
+- A API roda no seu computador (`uvicorn web.app:app --port 8000`) e fica acessível por um túnel (ex.: Cloudflare Tunnel).
+- No seu computador, o `.env` precisa de `ACCESS_TOKEN` (uma senha longa) e `ALLOWED_ORIGINS=https://SEU-SITE.vercel.app`.
+- Na página, o campo "Endereço do servidor" recebe a URL do túnel, e o campo "Senha de acesso" recebe a senha.

@@ -4,46 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Gerador de lyric video</title>
-  <style>
-    :root { --bg: #f7f5f2; --fg: #1d1b19; --muted: #6b6560; --accent: #8c5a2b; --card: #ffffff; --line: #d9d3cc; }
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) { --bg: #161412; --fg: #f1ece6; --muted: #a39b94; --accent: #e0b872; --card: #201d1a; --line: #3a342f; }
-    }
-    :root[data-theme="dark"] { --bg: #161412; --fg: #f1ece6; --muted: #a39b94; --accent: #e0b872; --card: #201d1a; --line: #3a342f; }
-    body { margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; }
-    main { max-width: 640px; margin: 0 auto; padding: 16px; }
-    h1 { font-size: 1.5rem; margin: 8px 0 4px; }
-    p.lead { color: var(--muted); margin-top: 0; }
-    form, .result { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
-    label { display: block; font-weight: 600; margin: 14px 0 6px; }
-    input[type="text"], input[type="number"], select, textarea {
-      width: 100%; box-sizing: border-box; padding: 10px; font: inherit; color: var(--fg);
-      background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
-    }
-    textarea { min-height: 160px; resize: vertical; }
-    .row { display: flex; gap: 12px; }
-    .row > div { flex: 1; }
-    .check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; margin-top: 18px; }
-    .warning { background: #fff4e5; color: #6b3d00; border-radius: 8px; padding: 10px; font-size: 0.95rem; }
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) .warning { background: #3a2a14; color: #f5d9a8; }
-    }
-    button { margin-top: 18px; width: 100%; padding: 12px; font: inherit; font-weight: 600; border: 0;
-      border-radius: 8px; background: var(--accent); color: #fff; cursor: pointer; }
-    button:disabled { opacity: 0.5; cursor: wait; }
-    .result { margin-top: 16px; display: none; }
-    .result.visible { display: block; }
-    .stage { font-weight: 600; }
-    .detail { color: var(--muted); font-size: 0.95rem; min-height: 1.2em; }
-    .error { color: #b3261e; font-weight: 600; }
-    video { width: 100%; border-radius: 8px; margin-top: 12px; background: #000; }
-    a.download { display: inline-block; margin-top: 12px; color: var(--accent); font-weight: 600; }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <main>
   <h1>Gerador de lyric video</h1>
   <p class="lead">Envie um MP3 e a letra. Você recebe um vídeo vertical com legendas no tempo da música.</p>
+
+  <section class="card">
+    <label for="server">Endereço do servidor</label>
+    <input type="text" id="server" placeholder="ex.: https://algo.trycloudflare.com">
+    <p class="hint">Deixe vazio se esta página foi aberta direto do servidor. Este endereço fica salvo neste navegador.</p>
+
+    <label for="token">Senha de acesso</label>
+    <input type="password" id="token" placeholder="a senha definida no seu computador">
+    <p class="hint">Se o servidor não tiver senha, deixe vazio.</p>
+  </section>
 
   <form id="form">
     <div class="warning">Envie apenas músicas próprias ou com autorização.</div>
@@ -89,7 +65,22 @@
   const stage = document.getElementById("stage");
   const detail = document.getElementById("detail");
   const output = document.getElementById("output");
+  const serverInput = document.getElementById("server");
+  const tokenInput = document.getElementById("token");
+  const SERVER_KEY = "lyricVideo.server";
   let timer = null;
+
+  try { serverInput.value = localStorage.getItem(SERVER_KEY) || ""; } catch (error) { /* navegador sem armazenamento */ }
+  serverInput.addEventListener("change", () => {
+    try { localStorage.setItem(SERVER_KEY, serverInput.value.trim()); } catch (error) { /* nada a fazer */ }
+  });
+
+  function api(path, options = {}) {
+    const base = serverInput.value.trim().replace(/\/+$/, "");
+    const headers = { ...(options.headers || {}) };
+    if (tokenInput.value) headers["X-Access-Token"] = tokenInput.value;
+    return fetch(base + path, { ...options, headers });
+  }
 
   function show(message, isError) {
     result.classList.add("visible");
@@ -102,35 +93,50 @@
     submit.disabled = false;
   }
 
+  async function failure(response) {
+    const body = await response.json().catch(() => ({}));
+    finish();
+    show(body.detail || "O servidor respondeu com erro " + response.status, true);
+  }
+
+  async function showVideo(id) {
+    const response = await api(`/jobs/${id}/video`);
+    if (!response.ok) return failure(response);
+    const url = URL.createObjectURL(await response.blob());
+    finish();
+    show("Vídeo pronto");
+    detail.textContent = "";
+    output.innerHTML = "";
+    const video = document.createElement("video");
+    video.controls = true;
+    video.src = url;
+    const link = document.createElement("a");
+    link.className = "download";
+    link.href = url;
+    link.download = "lyric-video.mp4";
+    link.textContent = "Baixar MP4";
+    output.append(video, link);
+  }
+
   async function poll(id) {
     try {
-      const response = await fetch(`/jobs/${id}`);
+      const response = await api(`/jobs/${id}`);
+      if (!response.ok) return failure(response);
       const job = await response.json();
       if (job.status === "error") {
         finish();
         show("Falhou: " + job.stage, true);
         detail.textContent = job.message;
       } else if (job.status === "done") {
-        finish();
-        show("Vídeo pronto");
-        detail.textContent = "";
-        output.innerHTML = "";
-        const video = document.createElement("video");
-        video.controls = true;
-        video.src = `/jobs/${id}/video`;
-        const link = document.createElement("a");
-        link.className = "download";
-        link.href = `/jobs/${id}/video`;
-        link.download = "lyric-video.mp4";
-        link.textContent = "Baixar MP4";
-        output.append(video, link);
+        clearInterval(timer);
+        await showVideo(id);
       } else {
         show(job.stage + "...");
         detail.textContent = job.message;
       }
     } catch (error) {
       finish();
-      show("Não consegui falar com o servidor", true);
+      show("Não consegui falar com o servidor. Confira o endereço e a conexão.", true);
     }
   }
 
@@ -140,20 +146,16 @@
     output.innerHTML = "";
     show("Enviando...");
     detail.textContent = "";
-    let response, body;
+    let response;
     try {
-      response = await fetch("/jobs", { method: "POST", body: new FormData(form) });
-      body = await response.json().catch(() => ({}));
+      response = await api("/jobs", { method: "POST", body: new FormData(form) });
     } catch (error) {
       finish();
-      show("Não consegui enviar. Verifique a conexão e tente de novo.", true);
+      show("Não consegui enviar. Confira o endereço do servidor e a conexão.", true);
       return;
     }
-    if (!response.ok) {
-      finish();
-      show(body.detail || "Não foi possível enviar", true);
-      return;
-    }
+    if (!response.ok) return failure(response);
+    const body = await response.json();
     clearInterval(timer);
     timer = setInterval(() => poll(body.id), 2000);
     poll(body.id);

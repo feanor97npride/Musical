@@ -15,6 +15,7 @@ MP3 = ("musica.mp3", b"ID3fake", "audio/mpeg")
 def client(tmp_path, monkeypatch):
     monkeypatch.setattr(jobs, "UPLOADS", tmp_path / "uploads")
     monkeypatch.setattr(jobs, "OUTPUT", tmp_path / "output")
+    monkeypatch.setattr(web_app, "ACCESS_TOKEN", "")  # um .env com senha não pode mudar os testes
     with TestClient(web_app.app) as test_client:
         yield test_client
 
@@ -25,11 +26,11 @@ def send(client, audio=MP3, lyrics="um dois", confirm="true", **fields):
     return client.post("/jobs", files=files, data=data)
 
 
-def wait_for(client, job_id, status, timeout=5):
+def wait_for(client, job_id, status, timeout=5, headers=None):
     deadline = time.monotonic() + timeout
     body = {}
     while time.monotonic() < deadline:
-        body = client.get(f"/jobs/{job_id}").json()
+        body = client.get(f"/jobs/{job_id}", headers=headers).json()
         if body["status"] == status:
             return body
         time.sleep(0.05)
@@ -111,6 +112,25 @@ def test_erro_da_pipeline_aparece_no_status(client, monkeypatch):
     assert body["stage"] == "Alinhando letra"
     assert "modelo indisponível" in body["message"]
     assert client.get(f"/jobs/{job_id}/video").status_code == 409
+
+
+def test_senha_obrigatoria_quando_configurada(client, monkeypatch):
+    def fake_pipeline(job):
+        job.video.parent.mkdir(parents=True)
+        job.video.write_bytes(b"mp4")
+        return 0
+
+    monkeypatch.setattr(jobs, "run_pipeline", fake_pipeline)
+    monkeypatch.setattr(web_app, "ACCESS_TOKEN", "segredo")
+    assert send(client).status_code == 401
+    assert send(client).status_code == 401
+    job_id = client.post("/jobs", files={"audio": MP3}, data={"lyrics": "um", "confirm": "true"},
+                         headers={"X-Access-Token": "segredo"}).json()["id"]
+    assert client.get(f"/jobs/{job_id}").status_code == 401
+    assert client.get(f"/jobs/{job_id}", headers={"X-Access-Token": "errada"}).status_code == 401
+    wait_for(client, job_id, "done", headers={"X-Access-Token": "segredo"})
+    assert client.get(f"/jobs/{job_id}/video").status_code == 401
+    assert client.get(f"/jobs/{job_id}/video", headers={"X-Access-Token": "segredo"}).status_code == 200
 
 
 def test_job_desconhecido_da_404(client):

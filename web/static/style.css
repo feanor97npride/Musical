@@ -1,0 +1,35 @@
+:root { --bg: #f7f5f2; --fg: #1d1b19; --muted: #6b6560; --accent: #8c5a2b; --card: #ffffff; --line: #d9d3cc; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #161412; --fg: #f1ece6; --muted: #a39b94; --accent: #e0b872; --card: #201d1a; --line: #3a342f; }
+}
+:root[data-theme="dark"] { --bg: #161412; --fg: #f1ece6; --muted: #a39b94; --accent: #e0b872; --card: #201d1a; --line: #3a342f; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; }
+main { max-width: 640px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 1.5rem; margin: 8px 0 4px; }
+p.lead { color: var(--muted); margin-top: 0; }
+form, .card, .result { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.card { margin-bottom: 16px; }
+.hint { color: var(--muted); font-size: 0.9rem; margin: 6px 0 0; }
+label { display: block; font-weight: 600; margin: 14px 0 6px; }
+input[type="text"], input[type="password"], input[type="number"], select, textarea {
+  width: 100%; box-sizing: border-box; padding: 10px; font: inherit; color: var(--fg);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+}
+textarea { min-height: 160px; resize: vertical; }
+.row { display: flex; gap: 12px; }
+.row > div { flex: 1; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; margin-top: 18px; }
+.warning { background: #fff4e5; color: #6b3d00; border-radius: 8px; padding: 10px; font-size: 0.95rem; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .warning { background: #3a2a14; color: #f5d9a8; }
+}
+button { margin-top: 18px; width: 100%; padding: 12px; font: inherit; font-weight: 600; border: 0;
+  border-radius: 8px; background: var(--accent); color: #fff; cursor: pointer; }
+button:disabled { opacity: 0.5; cursor: wait; }
+.result { margin-top: 16px; display: none; }
+.result.visible { display: block; }
+.stage { font-weight: 600; }
+.detail { color: var(--muted); font-size: 0.95rem; min-height: 1.2em; }
+.error { color: #b3261e; font-weight: 600; }
+video { width: 100%; border-radius: 8px; margin-top: 12px; background: #000; }
+a.download { display: inline-block; margin-top: 12px; color: var(--accent); font-weight: 600; }
