@@ -13,7 +13,7 @@ from dotenv import dotenv_values
 from web.launcher.checks import Plan, preflight
 from web.launcher.services import RestartPolicy, Service, extract_tunnel_url
 from web.launcher.update import update_project
-from web.launcher.windows import copy_to_clipboard, create_shortcut
+from web.launcher.windows import copy_to_clipboard, create_shortcut, install_close_handler
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -111,6 +111,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.sem_atualizar:
         update_project(ROOT)
     stop = threading.Event()
+    install_close_handler(stop.set)  # fechar a janela pelo X também encerra o servidor e o túnel
     try:
         return run(plan, ROOT, env, stop)
     except KeyboardInterrupt:

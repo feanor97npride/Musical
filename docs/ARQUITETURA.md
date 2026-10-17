@@ -175,5 +175,5 @@ Regras que `validate_song()` verifica:
 - Sem `ACCESS_TOKEN`, o túnel não é aberto (o servidor fica só local). Sem `cloudflared`, o iniciador segue só local e mostra como instalar.
 - Se o servidor ou o túnel cair, o iniciador reinicia o processo; se cair mais de 5 vezes em 1 minuto, desiste e avisa.
 - `python -m web.launcher --criar-atalho` cria o atalho na Área de Trabalho (sem binário novo; usa o PowerShell, sem as flags que o antivírus marca).
-- Limite conhecido: fechar a janela pelo botão X não encerra o servidor e o túnel de forma garantida (fase B, a fazer se for pedido). Antes de fechar, use `Ctrl + C`.
+- Fechar a janela pelo botão X também encerra o servidor e o túnel (no Windows, o iniciador recebe o aviso de fechamento e para tudo antes de sair). `Ctrl + C` continua funcionando.
 - Modelo de ameaça do link: a página só aceita endereço no `#server=` no formato `https://...trycloudflare.com`, e não grava esse endereço no navegador. Mesmo assim, quem recebe um link falso pode induzir a digitação da senha num servidor alheio. Por isso a página mostra o aviso "Se você não abriu pelo iniciador, não digite a senha". Melhoria futura: prova de posse da senha (HMAC com desafio).

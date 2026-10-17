@@ -1,7 +1,10 @@
-# Ações do Windows: encerrar a árvore de processos, copiar e criar o atalho.
+# Ações do Windows: encerrar a árvore de processos, copiar, criar o atalho e tratar o X da janela.
+import ctypes
 import os
 import signal
 import subprocess
+import time
+from collections.abc import Callable
 from pathlib import Path
 
 SHORTCUT_SCRIPT = (
@@ -10,6 +13,11 @@ SHORTCUT_SCRIPT = (
     "$s.TargetPath=$env:LV_TARGET;$s.WorkingDirectory=$env:LV_ROOT;"
     "$s.IconLocation='shell32.dll,13';$s.Save()"
 )
+CTRL_CLOSE_EVENT = 2  # o Windows manda este aviso quando a janela é fechada pelo X
+# atalho: espera fixa de 4 s; o Windows encerra o processo perto de 5 s.
+# Se a limpeza passar disso, trocar por um evento.
+CLOSE_GRACE = 4.0
+_close_routine = None  # guarda a referência: sem ela o coletor de lixo apaga o callback
 
 
 def kill_tree(proc: subprocess.Popen, windows: bool = os.name == "nt") -> None:
@@ -53,3 +61,23 @@ def create_shortcut(root: Path) -> bool:
     except (OSError, subprocess.CalledProcessError):
         return False
     return True
+
+
+def close_handler(on_close: Callable[[], None], grace: float = CLOSE_GRACE) -> Callable[[int], bool]:
+    """Trata o aviso de fechar a janela: para o laço principal e segura o processo enquanto a limpeza roda."""
+    def handle(event: int) -> bool:
+        if event != CTRL_CLOSE_EVENT:
+            return False  # Ctrl+C e os outros avisos seguem o caminho normal do Python
+        on_close()
+        time.sleep(grace)  # sem a espera o Windows pode encerrar o processo antes do finally de run
+        return True
+    return handle
+
+
+def install_close_handler(on_close: Callable[[], None]) -> None:
+    """No Windows, fechar a janela pelo X chama on_close. No resto não faz nada."""
+    global _close_routine
+    if os.name != "nt":
+        return
+    _close_routine = ctypes.WINFUNCTYPE(ctypes.c_int, ctypes.c_uint)(close_handler(on_close))
+    ctypes.windll.kernel32.SetConsoleCtrlHandler(_close_routine, True)
