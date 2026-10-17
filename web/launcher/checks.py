@@ -40,6 +40,7 @@ class Plan:
     cloudflared: str | None  # None = só local, sem túnel
     warnings: list[str] = field(default_factory=list)
     abort: str = ""  # texto do erro; vazio = pode seguir
+    tunnel_host: str = ""  # endereço fixo do túnel com token; vazio = túnel aleatório
 
 
 def preflight(env: Mapping[str, str], in_use: Callable[[int], bool] = port_in_use,
@@ -53,6 +54,14 @@ def preflight(env: Mapping[str, str], in_use: Callable[[int], bool] = port_in_us
     plan = Plan(port, site, finder(env))
     if in_use(port):
         plan.abort = f"a porta {port} já está em uso; feche o outro programa e tente de novo"
+    token = env.get("TUNNEL_TOKEN", "").strip()
+    host = env.get("TUNNEL_HOSTNAME", "").strip().lower()
+    if token and not host:
+        plan.abort = plan.abort or "TUNNEL_TOKEN precisa de TUNNEL_HOSTNAME no .env (o endereço fixo do túnel)"
+    elif token:
+        plan.tunnel_host = host
+    elif host:
+        plan.warnings.append("TUNNEL_HOSTNAME sem TUNNEL_TOKEN: ignorado; o túnel usa endereço aleatório")
     if not site:
         plan.warnings.append("SITE_URL vazio ou inválido: o navegador não será aberto")
     elif site not in allowed:

@@ -159,6 +159,8 @@ Regras que `validate_song()` verifica:
 - `SITE_URL` — endereço fixo do site na Vercel, usado pelo iniciador para abrir o site (sem barra no final)
 - `PORT` — porta do servidor local usada pelo iniciador (padrão `8000`)
 - `CLOUDFLARED_BIN` — caminho do `cloudflared` quando ele não está no PATH (opcional)
+- `TUNNEL_TOKEN` — token do túnel fixo da Cloudflare. É uma senha: nunca versionar. Vazio = túnel aleatório
+- `TUNNEL_HOSTNAME` — endereço fixo do túnel, ex.: `meu-servidor.seudominio.com`. Obrigatório junto com `TUNNEL_TOKEN`
 
 ## Publicação em duas partes (opção B1)
 - A página `web/static/` vai para a Vercel (pasta raiz do projeto na Vercel: `web/static`, sem build).
@@ -173,7 +175,8 @@ Regras que `validate_song()` verifica:
   3. liga o servidor (`127.0.0.1:PORT`) e o túnel `cloudflared`;
   4. copia só o endereço do túnel para a área de transferência e abre `SITE_URL/#server=<endereço>` no navegador.
 - Sem `ACCESS_TOKEN`, o túnel não é aberto (o servidor fica só local). Sem `cloudflared`, o iniciador segue só local e mostra como instalar.
+- Com `TUNNEL_TOKEN` e `TUNNEL_HOSTNAME`, o túnel é o fixo da Cloudflare: roda `cloudflared tunnel run` (o destino fica no painel) e o endereço é `https://TUNNEL_HOSTNAME`, anunciado quando a conexão registra. Sem eles, usa o túnel aleatório (`trycloudflare.com`), cujo endereço muda a cada início.
 - Se o servidor ou o túnel cair, o iniciador reinicia o processo; se cair mais de 5 vezes em 1 minuto, desiste e avisa.
 - `python -m web.launcher --criar-atalho` cria o atalho na Área de Trabalho (sem binário novo; usa o PowerShell, sem as flags que o antivírus marca).
 - Fechar a janela pelo botão X também encerra o servidor e o túnel (no Windows, o iniciador recebe o aviso de fechamento e para tudo antes de sair). `Ctrl + C` continua funcionando.
-- Modelo de ameaça do link: a página só aceita endereço no `#server=` no formato `https://...trycloudflare.com`, e não grava esse endereço no navegador. Mesmo assim, quem recebe um link falso pode induzir a digitação da senha num servidor alheio. Por isso a página mostra o aviso "Se você não abriu pelo iniciador, não digite a senha". Melhoria futura: prova de posse da senha (HMAC com desafio).
+- Modelo de ameaça do link: a página só aceita no `#server=` o endereço fixo definido em `FIXED_SERVER` (em `web/static/index.html`), e não grava esse endereço no navegador. Mesmo assim, quem recebe um link falso pode induzir a digitação da senha num servidor alheio. Por isso a página mostra o aviso "Se você não abriu pelo iniciador, não digite a senha". Melhoria futura: prova de posse da senha (HMAC com desafio).

@@ -16,6 +16,7 @@ from web.launcher.update import update_project
 from web.launcher.windows import copy_to_clipboard, create_shortcut, install_close_handler
 
 ROOT = Path(__file__).resolve().parents[2]
+TUNNEL_READY = "Registered tunnel connection"  # linha que o cloudflared escreve quando a conexão registra
 
 
 def site_link(site_url: str, tunnel_url: str) -> str:
@@ -35,10 +36,25 @@ def announce_tunnel(url: str, site_url: str, log: Callable[[str], None],
     open_link(link)
 
 
+def tunnel_address(tunnel_host: str, linha: str) -> str | None:
+    if tunnel_host:  # túnel fixo: o endereço já é conhecido, falta só a conexão
+        return f"https://{tunnel_host}" if TUNNEL_READY in linha else None
+    return extract_tunnel_url(linha)
+
+
+def service_env(nome: str, env: Mapping[str, str]) -> dict[str, str]:
+    # só o túnel recebe o token; o servidor não precisa dele
+    if nome == "túnel":
+        return {**env, "NO_AUTOUPDATE": "1"}
+    return {chave: valor for chave, valor in env.items() if chave != "TUNNEL_TOKEN"}
+
+
 def default_commands(plan: Plan) -> dict[str, list[str]]:
     commands = {"servidor": [sys.executable, "-m", "uvicorn", "web.app:app",
                              "--host", "127.0.0.1", "--port", str(plan.port), "--no-access-log"]}
-    if plan.cloudflared:
+    if plan.cloudflared and plan.tunnel_host:  # o destino do túnel fixo fica no painel da Cloudflare
+        commands["túnel"] = [plan.cloudflared, "tunnel", "run"]
+    elif plan.cloudflared:
         commands["túnel"] = [plan.cloudflared, "tunnel", "--no-autoupdate",
                              "--url", f"http://127.0.0.1:{plan.port}"]
     return commands
@@ -59,13 +75,13 @@ def run(plan: Plan, root: Path, env: Mapping[str, str], stop: threading.Event,
     def on_line(nome: str, linha: str) -> None:
         log(f"[{nome}] {linha}")
         if nome == "túnel":
-            url = extract_tunnel_url(linha)
+            url = tunnel_address(plan.tunnel_host, linha)
             if url and url != ultima["url"]:
                 ultima["url"] = url
                 announce_tunnel(url, plan.site_url, log, open_link, copy)
 
     comandos = commands or default_commands(plan)
-    servicos = [Service(nome, argv, root, env, on_line) for nome, argv in comandos.items()]
+    servicos = [Service(nome, argv, root, service_env(nome, env), on_line) for nome, argv in comandos.items()]
     politicas = {servico.name: RestartPolicy() for servico in servicos}
     try:
         for servico in servicos:

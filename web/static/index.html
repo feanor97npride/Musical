@@ -77,6 +77,7 @@
   const serverInput = document.getElementById("server");
   const tokenInput = document.getElementById("token");
   const SERVER_KEY = "lyricVideo.server";
+  const FIXED_SERVER = "https://whimsical.musicas.space"; // único endereço que o link do iniciador pode preencher
   let timer = null;
 
   try { serverInput.value = localStorage.getItem(SERVER_KEY) || ""; } catch (error) { /* navegador sem armazenamento */ }
@@ -84,12 +85,12 @@
     try { localStorage.setItem(SERVER_KEY, serverInput.value.trim()); } catch (error) { /* nada a fazer */ }
   });
 
-  // link do iniciador: #server=https://xxxx.trycloudflare.com preenche o campo (sem gravar no localStorage)
+  // link do iniciador: #server=<endereço fixo> preenche o campo (sem gravar no localStorage)
   (function applyServerFromHash() {
     const value = new URLSearchParams(location.hash.slice(1)).get("server");
     if (!value) return;
     history.replaceState(null, "", location.pathname + location.search);
-    if (!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(value)) return;
+    if (value !== FIXED_SERVER) return;
     serverInput.value = value;
     const notice = document.getElementById("hash-notice");
     notice.textContent = "Servidor preenchido por link: " + value + ". Se você não abriu pelo iniciador, não digite a senha.";

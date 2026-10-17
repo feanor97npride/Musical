@@ -70,3 +70,22 @@ def test_sem_cloudflared_segue_so_local_com_aviso():
     assert plan.cloudflared is None
     assert plan.abort == ""
     assert any("winget" in aviso for aviso in plan.warnings)
+
+
+def test_token_do_tunel_sem_endereco_aborta():
+    plan = preflight({"ACCESS_TOKEN": "x", "TUNNEL_TOKEN": "t"}, in_use=sem_porta_ocupada, finder=com_cloudflared)
+    assert "TUNNEL_HOSTNAME" in plan.abort
+
+
+def test_token_e_endereco_definem_o_tunel_fixo():
+    env = {"ACCESS_TOKEN": "x", "TUNNEL_TOKEN": "t", "TUNNEL_HOSTNAME": "Whimsical.musicas.space"}
+    plan = preflight(env, in_use=sem_porta_ocupada, finder=com_cloudflared)
+    assert plan.abort == ""
+    assert plan.tunnel_host == "whimsical.musicas.space"
+
+
+def test_endereco_sem_token_e_ignorado_com_aviso():
+    env = {"ACCESS_TOKEN": "x", "TUNNEL_HOSTNAME": "whimsical.musicas.space"}
+    plan = preflight(env, in_use=sem_porta_ocupada, finder=com_cloudflared)
+    assert plan.tunnel_host == ""
+    assert any("ignorado" in aviso for aviso in plan.warnings)

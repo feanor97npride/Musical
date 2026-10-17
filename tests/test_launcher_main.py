@@ -105,3 +105,22 @@ def test_ajuda_mostra_o_comando_certo(capsys):
     with pytest.raises(SystemExit):
         launcher.parse_args(["--help"])
     assert "usage: python -m web.launcher" in capsys.readouterr().out
+
+
+def test_tunel_fixo_roda_sem_url_de_quick_tunnel():
+    plano = Plan(port=8123, site_url="", cloudflared="cloudflared", tunnel_host="whimsical.musicas.space")
+    assert launcher.default_commands(plano)["túnel"] == ["cloudflared", "tunnel", "run"]
+
+
+def test_token_so_vai_para_o_tunel():
+    env = {"TUNNEL_TOKEN": "segredo", "ACCESS_TOKEN": "x"}
+    assert "TUNNEL_TOKEN" not in launcher.service_env("servidor", env)
+    tunel = launcher.service_env("túnel", env)
+    assert tunel["TUNNEL_TOKEN"] == "segredo"
+    assert tunel["NO_AUTOUPDATE"] == "1"
+
+
+def test_anuncio_do_tunel_fixo_sai_quando_a_conexao_registra():
+    assert launcher.tunnel_address("whimsical.musicas.space", "INF iniciando") is None
+    linha = "INF Registered tunnel connection connIndex=0"
+    assert launcher.tunnel_address("whimsical.musicas.space", linha) == "https://whimsical.musicas.space"
