@@ -156,9 +156,24 @@ Regras que `validate_song()` verifica:
 - `WHISPER_MODEL` — modelo do alinhador (padrão `small`)
 - `ACCESS_TOKEN` — senha da web; a página envia no cabeçalho `X-Access-Token`. Vazio = sem senha (uso local)
 - `ALLOWED_ORIGINS` — sites que podem chamar a API de outro endereço (CORS), separados por vírgula. Vazio = só a própria web
+- `SITE_URL` — endereço fixo do site na Vercel, usado pelo iniciador para abrir o site (sem barra no final)
+- `PORT` — porta do servidor local usada pelo iniciador (padrão `8000`)
+- `CLOUDFLARED_BIN` — caminho do `cloudflared` quando ele não está no PATH (opcional)
 
 ## Publicação em duas partes (opção B1)
 - A página `web/static/` vai para a Vercel (pasta raiz do projeto na Vercel: `web/static`, sem build).
 - A API roda no seu computador (`uvicorn web.app:app --port 8000`) e fica acessível por um túnel (ex.: Cloudflare Tunnel).
 - No seu computador, o `.env` precisa de `ACCESS_TOKEN` (uma senha longa) e `ALLOWED_ORIGINS=https://SEU-SITE.vercel.app`.
 - Na página, o campo "Endereço do servidor" recebe a URL do túnel, e o campo "Senha de acesso" recebe a senha.
+
+## Iniciador (Windows)
+- `iniciar.bat` (duplo clique) ou `python -m web.launcher` faz, nesta ordem:
+  1. confere o `.env` e a porta; se a porta já estiver em uso, para e avisa;
+  2. atualiza o projeto com `git pull --ff-only` e instala `pip` ou `npm ci` só se `requirements.txt` ou `renderer/package-lock.json` mudaram (`--sem-atualizar` pula esta etapa);
+  3. liga o servidor (`127.0.0.1:PORT`) e o túnel `cloudflared`;
+  4. copia só o endereço do túnel para a área de transferência e abre `SITE_URL/#server=<endereço>` no navegador.
+- Sem `ACCESS_TOKEN`, o túnel não é aberto (o servidor fica só local). Sem `cloudflared`, o iniciador segue só local e mostra como instalar.
+- Se o servidor ou o túnel cair, o iniciador reinicia o processo; se cair mais de 5 vezes em 1 minuto, desiste e avisa.
+- `python -m web.launcher --criar-atalho` cria o atalho na Área de Trabalho (sem binário novo; usa o PowerShell, sem as flags que o antivírus marca).
+- Limite conhecido: fechar a janela pelo botão X não encerra o servidor e o túnel de forma garantida (fase B, a fazer se for pedido). Antes de fechar, use `Ctrl + C`.
+- Modelo de ameaça do link: a página só aceita endereço no `#server=` no formato `https://...trycloudflare.com`, e não grava esse endereço no navegador. Mesmo assim, quem recebe um link falso pode induzir a digitação da senha num servidor alheio. Por isso a página mostra o aviso "Se você não abriu pelo iniciador, não digite a senha". Melhoria futura: prova de posse da senha (HMAC com desafio).

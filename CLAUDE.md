@@ -21,7 +21,7 @@ Pipeline: MP3 + letra → separação de vocais (Demucs) → alinhamento forçad
 ## Estrutura
 - `engine/` — Python: lyrics, separate, align, theme, props, pipeline
 - `renderer/` — projeto Remotion (composição `LyricVideo`)
-- `web/` — FastAPI e página estática
+- `web/` — FastAPI, página estática e iniciador (`web/launcher/`, arquivo de duplo clique `iniciar.bat`)
 - `samples/` — músicas e letras de teste (áudio nunca vai para o Git)
 - `output/` — artefatos por job, em `output/<slug>/` (nunca vai para o Git)
 - `docs/` — documentação do projeto
@@ -36,6 +36,8 @@ Passam a existir conforme as fases avançam. Quando um comando mudar, atualize e
 - Renderizar: `cd renderer && npm run render -- <props.json> <saida.mp4>`
 - Prévia: `cd renderer && npm run studio`
 - Web: `uvicorn web.app:app --reload`
+- Iniciar tudo (Windows): duplo clique em `iniciar.bat`, ou `python -m web.launcher` (liga servidor e túnel e abre o site)
+- Criar atalho na Área de Trabalho (Windows): `python -m web.launcher --criar-atalho`
 - Testes: `pytest`
 
 ## Convenções
