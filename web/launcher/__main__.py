@@ -37,7 +37,7 @@ def announce_tunnel(url: str, site_url: str, log: Callable[[str], None],
 
 def default_commands(plan: Plan) -> dict[str, list[str]]:
     commands = {"servidor": [sys.executable, "-m", "uvicorn", "web.app:app",
-                             "--host", "127.0.0.1", "--port", str(plan.port)]}
+                             "--host", "127.0.0.1", "--port", str(plan.port), "--no-access-log"]}
     if plan.cloudflared:
         commands["túnel"] = [plan.cloudflared, "tunnel", "--no-autoupdate",
                              "--url", f"http://127.0.0.1:{plan.port}"]
@@ -88,7 +88,8 @@ def run(plan: Plan, root: Path, env: Mapping[str, str], stop: threading.Event,
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Liga o servidor e o túnel e abre o site")
+    parser = argparse.ArgumentParser(prog="python -m web.launcher",
+                                     description="Liga o servidor e o túnel e abre o site")
     parser.add_argument("--criar-atalho", action="store_true", help="cria o atalho na Área de Trabalho")
     parser.add_argument("--sem-atualizar", action="store_true", help="não faz git pull antes de ligar")
     return parser.parse_args(argv)

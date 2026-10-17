@@ -3,6 +3,8 @@ import sys
 import threading
 import time
 
+import pytest
+
 from web.launcher import __main__ as launcher
 from web.launcher.checks import Plan
 
@@ -92,3 +94,14 @@ def test_parse_args_padroes():
 def test_criar_atalho_chama_o_criador(monkeypatch):
     monkeypatch.setattr(launcher, "create_shortcut", lambda root: True)
     assert launcher.main(["--criar-atalho"]) == 0
+
+
+def test_servidor_roda_sem_log_de_acesso():
+    comandos = launcher.default_commands(Plan(port=8123, site_url="", cloudflared=None))
+    assert "--no-access-log" in comandos["servidor"]
+
+
+def test_ajuda_mostra_o_comando_certo(capsys):
+    with pytest.raises(SystemExit):
+        launcher.parse_args(["--help"])
+    assert "usage: python -m web.launcher" in capsys.readouterr().out
