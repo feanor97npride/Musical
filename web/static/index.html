@@ -50,6 +50,7 @@
     </label>
 
     <button type="submit" id="submit">Gerar vídeo</button>
+    <button type="button" id="preview" class="secondary">Gerar prévia (30 s)</button>
   </form>
 
   <section class="result" id="result" aria-live="polite">
@@ -62,6 +63,7 @@
 <script>
   const form = document.getElementById("form");
   const submit = document.getElementById("submit");
+  const preview = document.getElementById("preview");
   const result = document.getElementById("result");
   const stage = document.getElementById("stage");
   const detail = document.getElementById("detail");
@@ -103,7 +105,7 @@
 
   function finish() {
     clearInterval(timer);
-    submit.disabled = false;
+    submit.disabled = preview.disabled = false;
   }
 
   async function failure(response) {
@@ -155,7 +157,7 @@
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    submit.disabled = true;
+    submit.disabled = preview.disabled = true;
     output.innerHTML = "";
     show("Enviando...");
     detail.textContent = "";
@@ -172,6 +174,16 @@
     clearInterval(timer);
     timer = setInterval(() => poll(body.id), 2000);
     poll(body.id);
+  });
+
+  // prévia: envia o mesmo formulário com o trecho de 0 a 30 s; o FormData é montado na hora do envio,
+  // então dá para limpar o trecho logo em seguida e um envio normal não sai com 30 s por engano
+  preview.addEventListener("click", () => {
+    document.getElementById("clip_start").value = "0";
+    document.getElementById("clip_end").value = "30";
+    form.requestSubmit();
+    document.getElementById("clip_start").value = "";
+    document.getElementById("clip_end").value = "";
   });
 </script>
 </body>

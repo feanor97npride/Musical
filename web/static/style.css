@@ -26,6 +26,7 @@ textarea { min-height: 160px; resize: vertical; }
 button { margin-top: 18px; width: 100%; padding: 12px; font: inherit; font-weight: 600; border: 0;
   border-radius: 8px; background: var(--accent); color: #fff; cursor: pointer; }
 button:disabled { opacity: 0.5; cursor: wait; }
+button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
 .result { margin-top: 16px; display: none; }
 .result.visible { display: block; }
 .stage { font-weight: 600; }
