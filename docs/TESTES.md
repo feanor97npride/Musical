@@ -53,6 +53,9 @@ Registre os resultados na tabela de baixo.
 - Música de ~4 min (242 s, "O Deserto Vai Florir"), pipeline completa do zero: ~12 min (separar 124 s + alinhar 55 s + tema 4 s + render 539 s).
 - Demucs sozinho: 124 s.
 - Alinhamento sozinho: 55 s.
-- Render de 30 s: não medido.
+- Render de 30 s (trecho 0–30 s de "O Deserto Vai Florir", estilo oneword, fundo gradiente; 900 quadros, 13,4 MB):
+  padrão do Remotion (2 processos neste PC), 71,1 s e 65,5 s (média 68 s); com `--concurrency 4`, 58,9 s e 59,2 s (média 59 s).
+  Ganho de ~13%, abaixo do limite de 20%: a opção não foi aplicada em `renderer/scripts/render.mjs`.
+  Memória do sistema (campo "usado" do `free`, amostrado a cada 2 s): pico de ~2,0 GB no padrão e ~2,2 GB com 4 processos.
 - Render da música inteira: 539 s (7277 quadros).
 - Trocar só o `--style` (cache): 520 s. Pulou Demucs, alinhamento e tema; o render continua sendo quase todo o tempo.
