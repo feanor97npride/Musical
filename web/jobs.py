@@ -23,6 +23,7 @@ class Job:
     folder: Path
     audio: Path  # o nome do arquivo vira o nome da pasta de saída, por isso leva o nome da música
     style: str
+    background: str
     clip: tuple[float, float] | None
     video: Path | None = None
     status: str = "queued"
@@ -50,7 +51,7 @@ class Job:
 
 def run_pipeline(job: Job) -> int:
     command = [sys.executable, "-m", "engine.pipeline", "--audio", str(job.audio),
-               "--lyrics", str(job.lyrics), "--style", job.style]
+               "--lyrics", str(job.lyrics), "--style", job.style, "--background", job.background]
     if job.clip:
         command += ["--clip", f"{job.clip[0]}:{job.clip[1]}"]
     # no Windows o filho escreve em cp1252 por padrão; forçamos UTF-8 para o texto com acento não quebrar a leitura
@@ -68,11 +69,12 @@ class JobQueue:
         self._pending: queue.Queue[Job] = queue.Queue()
         self._worker: threading.Thread | None = None
 
-    def create(self, filename: str, audio: bytes, lyrics: str, style: str, clip: tuple[float, float] | None) -> Job:
+    def create(self, filename: str, audio: bytes, lyrics: str, style: str, background: str,
+               clip: tuple[float, float] | None) -> Job:
         job_id = uuid.uuid4().hex
         folder = UPLOADS / job_id
         folder.mkdir(parents=True)
-        job = Job(job_id, folder, folder / f"{clean_name(Path(filename).stem)}.mp3", style, clip)
+        job = Job(job_id, folder, folder / f"{clean_name(Path(filename).stem)}.mp3", style, background, clip)
         job.audio.write_bytes(audio)
         job.lyrics.write_text(lyrics, encoding="utf-8", newline="")  # no Windows, sem isso cada \n vira \r\n
         # lê o arquivo de volta: o navegador manda \r\n e o pipeline normaliza, o nome da pasta tem que bater

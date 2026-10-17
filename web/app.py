@@ -16,6 +16,7 @@ from web.jobs import Job, JobQueue
 load_dotenv(ROOT / ".env")
 MAX_BYTES = 25 * 1024 * 1024
 STYLES = {"highlight", "oneword", "karaoke"}
+BACKGROUNDS = {"gradient", "solid"}
 STATIC = Path(__file__).resolve().parent / "static"
 # senha opcional: sem ela, qualquer um que acessa o servidor usa (uso local)
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN", "").strip()
@@ -71,7 +72,8 @@ def _find(job_id: str) -> Job:
 
 @app.post("/jobs", dependencies=[Depends(_check_token)])
 async def create_job(audio: UploadFile = File(...), lyrics: str = Form(""), style: str = Form("karaoke"),
-                     clip_start: str = Form(""), clip_end: str = Form(""), confirm: bool = Form(False)) -> dict:
+                     background: str = Form("gradient"), clip_start: str = Form(""), clip_end: str = Form(""),
+                     confirm: bool = Form(False)) -> dict:
     if not confirm:
         raise HTTPException(400, "confirme que a música é sua ou que você tem autorização para usá-la")
     if not (audio.filename or "").lower().endswith(".mp3"):
@@ -80,8 +82,10 @@ async def create_job(audio: UploadFile = File(...), lyrics: str = Form(""), styl
         raise HTTPException(400, "a letra não pode estar vazia")
     if style not in STYLES:
         raise HTTPException(400, "estilo de legenda desconhecido")
+    if background not in BACKGROUNDS:
+        raise HTTPException(400, "fundo desconhecido")
     clip = _clip(clip_start, clip_end)
-    job = queue.create(audio.filename or "musica.mp3", await _read_limited(audio), lyrics, style, clip)
+    job = queue.create(audio.filename or "musica.mp3", await _read_limited(audio), lyrics, style, background, clip)
     return {"id": job.id}
 
 

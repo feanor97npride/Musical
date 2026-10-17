@@ -147,7 +147,7 @@ Regras que `validate_song()` verifica:
 ## CLI
 - `python -m engine.align --audio A --lyrics L --out O [--model small] [--no-separate] [--language pt]`
 - `python -m engine.theme --song O` (grava `theme` no mesmo JSON)
-- `python -m engine.pipeline --audio A --lyrics L [--style karaoke] [--clip 30:75] [--no-separate] [--skip-theme] [--force]`
+- `python -m engine.pipeline --audio A --lyrics L [--style karaoke] [--background gradient] [--clip 30:75] [--no-separate] [--skip-theme] [--force]`
 - `cd renderer && npm run render -- <props.json> <saida.mp4>`
 
 ## Variáveis de ambiente (`.env`)

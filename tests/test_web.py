@@ -70,6 +70,41 @@ def test_recusa_estilo_desconhecido(client):
     assert response.status_code == 400
 
 
+def test_recusa_fundo_desconhecido(client):
+    response = send(client, background="radial")
+    assert response.status_code == 400
+    assert "fundo" in response.json()["detail"]
+
+
+def test_fundo_escolhido_chega_ao_job(client, monkeypatch):
+    def fake_pipeline(job):
+        job.video.parent.mkdir(parents=True)
+        job.video.write_bytes(b"mp4")
+        return 0
+
+    monkeypatch.setattr(jobs, "run_pipeline", fake_pipeline)
+    job_id = send(client, background="solid").json()["id"]
+    wait_for(client, job_id, "done")
+    assert web_app.queue.jobs[job_id].background == "solid"
+
+
+def test_pipeline_recebe_o_fundo_na_linha_de_comando(tmp_path, monkeypatch):
+    comandos = []
+
+    class FakeProcess:
+        def __init__(self, command, **_kwargs):
+            comandos.append(command)
+            self.stdout = iter([])
+
+        def wait(self):
+            return 0
+
+    monkeypatch.setattr(jobs.subprocess, "Popen", FakeProcess)
+    jobs.run_pipeline(jobs.Job("id", tmp_path, tmp_path / "a.mp3", "karaoke", "solid", None))
+    command = comandos[0]
+    assert command[command.index("--background") + 1] == "solid"
+
+
 def test_letra_com_quebra_crlf_cai_na_mesma_pasta_do_pipeline(client, monkeypatch):
     def fake_pipeline(job):
         job.video.parent.mkdir(parents=True)

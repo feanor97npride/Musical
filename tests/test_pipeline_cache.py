@@ -1,5 +1,6 @@
 # Testes do slug e do cache da pipeline, com arquivos falsos e sem rodar modelos nem o render.
 import argparse
+import json
 import subprocess
 from pathlib import Path
 
@@ -11,7 +12,7 @@ from engine import pipeline
 def make_job(tmp_path: Path, **flags: bool) -> pipeline.Job:
     audio = tmp_path / "Minha Música.mp3"
     audio.write_bytes(b"audio")
-    args = argparse.Namespace(audio=audio, lyrics=tmp_path / "a.txt", style="karaoke", clip=None,
+    args = argparse.Namespace(audio=audio, lyrics=tmp_path / "a.txt", style="karaoke", background="gradient", clip=None,
                               no_separate=False, skip_theme=False, force=False, model="small", language="pt")
     for name, value in flags.items():
         setattr(args, name, value)
@@ -87,3 +88,10 @@ def test_render_que_falha_mantem_os_arquivos_anteriores(tmp_path, monkeypatch):
     assert job.props.read_text(encoding="utf-8") == "antigo"
     assert job.video.read_bytes() == b"antigo"
     assert not (job.out / "video.tmp.mp4").exists()
+
+
+def test_props_usa_o_fundo_escolhido(tmp_path, monkeypatch):
+    job = make_job(tmp_path, background="solid")
+    monkeypatch.setattr(pipeline, "build_props", lambda *args: {"fundo": args[3]})  # args[3] é o fundo
+    pipeline._props(job)
+    assert json.loads(job.new_props) == {"fundo": "solid"}
