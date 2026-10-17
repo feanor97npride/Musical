@@ -10,7 +10,7 @@ MP3 + letra
    ├─ align.py     stable-ts → tempo por palavra → song.json
    ├─ theme.py     Claude API → theme dentro do song.json
    ├─ props.py     monta props.json (song + estilo + trecho)
-   └─ renderer/    Remotion → video.mp4
+   └─ renderer/    Remotion → video-<variante>.mp4
 ```
 
 Cada etapa lê e escreve arquivos em `output/<slug>/`. Se o arquivo de saída da etapa já existe, a etapa é pulada (cache), a não ser que se passe `--force`.

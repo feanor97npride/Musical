@@ -31,7 +31,7 @@ class Job:
     args: argparse.Namespace
     lyrics: str
     out: Path
-    new_props: str = ""  # props da rodada atual; só vira props.json depois que o render termina
+    new_props: str = ""  # props da rodada atual; só vira props-<variante>.json depois que o render termina
 
     @property
     def song(self) -> Path:
@@ -70,7 +70,11 @@ def make_slug(audio: Path, lyrics: str) -> str:
 def variant_name(style: str, background: str, clip: tuple[float, float] | None) -> str:
     """Estilo, fundo e trecho juntos: cada combinação tem props e vídeo próprios."""
     name = f"{style}-{background}"
-    return f"{name}-{clip[0]:g}-{clip[1]:g}" if clip else name
+    if clip is None:
+        return name
+    # sem o int, 30.0 viraria "30.0"; com :g, 30.00001 viraria "30" e colidiria com 30.0
+    start, end = (int(value) if value.is_integer() else value for value in clip)
+    return f"{name}-{start}-{end}"
 
 
 def _write_song(path: Path, song: dict) -> None:

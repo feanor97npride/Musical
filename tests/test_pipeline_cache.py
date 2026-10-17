@@ -105,3 +105,11 @@ def test_cada_variante_tem_seu_video(tmp_path):
     job.args.clip = (0.0, 30.0)
     assert job.video.name == "video-karaoke-solid-0-30.mp4"
     assert job.props.name == "props-karaoke-solid-0-30.json"
+
+
+def test_trechos_quase_iguais_tem_arquivos_diferentes(tmp_path):
+    job = make_job(tmp_path)
+    job.args.clip = (30.0, 75.0)
+    first = job.video
+    job.args.clip = (30.00001, 75.0)
+    assert job.video != first
