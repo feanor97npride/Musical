@@ -8,8 +8,9 @@ def fix_words(raw: list[tuple[str, float, float]], duration: float) -> list[Word
     """Deixa os starts não decrescentes, os ends >= start e tudo entre 0 e a duração."""
     words: list[Word] = []
     previous = 0.0
+    latest = duration - MIN_LINE  # nenhum start no último instante: sempre sobra espaço para o end
     for text, start, end in raw:
-        start = min(max(start, previous), duration)
+        start = max(previous, min(start, latest))
         end = min(max(end, start), duration)
         words.append(Word(text, start, end))
         previous = start

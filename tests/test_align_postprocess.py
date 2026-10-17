@@ -13,7 +13,8 @@ def test_tempos_fora_de_ordem_ficam_nao_decrescentes():
 
 def test_tempos_limitados_a_duracao_do_audio():
     words = fix_words([("a", 4.0, 6.0), ("b", 7.0, 9.0)], duration=5.0)
-    assert [(w.start, w.end) for w in words] == [(4.0, 5.0), (5.0, 5.0)]
+    assert [w.end for w in words] == [5.0, 5.0]
+    assert words[1].start == pytest.approx(5.0 - MIN_LINE)
 
 
 def test_split_by_counts_distribui_em_sequencia():
@@ -48,3 +49,11 @@ def test_verso_sem_palavras_gera_erro_claro():
     lyrics = [{"text": "um", "section": "verse"}, {"text": "dois", "section": "verse"}]
     with pytest.raises(ValueError, match="verso 1"):
         build_lines(lyrics, [[("um", 1.0, 1.5)], []], duration=10.0)
+
+
+def test_verso_que_comeca_no_fim_da_musica_nao_fica_com_duracao_zero():
+    lyrics = [{"text": "oi", "section": "outro"}]
+    lines = build_lines(lyrics, [[("oi", 10.0, 10.0)]], duration=10.0)
+    assert lines[0].start < lines[0].end <= 10.0
+    song = Song(language="pt", audio=Audio("musica.mp3", 10.0, 96.0), lines=lines)
+    assert validate_song(song.to_dict()) == []
