@@ -1,10 +1,11 @@
 # Testes do props.json: cópia do áudio, clip, nome sem acentos e validação do song.json.
 import json
+import re
 from pathlib import Path
 
 import pytest
 
-from engine.props import build_props
+from engine.props import BACKGROUNDS, ROOT, build_props
 
 
 def valid_song() -> dict:
@@ -42,6 +43,17 @@ def test_com_clip_copia_audio_e_monta_contrato(files):
 def test_sem_clip_fica_null(files):
     song, audio, public = files
     assert build_props(song, audio, public_audio=public)["clip"] is None
+
+
+def test_fundo_padrao_e_gradiente(files):
+    song, audio, public = files
+    assert build_props(song, audio, public_audio=public)["style"]["background"] == "gradient"
+
+
+def test_lista_de_fundos_bate_com_o_tipo_do_renderer():
+    types = (ROOT / "renderer" / "src" / "types.ts").read_text(encoding="utf-8")
+    listed = re.search(r'background: ("\w+"(?:\s*\|\s*"\w+")*)', types).group(1)
+    assert set(re.findall(r'"(\w+)"', listed)) == BACKGROUNDS
 
 
 def test_song_invalido_e_recusado(files):

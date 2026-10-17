@@ -1,12 +1,11 @@
 // Composição LyricVideo: fundo sólido ou gradiente com partículas, e a legenda no estilo escolhido.
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
-import { Gradient } from "./backgrounds/Gradient";
-import { Particles } from "./backgrounds/Particles";
+import { Background } from "./backgrounds/Background";
 import { fontFor } from "./fonts";
 import { Highlight } from "./subtitles/Highlight";
 import { Karaoke } from "./subtitles/Karaoke";
 import { OneWord } from "./subtitles/OneWord";
-import { activeLine, activeWordIndex, beatPulse, chorusWeight, lightFactor } from "./timing";
+import { activeLine, activeWordIndex, beatPulse, chorusWeight } from "./timing";
 import type { LyricProps } from "./types";
 
 const SUBTITLES = { highlight: Highlight, oneword: OneWord, karaoke: Karaoke };
@@ -25,16 +24,7 @@ export const LyricVideo: React.FC<LyricProps> = ({ song, audioFile, style, clip 
 
   return (
     <AbsoluteFill>
-      {style.background === "gradient" ? (
-        <>
-          <Gradient palette={palette} intensity={intensity} pulse={pulse} />
-          <Particles intensity={intensity} />
-        </>
-      ) : (
-        <AbsoluteFill
-          style={{ backgroundColor: palette[0], filter: `brightness(${lightFactor(pulse, intensity)})` }}
-        />
-      )}
+      <Background kind={style.background} palette={palette} intensity={intensity} pulse={pulse} />
       {audioFile && (
         <Audio
           src={staticFile(audioFile)}

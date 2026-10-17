@@ -16,7 +16,7 @@ SUBTITLE_STYLES = {"highlight", "oneword", "karaoke"}
 BACKGROUNDS = {"solid", "gradient"}
 
 
-def build_props(song_path: Path, audio_path: Path, subtitle: str = "highlight", background: str = "solid",
+def build_props(song_path: Path, audio_path: Path, subtitle: str = "highlight", background: str = "gradient",
                 clip: tuple[float, float] | None = None, public_audio: Path = PUBLIC_AUDIO) -> dict:
     song = json.loads(song_path.read_text(encoding="utf-8"))
     errors = validate_song(song)
@@ -57,7 +57,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--song", type=Path, required=True)
     parser.add_argument("--audio", type=Path, required=True)
     parser.add_argument("--style", default="highlight", help="highlight, oneword ou karaoke")
-    parser.add_argument("--background", default="solid", help="solid ou gradient")
+    parser.add_argument("--background", default="gradient", help="gradient ou solid")
     parser.add_argument("--clip", type=parse_clip, default=None, help="início:fim em segundos, ex.: 30:75")
     parser.add_argument("--out", type=Path, required=True, help="caminho do props.json")
     args = parser.parse_args(argv)
