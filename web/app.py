@@ -16,7 +16,7 @@ from web.jobs import Job, JobQueue
 load_dotenv(ROOT / ".env")
 MAX_BYTES = 25 * 1024 * 1024
 STYLES = {"highlight", "oneword", "karaoke"}
-BACKGROUNDS = {"gradient", "solid"}
+BACKGROUNDS = {"gradient", "solid", "aurora"}
 STATIC = Path(__file__).resolve().parent / "static"
 # senha opcional: sem ela, qualquer um que acessa o servidor usa (uso local)
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN", "").strip()

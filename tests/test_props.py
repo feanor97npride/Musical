@@ -50,6 +50,11 @@ def test_fundo_padrao_e_gradiente(files):
     assert build_props(song, audio, public_audio=public)["style"]["background"] == "gradient"
 
 
+def test_fundo_aurora_e_aceito(files):
+    song, audio, public = files
+    assert build_props(song, audio, background="aurora", public_audio=public)["style"]["background"] == "aurora"
+
+
 def test_lista_de_fundos_bate_com_o_tipo_do_renderer():
     types = (ROOT / "renderer" / "src" / "types.ts").read_text(encoding="utf-8")
     listed = re.search(r'background: ("\w+"(?:\s*\|\s*"\w+")*)', types).group(1)

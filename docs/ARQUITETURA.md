@@ -46,7 +46,7 @@ Cada etapa lê e escreve arquivos em `output/<slug>/`. Se o arquivo de saída da
 │       ├── Root.tsx
 │       ├── LyricVideo.tsx
 │       ├── types.ts
-│       ├── backgrounds/   # Gradient, Particles
+│       ├── backgrounds/   # Background, Gradient, Particles, Aurora
 │       └── subtitles/     # Highlight, OneWord, Karaoke
 ├── web/
 │   ├── app.py         # FastAPI
@@ -134,7 +134,7 @@ Regras que `validate_song()` verifica:
 }
 ```
 - `audioFile` é relativo a `renderer/public/`.
-- `style.subtitle` ∈ {`highlight`, `oneword`, `karaoke`}; `style.background` ∈ {`solid`, `gradient`}.
+- `style.subtitle` ∈ {`highlight`, `oneword`, `karaoke`}; `style.background` ∈ {`solid`, `gradient`, `aurora`}.
 - `clip` pode ser `null` (música inteira). Com `clip`, o vídeo começa em `clip.start` e o tempo das legendas é deslocado de acordo.
 
 ## Regras do renderer

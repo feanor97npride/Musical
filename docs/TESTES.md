@@ -55,7 +55,15 @@ Registre os resultados na tabela de baixo.
 - Alinhamento sozinho: 55 s.
 - Render de 30 s (trecho 0–30 s de "O Deserto Vai Florir", estilo oneword, fundo gradiente; 900 quadros, 13,4 MB):
   padrão do Remotion (2 processos neste PC), 71,1 s e 65,5 s (média 68 s); com `--concurrency 4`, 58,9 s e 59,2 s (média 59 s).
-  Ganho de ~13%, abaixo do limite de 20%: a opção não foi aplicada em `renderer/scripts/render.mjs`.
+  Ganho de ~13%, abaixo do limite de 20%: o padrão não mudou. A opção existe como `RENDER_CONCURRENCY` em `renderer/scripts/render.mjs`, vazia por padrão.
   Memória do sistema (campo "usado" do `free`, amostrado a cada 2 s): pico de ~2,0 GB no padrão e ~2,2 GB com 4 processos.
 - Render da música inteira: 539 s (7277 quadros).
 - Trocar só o `--style` (cache): 520 s. Pulou Demucs, alinhamento e tema; o render continua sendo quase todo o tempo.
+
+## Fundos (Fase 3: aurora)
+- Render de 10 s (trecho 0–10 s de "O Deserto Vai Florir", estilo oneword, 300 quadros), 3 repetições de cada, na mesma máquina de 4 vCPU:
+  - degradê: 24,9 s, 23,9 s e 25,2 s (média 24,7 s);
+  - aurora: 27,1 s, 26,7 s e 26,4 s (média 26,7 s).
+  - Diferença de +8%, abaixo do limite de 20% proposto no plano.
+- Determinismo: as 3 repetições da aurora deram quadros de vídeo idênticos (`framemd5`).
+- Visual: legenda branca legível sobre a aurora (quadro em 22,5 s de um trecho de 14–24 s).

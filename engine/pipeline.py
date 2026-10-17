@@ -176,7 +176,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--audio", type=Path, required=True)
     parser.add_argument("--lyrics", type=Path, required=True)
     parser.add_argument("--style", default="karaoke", help="highlight, oneword ou karaoke")
-    parser.add_argument("--background", default="gradient", help="gradient (animado) ou solid")
+    parser.add_argument("--background", default="gradient", help="gradient (animado), solid ou aurora")
     parser.add_argument("--clip", type=parse_clip, default=None, help="início:fim em segundos, ex.: 30:75")
     parser.add_argument("--no-separate", action="store_true", help="não separar vocais com Demucs")
     parser.add_argument("--skip-theme", action="store_true", help="não chamar a Claude API")

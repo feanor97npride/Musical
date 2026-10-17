@@ -2,6 +2,7 @@
 import { AbsoluteFill } from "remotion";
 import { lightFactor } from "../timing";
 import type { LyricProps } from "../types";
+import { Aurora } from "./Aurora";
 import { Gradient } from "./Gradient";
 import { Particles } from "./Particles";
 
@@ -21,6 +22,8 @@ export const Background: React.FC<Props> = ({ kind, palette, intensity, pulse })
           <Particles intensity={intensity} />
         </>
       );
+    case "aurora":
+      return <Aurora palette={palette} intensity={intensity} pulse={pulse} />;
     case "solid":
       return (
         <AbsoluteFill style={{ backgroundColor: palette[0], filter: `brightness(${lightFactor(pulse, intensity)})` }} />
