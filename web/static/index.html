@@ -15,6 +15,7 @@
     <label for="server">Endereço do servidor</label>
     <input type="text" id="server" placeholder="ex.: https://algo.trycloudflare.com">
     <p class="hint">Deixe vazio se esta página foi aberta direto do servidor. Este endereço fica salvo neste navegador.</p>
+    <p class="hint warning" id="hash-notice" hidden></p>
 
     <label for="token">Senha de acesso</label>
     <input type="password" id="token" placeholder="a senha definida no seu computador">
@@ -74,6 +75,18 @@
   serverInput.addEventListener("change", () => {
     try { localStorage.setItem(SERVER_KEY, serverInput.value.trim()); } catch (error) { /* nada a fazer */ }
   });
+
+  // link do iniciador: #server=https://xxxx.trycloudflare.com preenche o campo (sem gravar no localStorage)
+  (function applyServerFromHash() {
+    const value = new URLSearchParams(location.hash.slice(1)).get("server");
+    if (!value) return;
+    history.replaceState(null, "", location.pathname + location.search);
+    if (!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(value)) return;
+    serverInput.value = value;
+    const notice = document.getElementById("hash-notice");
+    notice.textContent = "Servidor preenchido por link: " + value + ". Se você não abriu pelo iniciador, não digite a senha.";
+    notice.hidden = false;
+  })();
 
   function api(path, options = {}) {
     const base = serverInput.value.trim().replace(/\/+$/, "");
