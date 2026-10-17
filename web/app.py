@@ -20,7 +20,7 @@ BACKGROUNDS = {"gradient", "solid"}
 STATIC = Path(__file__).resolve().parent / "static"
 # senha opcional: sem ela, qualquer um que acessa o servidor usa (uso local)
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN", "").strip()
-# sites que podem chamar o servidor de outra origem, ex.: a página na Vercel
+# sites que podem chamar o servidor de outra origem, ex.: a página no Cloudflare Pages
 ALLOWED_ORIGINS = [origin.strip() for origin in os.getenv("ALLOWED_ORIGINS", "").split(",") if origin.strip()]
 queue = JobQueue()
 

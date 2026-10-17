@@ -156,16 +156,16 @@ Regras que `validate_song()` verifica:
 - `WHISPER_MODEL` — modelo do alinhador (padrão `small`)
 - `ACCESS_TOKEN` — senha da web; a página envia no cabeçalho `X-Access-Token`. Vazio = sem senha (uso local)
 - `ALLOWED_ORIGINS` — sites que podem chamar a API de outro endereço (CORS), separados por vírgula. Vazio = só a própria web
-- `SITE_URL` — endereço fixo do site na Vercel, usado pelo iniciador para abrir o site (sem barra no final)
+- `SITE_URL` — endereço fixo do site no Cloudflare Pages, usado pelo iniciador para abrir o site (sem barra no final)
 - `PORT` — porta do servidor local usada pelo iniciador (padrão `8000`)
 - `CLOUDFLARED_BIN` — caminho do `cloudflared` quando ele não está no PATH (opcional)
 - `TUNNEL_TOKEN` — token do túnel fixo da Cloudflare. É uma senha: nunca versionar. Vazio = túnel aleatório
 - `TUNNEL_HOSTNAME` — endereço fixo do túnel, ex.: `meu-servidor.seudominio.com`. Obrigatório junto com `TUNNEL_TOKEN`
 
 ## Publicação em duas partes (opção B1)
-- A página `web/static/` vai para a Vercel (pasta raiz do projeto na Vercel: `web/static`, sem build).
+- A página `web/static/` vai para o Cloudflare Pages (projeto Pages com build output directory `web/static`, sem build command).
 - A API roda no seu computador (`uvicorn web.app:app --port 8000`) e fica acessível por um túnel (ex.: Cloudflare Tunnel).
-- No seu computador, o `.env` precisa de `ACCESS_TOKEN` (uma senha longa) e `ALLOWED_ORIGINS=https://SEU-SITE.vercel.app`.
+- No seu computador, o `.env` precisa de `ACCESS_TOKEN` (uma senha longa) e `ALLOWED_ORIGINS=https://SEU-SITE` (o endereço do site, sem barra no fim).
 - Na página, o campo "Endereço do servidor" recebe a URL do túnel, e o campo "Senha de acesso" recebe a senha.
 
 ## Iniciador (Windows)
