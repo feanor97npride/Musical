@@ -58,7 +58,8 @@ Cada etapa lê e escreve arquivos em `output/<slug>/`. Se o arquivo de saída da
 
 `<slug>` = nome do arquivo de áudio sem extensão + `-` + 8 primeiros caracteres do SHA-1 de (bytes do áudio + texto da letra). Mudou áudio ou letra, muda o slug.
 
-Artefatos em `output/<slug>/`: `vocals.wav`, `song.json`, `props.json`, `video.mp4`.
+Artefatos em `output/<slug>/`: `vocals.wav`, `song.json`, `props-<variante>.json`, `video-<variante>.mp4`.
+`<variante>` = `<estilo>-<fundo>`, com `-<início>-<fim>` quando há trecho (ex.: `karaoke-gradient`, `karaoke-solid-0-30`). Cada variante tem o seu vídeo: trocar estilo, fundo ou trecho não apaga os outros.
 
 ## Formato da letra
 

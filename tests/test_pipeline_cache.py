@@ -95,3 +95,13 @@ def test_props_usa_o_fundo_escolhido(tmp_path, monkeypatch):
     monkeypatch.setattr(pipeline, "build_props", lambda *args: {"fundo": args[3]})  # args[3] é o fundo
     pipeline._props(job)
     assert json.loads(job.new_props) == {"fundo": "solid"}
+
+
+def test_cada_variante_tem_seu_video(tmp_path):
+    job = make_job(tmp_path)
+    assert job.video.name == "video-karaoke-gradient.mp4"
+    job.args.background = "solid"
+    assert job.video.name == "video-karaoke-solid.mp4"
+    job.args.clip = (0.0, 30.0)
+    assert job.video.name == "video-karaoke-solid-0-30.mp4"
+    assert job.props.name == "props-karaoke-solid-0-30.json"

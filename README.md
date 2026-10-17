@@ -30,7 +30,7 @@ Gera um vídeo vertical com legendas palavra por palavra (estilo TikTok) e fundo
 ```
 python -m engine.pipeline --audio samples/minha.mp3 --lyrics samples/minha.txt --style karaoke --clip 30:75
 ```
-O vídeo sai em `output/<slug>/video.mp4`.
+O vídeo sai em `output/<slug>/video-<variante>.mp4`, por exemplo `video-karaoke-gradient.mp4`.
 
 ## Direitos autorais
 Use apenas músicas próprias ou com autorização do titular.

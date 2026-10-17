@@ -9,7 +9,7 @@ import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
-from engine.pipeline import OUTPUT, ROOT, clean_name, make_slug
+from engine.pipeline import OUTPUT, ROOT, clean_name, make_slug, variant_name
 
 UPLOADS = ROOT / "output" / "web"
 STAGE_LINE = re.compile(r"^\[\d/\d\] (.+?)\.\.\.")
@@ -78,7 +78,8 @@ class JobQueue:
         job.audio.write_bytes(audio)
         job.lyrics.write_text(lyrics, encoding="utf-8", newline="")  # no Windows, sem isso cada \n vira \r\n
         # lê o arquivo de volta: o navegador manda \r\n e o pipeline normaliza, o nome da pasta tem que bater
-        job.video = OUTPUT / make_slug(job.audio, job.lyrics.read_text(encoding="utf-8")) / "video.mp4"
+        slug = make_slug(job.audio, job.lyrics.read_text(encoding="utf-8"))
+        job.video = OUTPUT / slug / f"video-{variant_name(style, background, clip)}.mp4"
         self.jobs[job_id] = job
         self._pending.put(job)
         return job

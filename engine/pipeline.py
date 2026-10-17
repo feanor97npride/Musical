@@ -1,4 +1,4 @@
-# CLI de ponta a ponta: MP3 + letra → output/<slug>/video.mp4, com cache por etapa.
+# CLI de ponta a ponta: MP3 + letra → output/<slug>/video-<variante>.mp4, com cache por etapa.
 import argparse
 import hashlib
 import json
@@ -38,12 +38,16 @@ class Job:
         return self.out / "song.json"
 
     @property
+    def variant(self) -> str:
+        return variant_name(self.args.style, self.args.background, self.args.clip)
+
+    @property
     def props(self) -> Path:
-        return self.out / "props.json"
+        return self.out / f"props-{self.variant}.json"
 
     @property
     def video(self) -> Path:
-        return self.out / "video.mp4"
+        return self.out / f"video-{self.variant}.mp4"
 
 
 class StepError(Exception):
@@ -61,6 +65,12 @@ def clean_name(name: str) -> str:
 def make_slug(audio: Path, lyrics: str) -> str:
     digest = hashlib.sha1(audio.read_bytes() + lyrics.encode("utf-8")).hexdigest()[:8]
     return f"{clean_name(audio.stem)}-{digest}"
+
+
+def variant_name(style: str, background: str, clip: tuple[float, float] | None) -> str:
+    """Estilo, fundo e trecho juntos: cada combinação tem props e vídeo próprios."""
+    name = f"{style}-{background}"
+    return f"{name}-{clip[0]:g}-{clip[1]:g}" if clip else name
 
 
 def _write_song(path: Path, song: dict) -> None:

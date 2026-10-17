@@ -86,6 +86,7 @@ def test_fundo_escolhido_chega_ao_job(client, monkeypatch):
     job_id = send(client, background="solid").json()["id"]
     wait_for(client, job_id, "done")
     assert web_app.queue.jobs[job_id].background == "solid"
+    assert web_app.queue.jobs[job_id].video.name == "video-karaoke-solid.mp4"  # cada fundo tem seu vídeo
 
 
 def test_pipeline_recebe_o_fundo_na_linha_de_comando(tmp_path, monkeypatch):
