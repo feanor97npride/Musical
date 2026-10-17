@@ -62,4 +62,6 @@ def preflight(env: Mapping[str, str], in_use: Callable[[int], bool] = port_in_us
     elif not env.get("ACCESS_TOKEN", "").strip():
         plan.warnings.append("ACCESS_TOKEN vazio: o túnel NÃO será aberto (qualquer um usaria seu computador)")
         plan.cloudflared = None
+    if not env.get("THEME_API_KEY", "").strip():
+        plan.warnings.append("THEME_API_KEY vazio: o fundo vai usar o tema padrão")
     return plan

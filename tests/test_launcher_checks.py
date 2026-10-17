@@ -54,6 +54,17 @@ def test_site_dentro_de_allowed_origins_nao_avisa():
     assert not any("ALLOWED_ORIGINS" in aviso for aviso in plan.warnings)
 
 
+def test_sem_chave_do_tema_avisa_mas_nao_bloqueia():
+    plan = preflight({"ACCESS_TOKEN": "x"}, in_use=sem_porta_ocupada, finder=com_cloudflared)
+    assert any("THEME_API_KEY" in aviso for aviso in plan.warnings)
+    assert plan.abort == ""
+
+
+def test_com_chave_do_tema_nao_avisa():
+    plan = preflight({"ACCESS_TOKEN": "x", "THEME_API_KEY": "chave"}, in_use=sem_porta_ocupada, finder=com_cloudflared)
+    assert not any("THEME_API_KEY" in aviso for aviso in plan.warnings)
+
+
 def test_sem_cloudflared_segue_so_local_com_aviso():
     plan = preflight({"ACCESS_TOKEN": "x"}, in_use=sem_porta_ocupada, finder=lambda _env: None)
     assert plan.cloudflared is None
