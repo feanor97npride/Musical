@@ -97,6 +97,7 @@ Quando houver ferramenta externa ou termo que quem não programa não conhece:
 - Mostre a saída real dos comandos de aceite. Não resuma de memória.
 - Em erro, leia a mensagem completa, corrija a causa e rode de novo. Não reescreva arquivos inteiros por palpite.
 - Prefira a solução mais simples que cumpra o critério de aceite.
+- Todos os planos devem ser feitos pensados para execução no Haiku: passos curtos, arquivo e linha citados, comando de aceite exato e nenhuma decisão de arquitetura deixada para quem executa.
 
 ## Aviso legal
 A interface web deve exibir um aviso: enviar apenas músicas próprias ou com autorização.
