@@ -27,10 +27,15 @@ def check_audio(audio: object, errors: list[str]) -> float | None:
     bpm = audio.get("bpm")
     if not is_num(bpm) or bpm <= 0:
         errors.append("audio.bpm deve ser um número maior que zero")
+    beats = audio.get("beats")  # opcional: lista de batidas em segundos
+    if beats is not None and not (isinstance(beats, list) and all(is_num(b) for b in beats) and beats == sorted(beats)):
+        errors.append("audio.beats deve ser uma lista de números em ordem crescente")
     duration = audio.get("duration")
     if not is_num(duration) or duration <= 0:
         errors.append("audio.duration deve ser um número maior que zero")
         return None
+    if isinstance(beats, list) and any(is_num(b) and not 0 <= b <= duration + END_TOLERANCE for b in beats):
+        errors.append("audio.beats precisa estar dentro da duração do áudio")
     return float(duration)
 
 

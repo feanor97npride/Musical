@@ -55,6 +55,7 @@ def test_run_com_cortes_renderiza_um_corte_por_vez(tmp_path, monkeypatch):
     out.mkdir(parents=True)
     (out / "song.json").write_text(json.dumps(data), encoding="utf-8")
     monkeypatch.setattr(pipeline, "_separate", lambda job: None)
+    monkeypatch.setattr(pipeline, "_beats", lambda job: None)
     monkeypatch.setattr(pipeline, "_theme", lambda job: None)
     monkeypatch.setattr(pipeline, "_props", lambda job: None)
     rendered = []

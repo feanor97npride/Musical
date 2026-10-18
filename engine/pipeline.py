@@ -6,23 +6,23 @@ import shutil
 import subprocess
 import sys
 import time
-from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
 
 from engine import align, separate, theme
+from engine.audio import beats
 from engine.cuts import plan_cuts
 from engine.lyrics import flat_text
 from engine.names import make_slug, variant_name
 from engine.props import build_props, parse_clip
 from engine.schema import validate_song
+from engine.steps import StepError, run_step
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "output"
 RENDERER = ROOT / "renderer"
-TOTAL_STEPS = 5
 
 
 @dataclass
@@ -49,13 +49,6 @@ class Job:
         return self.out / f"video-{self.variant}.mp4"
 
 
-class StepError(Exception):
-    def __init__(self, label: str, cause: Exception) -> None:
-        super().__init__(f"etapa '{label}' falhou: {cause}")
-        self.label = label
-        self.cause = cause
-
-
 def _write_song(path: Path, song: dict) -> None:
     errors = validate_song(song)
     if errors:
@@ -78,6 +71,15 @@ def _align(job: Job) -> str | None:
     song = align.align(job.args.audio, job.lyrics, job.out, job.args.language,
                        job.args.model, not job.args.no_separate)
     _write_song(job.song, song.to_dict())
+    return None
+
+
+def _beats(job: Job) -> str | None:
+    song = json.loads(job.song.read_text(encoding="utf-8"))
+    if song["audio"].get("beats") is not None and not job.args.force:
+        return "pulado (cache)"
+    song["audio"]["beats"] = beats(job.args.audio)
+    _write_song(job.song, song)
     return None
 
 
@@ -132,17 +134,6 @@ def _render(job: Job) -> str | None:
     return None
 
 
-def _step(number: int, label: str, action: Callable[[], str | None]) -> None:
-    print(f"[{number}/{TOTAL_STEPS}] {label}... ", end="", flush=True)
-    began = time.monotonic()
-    try:
-        note = action()
-    except Exception as error:
-        print("falhou")
-        raise StepError(label, error) from error
-    print(note or f"ok ({time.monotonic() - began:.0f} s)")
-
-
 def run(args: argparse.Namespace) -> int:
     began = time.monotonic()
     lyrics = args.lyrics.read_text(encoding="utf-8")
@@ -150,14 +141,15 @@ def run(args: argparse.Namespace) -> int:
     job.out.mkdir(parents=True, exist_ok=True)
     print(f"pasta: {job.out}")
     try:
-        _step(1, "Separando vocais", lambda: _separate(job))
-        _step(2, "Alinhando letra", lambda: _align(job))
-        _step(3, "Gerando tema", lambda: _theme(job))
+        run_step(1, "Separando vocais", lambda: _separate(job))
+        run_step(2, "Alinhando letra", lambda: _align(job))
+        run_step(3, "Achando batidas", lambda: _beats(job))
+        run_step(4, "Gerando tema", lambda: _theme(job))
         jobs = _cut_jobs(job) if args.cuts else [job]  # o song.json já existe aqui: o alinhamento acabou
-        _step(4, "Montando props", lambda: _props_all(jobs))
+        run_step(5, "Montando props", lambda: _props_all(jobs))
         for number, item in enumerate(jobs, 1):
             label = "Renderizando vídeo" if len(jobs) == 1 else f"Renderizando corte {number} de {len(jobs)}"
-            _step(5, label, lambda item=item: _render(item))
+            run_step(6, label, lambda item=item: _render(item))
     except StepError as error:
         print(f"erro: {error}", file=sys.stderr)
         return 1

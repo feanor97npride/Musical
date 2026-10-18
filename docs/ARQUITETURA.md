@@ -79,7 +79,7 @@ Mapeamento de seções: Verso/Verse → `verse`, Refrão/Chorus/Final Chorus →
 {
   "version": 1,
   "language": "pt",
-  "audio": { "file": "musica.mp3", "duration": 187.4, "bpm": 96.0 },
+  "audio": { "file": "musica.mp3", "duration": 187.4, "bpm": 96.0, "beats": [0.41, 1.03, 1.65] },
   "lines": [
     {
       "id": 0,
@@ -102,6 +102,7 @@ Regras que `validate_song()` verifica:
 - `version == 1`; `lines` não vazio; ids sequenciais a partir de 0.
 - Tempos em segundos (float), com `0 <= start < end <= audio.duration` (tolerância de 0,05 s no fim).
 - `audio.bpm` é número maior que zero.
+- `audio.beats` é opcional: lista de tempos das batidas, em segundos, em ordem crescente e dentro da duração. O passo "Achando batidas" do pipeline grava esse campo.
 - Dentro de uma linha, palavras em ordem, com `start` não decrescente e `end >= start`.
 - `line.start` = início da primeira palavra e `line.end` = fim da última.
 - Entre linhas, `start` da próxima ≥ `start` da anterior.
