@@ -101,13 +101,17 @@ def job_status(job_id: str) -> dict:
 
 
 @app.get("/jobs/{job_id}/video", dependencies=[Depends(_check_token)])
-def job_video(job_id: str, n: int = 0) -> FileResponse:
+def job_video(job_id: str, n: int | None = None) -> FileResponse:
     job = _find(job_id)
     if job.status != "done" or job.video is None:
         raise HTTPException(409, "o vídeo ainda não está pronto")
-    if not 0 <= n < len(job.videos):  # só os arquivos da lista do job; o cliente não escolhe caminho
+    if n is None:
+        if len(job.ready_videos) > 1:
+            raise HTTPException(400, "este job tem cortes: informe o número do corte em n")
+        n = 0
+    if not 0 <= n < len(job.ready_videos):  # só os arquivos da lista do job; o cliente não escolhe caminho
         raise HTTPException(404, "corte não encontrado")
-    return FileResponse(job.videos[n], media_type="video/mp4")
+    return FileResponse(job.ready_videos[n], media_type="video/mp4")
 
 
 app.mount("/", StaticFiles(directory=STATIC, html=True), name="static")

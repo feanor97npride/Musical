@@ -12,6 +12,14 @@ MP3 = ("musica.mp3", b"ID3fake", "audio/mpeg")
 CORTES_SONG = {"audio": {"duration": 100.0}, "lines": [{"start": i * 5.0, "end": i * 5.0 + 4.0} for i in range(18)]}
 
 
+def gerar_cortes(job):
+    job.video.parent.mkdir(parents=True)
+    (job.video.parent / "song.json").write_text(json.dumps(CORTES_SONG), encoding="utf-8")
+    for path in job.videos:  # os mesmos nomes que o pipeline grava
+        path.write_bytes(b"mp4 " + path.name.encode())
+    return 0
+
+
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setattr(jobs, "UPLOADS", tmp_path / "uploads")
@@ -66,14 +74,7 @@ def test_cortes_chegam_ao_comando(tmp_path, monkeypatch):
 
 
 def test_status_lista_os_cortes_e_baixa_um_por_vez(client, monkeypatch):
-    def fake_pipeline(job):
-        job.video.parent.mkdir(parents=True)
-        (job.video.parent / "song.json").write_text(json.dumps(CORTES_SONG), encoding="utf-8")
-        for path in job.videos:  # os mesmos nomes que o pipeline grava
-            path.write_bytes(b"mp4 " + path.name.encode())
-        return 0
-
-    monkeypatch.setattr(jobs, "run_pipeline", fake_pipeline)
+    monkeypatch.setattr(jobs, "run_pipeline", gerar_cortes)
     job_id = send(client, cuts="30").json()["id"]
     names = wait_for(client, job_id, "done")["videos"]
     assert len(names) == 3
@@ -82,3 +83,19 @@ def test_status_lista_os_cortes_e_baixa_um_por_vez(client, monkeypatch):
     assert response.status_code == 200
     assert response.content == b"mp4 " + names[1].encode()
     assert client.get(f"/jobs/{job_id}/video", params={"n": 3}).status_code == 404
+
+
+def test_video_sem_numero_em_job_de_cortes_e_recusado(client, monkeypatch):
+    monkeypatch.setattr(jobs, "run_pipeline", gerar_cortes)
+    job_id = send(client, cuts="30").json()["id"]
+    wait_for(client, job_id, "done")
+    assert client.get(f"/jobs/{job_id}/video").status_code == 400
+
+
+def test_lista_de_cortes_fica_mesmo_sem_song_json(client, monkeypatch):
+    monkeypatch.setattr(jobs, "run_pipeline", gerar_cortes)
+    job_id = send(client, cuts="30").json()["id"]
+    names = wait_for(client, job_id, "done")["videos"]
+    (web_app.queue.jobs[job_id].video.parent / "song.json").unlink()
+    assert wait_for(client, job_id, "done")["videos"] == names
+    assert client.get(f"/jobs/{job_id}/video", params={"n": 0}).status_code == 200

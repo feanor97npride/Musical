@@ -7,7 +7,7 @@ import subprocess
 import sys
 import threading
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from engine.cuts import plan_cuts
@@ -33,6 +33,7 @@ class Job:
     stage: str = "Na fila"
     message: str = ""
     cuts: int | None = None  # segundos por corte; None = um vídeo só
+    ready_videos: list[Path] = field(default_factory=list)  # guardados quando o job termina
 
     @property
     def lyrics(self) -> Path:
@@ -61,7 +62,7 @@ class Job:
     def to_dict(self) -> dict:
         data = {"status": self.status, "stage": self.stage, "message": self.message}
         if self.status == "done":
-            data["videos"] = [path.name for path in self.videos]
+            data["videos"] = [path.name for path in self.ready_videos]
         return data
 
 
@@ -117,6 +118,8 @@ class JobQueue:
         try:
             code = run_pipeline(job)
             ready = code == 0 and all(path.exists() for path in job.videos)  # lê o song.json dos cortes
+            if ready:
+                job.ready_videos = job.videos  # guarda a lista: depois o song.json pode não estar mais lá
         except Exception as error:  # a pipeline nem chegou a rodar, ou o song.json não está lá
             code, ready, job.message = 1, False, str(error)
         if ready:
