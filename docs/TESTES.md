@@ -77,4 +77,4 @@ Registre os resultados na tabela de baixo.
   - Quadros iguais nas 3 repetições (`framemd5`).
   - Isolamento: gradiente antigo com partículas novas: 26,2 s de média (+2%). Gradiente novo com partículas antigas: 30,3 s (+19%). O custo está no gradiente.
   - Tentativa descartada: gradiente em um só elemento, com cores transparentes no lugar de camadas com opacidade: 33,5 s de média (+31%). Mais lenta, por isso não foi para o repositório.
-- Render da música inteira com a Fase 3: não medido. Estimativa: 539 s × 1,23 ≈ 11 minutos na máquina de 4 vCPU.
+- Render da música inteira com as animações (commit `5ffff54`, estilo karaokê, máquina de 4 vCPU): 643 s (10 min 43 s), 7277 quadros. Arquivo de 171,9 MB, cerca de 5,7 Mbps. O vídeo anterior desta música tinha 125,6 MB (cerca de 4,1 Mbps). A medição antiga de 539 s era de outro código e, pelo registro, de outro estilo, então a comparação é aproximada.
