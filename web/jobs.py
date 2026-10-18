@@ -125,5 +125,5 @@ class JobQueue:
         if ready:
             job.status, job.stage, job.message = "done", "Concluído", ""
         else:
+            job.message = job.message or f"a pipeline terminou com código {code}"  # antes do status: o polling para em error
             job.status = "error"
-            job.message = job.message or f"a pipeline terminou com código {code}"

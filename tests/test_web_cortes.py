@@ -5,6 +5,8 @@ import time
 import pytest
 from fastapi.testclient import TestClient
 
+from engine.cuts import plan_cuts
+from engine.names import variant_name
 from web import app as web_app
 from web import jobs
 
@@ -15,7 +17,8 @@ CORTES_SONG = {"audio": {"duration": 100.0}, "lines": [{"start": i * 5.0, "end":
 def gerar_cortes(job):
     job.video.parent.mkdir(parents=True)
     (job.video.parent / "song.json").write_text(json.dumps(CORTES_SONG), encoding="utf-8")
-    for path in job.videos:  # os mesmos nomes que o pipeline grava
+    for clip in plan_cuts(CORTES_SONG, 30.0):  # nomes calculados aqui, sem depender de Job.videos
+        path = job.video.parent / f"video-{variant_name('karaoke', 'gradient', clip)}.mp4"
         path.write_bytes(b"mp4 " + path.name.encode())
     return 0
 

@@ -92,12 +92,16 @@ function showCuts(id, names) {
 
 // o download passa pelo fetch para levar a senha no cabeçalho; um link comum não levaria
 async function downloadCut(id, index, name) {
-  const response = await api(`/jobs/${id}/video?n=${index}`);
-  if (!response.ok) return failure(response);
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(await response.blob());
-  link.download = name;
-  link.click();
+  try {
+    const response = await api(`/jobs/${id}/video?n=${index}`);
+    if (!response.ok) return failure(response);
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(await response.blob());
+    link.download = name;
+    link.click();
+  } catch (error) {
+    show("Não consegui baixar o corte. Confira a conexão com o servidor.", true);
+  }
 }
 
 async function poll(id) {
@@ -146,13 +150,11 @@ form.addEventListener("submit", async (event) => {
 // prévia: envia o mesmo formulário com o trecho de 0 a 30 s; o FormData é montado na hora do envio,
 // então dá para limpar o trecho logo em seguida e um envio normal não sai com 30 s por engano
 preview.addEventListener("click", () => {
-  const cuts = document.getElementById("cuts");
-  const savedCuts = cuts.value;
+  const fields = ["cuts", "clip_start", "clip_end"].map((id) => document.getElementById(id));
+  const saved = fields.map((field) => field.value);
   document.getElementById("clip_start").value = "0";
   document.getElementById("clip_end").value = "30";
-  cuts.value = ""; // prévia é um trecho só: não junta com cortes
+  document.getElementById("cuts").value = ""; // prévia é um trecho só: não junta com cortes
   form.requestSubmit();
-  document.getElementById("clip_start").value = "";
-  document.getElementById("clip_end").value = "";
-  cuts.value = savedCuts;
+  fields.forEach((field, index) => { field.value = saved[index]; }); // devolve o que o usuário tinha digitado
 });
