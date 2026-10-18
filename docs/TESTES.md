@@ -67,3 +67,14 @@ Registre os resultados na tabela de baixo.
   - Diferença de +8%, abaixo do limite de 20% proposto no plano.
 - Determinismo: as 3 repetições da aurora deram quadros de vídeo idênticos (`framemd5`).
 - Visual: legenda branca legível sobre a aurora (quadro em 22,5 s de um trecho de 14–24 s).
+
+## Animações (Plano 5)
+- Batidas (Fase 1): na música de teste, 555 batidas (bpm 143,55, duração 242,6 s). A primeira em 0,163 s e a última em 237,331 s. Esperado ~580 pelo bpm: o método acha cerca de 4% menos batidas.
+- Legendas (Fase 2): render de 10 s do trecho 14–24 s, estilo highlight. Três quadros conferidos a olho: entrada, meio e saída de um verso. Sem medição de tempo separada.
+- Fundo (Fase 3), 10 s, estilo oneword, gradiente, 3 repetições cada, na máquina de 4 vCPU:
+  - antes da fase (referência): 26,2 s, 25,5 s e 25,0 s (média 25,6 s);
+  - versão entregue (commit `a2fe106`): 30,7 s, 31,3 s e 32,1 s (média 31,4 s), **+23%**. Acima do limite de +20%; o usuário decidiu manter.
+  - Quadros iguais nas 3 repetições (`framemd5`).
+  - Isolamento: gradiente antigo com partículas novas: 26,2 s de média (+2%). Gradiente novo com partículas antigas: 30,3 s (+19%). O custo está no gradiente.
+  - Tentativa descartada: gradiente em um só elemento, com cores transparentes no lugar de camadas com opacidade: 33,5 s de média (+31%). Mais lenta, por isso não foi para o repositório.
+- Render da música inteira com a Fase 3: não medido. Estimativa: 539 s × 1,23 ≈ 11 minutos na máquina de 4 vCPU.

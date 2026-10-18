@@ -117,7 +117,7 @@ Tarefa:
 1. renderer/src/backgrounds/Gradient.tsx: gradiente animado lento usando theme.palette (ou paleta padrão). Deve usar o frame do Remotion para animar. Nada de CSS animation ou setTimeout.
 2. renderer/src/backgrounds/Particles.tsx: partículas simples (posições determinísticas a partir de um gerador pseudoaleatório com semente fixa, para o render ser reproduzível).
 3. Pulso sutil na batida usando audio.bpm (escala ou brilho com variação de poucos por cento).
-4. Intensidade por seção: quando a linha ativa tem section == "chorus", aumente brilho, velocidade e número de partículas.
+4. Intensidade por seção: quando a linha ativa tem section == "chorus", aumente brilho, tamanho e visibilidade das partículas (a velocidade não muda, para não dar salto). Atualizado no Plano 5: ver ARQUITETURA.md, "Regras do renderer".
 5. Estilos de legenda em renderer/src/subtitles/:
    - Highlight.tsx: o verso inteiro visível, palavra atual em cor de destaque.
    - OneWord.tsx: uma palavra por vez, grande, no centro da área segura.

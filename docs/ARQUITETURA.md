@@ -143,8 +143,9 @@ Regras que `validate_song()` verifica:
 - Linha ativa: a que contém o instante atual. Se não houver linha ativa por mais de 0,5 s, não mostrar legenda.
 - Palavra atual: a que contém o instante atual dentro da linha ativa.
 - Área segura: margem de 12% no topo e 22% embaixo; legendas ficam dentro dela.
-- `section == "chorus"` aumenta a intensidade visual (brilho, movimento, escala).
-- Pulso na batida usando `audio.bpm`, de forma sutil.
+- Legenda: o verso entra subindo e aumentando em 0,25 s e sai desvanecendo nos últimos 0,25 s. A palavra atual cresce até 5% em 0,18 s (`Highlight` e `OneWord`).
+- `section == "chorus"` aumenta a intensidade visual, sem salto (entra e sai em 0,6 s): o brilho do fundo sobe 12%, o halo cresce, as partículas ficam maiores e mais visíveis, e a legenda fica 3% maior. A velocidade não muda, para não dar salto.
+- Pulso na batida: usa `audio.beats` (batidas reais) quando existe, com pico de 3% de brilho que decai em menos de 0,3 s. Sem `audio.beats`, usa a grade do `audio.bpm` contada desde o tempo zero.
 
 ## CLI
 - `python -m engine.align --audio A --lyrics L --out O [--model small] [--no-separate] [--language pt]`
