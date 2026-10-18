@@ -9,7 +9,8 @@ import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
-from engine.pipeline import OUTPUT, ROOT, clean_name, make_slug, variant_name
+from engine.names import clean_name, make_slug, variant_name
+from engine.pipeline import OUTPUT, ROOT
 
 UPLOADS = ROOT / "output" / "web"
 STAGE_LINE = re.compile(r"^\[\d/\d\] (.+?)\.\.\.")

@@ -1,14 +1,11 @@
 # CLI de ponta a ponta: MP3 + letra → output/<slug>/video-<variante>.mp4, com cache por etapa.
 import argparse
-import hashlib
 import json
 import os
-import re
 import shutil
 import subprocess
 import sys
 import time
-import unicodedata
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,7 +13,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from engine import align, separate, theme
+from engine.cuts import plan_cuts
 from engine.lyrics import flat_text
+from engine.names import make_slug, variant_name
 from engine.props import build_props, parse_clip
 from engine.schema import validate_song
 
@@ -55,26 +54,6 @@ class StepError(Exception):
         super().__init__(f"etapa '{label}' falhou: {cause}")
         self.label = label
         self.cause = cause
-
-
-def clean_name(name: str) -> str:
-    stem = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
-    return re.sub(r"[^a-z0-9]+", "-", stem.lower()).strip("-") or "musica"
-
-
-def make_slug(audio: Path, lyrics: str) -> str:
-    digest = hashlib.sha1(audio.read_bytes() + lyrics.encode("utf-8")).hexdigest()[:8]
-    return f"{clean_name(audio.stem)}-{digest}"
-
-
-def variant_name(style: str, background: str, clip: tuple[float, float] | None) -> str:
-    """Estilo, fundo e trecho juntos: cada combinação tem props e vídeo próprios."""
-    name = f"{style}-{background}"
-    if clip is None:
-        return name
-    # sem o int, 30.0 viraria "30.0"; com :g, 30.00001 viraria "30" e colidiria com 30.0
-    start, end = (int(value) if value.is_integer() else value for value in clip)
-    return f"{name}-{start}-{end}"
 
 
 def _write_song(path: Path, song: dict) -> None:
@@ -120,6 +99,19 @@ def _props(job: Job) -> str | None:
     return None
 
 
+def _cut_jobs(job: Job) -> list[Job]:
+    """Um job por corte: mesmo estilo e fundo, cada um com o clip do seu trecho."""
+    song = json.loads(job.song.read_text(encoding="utf-8"))
+    return [Job(argparse.Namespace(**{**vars(job.args), "clip": clip}), job.lyrics, job.out)
+            for clip in plan_cuts(song, job.args.cuts)]
+
+
+def _props_all(jobs: list[Job]) -> str | None:
+    for item in jobs:
+        _props(item)
+    return None
+
+
 def _render(job: Job) -> str | None:
     unchanged = job.props.exists() and job.props.read_text(encoding="utf-8") == job.new_props
     if unchanged and job.video.exists() and not job.args.force:
@@ -161,12 +153,17 @@ def run(args: argparse.Namespace) -> int:
         _step(1, "Separando vocais", lambda: _separate(job))
         _step(2, "Alinhando letra", lambda: _align(job))
         _step(3, "Gerando tema", lambda: _theme(job))
-        _step(4, "Montando props", lambda: _props(job))
-        _step(5, "Renderizando vídeo", lambda: _render(job))
+        jobs = _cut_jobs(job) if args.cuts else [job]  # o song.json já existe aqui: o alinhamento acabou
+        _step(4, "Montando props", lambda: _props_all(jobs))
+        for number, item in enumerate(jobs, 1):
+            label = "Renderizando vídeo" if len(jobs) == 1 else f"Renderizando corte {number} de {len(jobs)}"
+            _step(5, label, lambda item=item: _render(item))
     except StepError as error:
         print(f"erro: {error}", file=sys.stderr)
         return 1
-    print(f"vídeo: {job.video} | tempo total: {time.monotonic() - began:.0f} s")
+    for item in jobs:
+        print(f"vídeo: {item.video}")
+    print(f"tempo total: {time.monotonic() - began:.0f} s")
     return 0
 
 
@@ -178,12 +175,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--style", default="karaoke", help="highlight, oneword ou karaoke")
     parser.add_argument("--background", default="gradient", help="gradient (animado), solid ou aurora")
     parser.add_argument("--clip", type=parse_clip, default=None, help="início:fim em segundos, ex.: 30:75")
+    parser.add_argument("--cuts", type=float, default=None, help="um vídeo por corte de cerca de N segundos, ex.: 30")
     parser.add_argument("--no-separate", action="store_true", help="não separar vocais com Demucs")
     parser.add_argument("--skip-theme", action="store_true", help="não chamar a Claude API")
     parser.add_argument("--force", action="store_true", help="refazer todas as etapas")
     parser.add_argument("--model", default=os.getenv("WHISPER_MODEL", "small"))
     parser.add_argument("--language", default="pt")
-    return run(parser.parse_args(argv))
+    args = parser.parse_args(argv)
+    if args.cuts is not None and args.cuts <= 0:
+        parser.error("--cuts precisa ser maior que zero")
+    if args.cuts is not None and args.clip is not None:
+        parser.error("use --clip ou --cuts, não os dois")
+    return run(args)
 
 
 if __name__ == "__main__":
