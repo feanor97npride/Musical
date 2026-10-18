@@ -17,6 +17,7 @@ load_dotenv(ROOT / ".env")
 MAX_BYTES = 25 * 1024 * 1024
 STYLES = {"highlight", "oneword", "karaoke"}
 BACKGROUNDS = {"gradient", "solid", "aurora"}
+CUTS = {"": None, "15": 15, "30": 30, "60": 60}  # segundos por corte; vazio = um vídeo só
 STATIC = Path(__file__).resolve().parent / "static"
 # senha opcional: sem ela, qualquer um que acessa o servidor usa (uso local)
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN", "").strip()
@@ -73,7 +74,7 @@ def _find(job_id: str) -> Job:
 @app.post("/jobs", dependencies=[Depends(_check_token)])
 async def create_job(audio: UploadFile = File(...), lyrics: str = Form(""), style: str = Form("karaoke"),
                      background: str = Form("gradient"), clip_start: str = Form(""), clip_end: str = Form(""),
-                     confirm: bool = Form(False)) -> dict:
+                     cuts: str = Form(""), confirm: bool = Form(False)) -> dict:
     if not confirm:
         raise HTTPException(400, "confirme que a música é sua ou que você tem autorização para usá-la")
     if not (audio.filename or "").lower().endswith(".mp3"):
@@ -84,8 +85,13 @@ async def create_job(audio: UploadFile = File(...), lyrics: str = Form(""), styl
         raise HTTPException(400, "estilo de legenda desconhecido")
     if background not in BACKGROUNDS:
         raise HTTPException(400, "fundo desconhecido")
+    if cuts not in CUTS:
+        raise HTTPException(400, "duração de corte desconhecida")
     clip = _clip(clip_start, clip_end)
-    job = queue.create(audio.filename or "musica.mp3", await _read_limited(audio), lyrics, style, background, clip)
+    if CUTS[cuts] and clip:
+        raise HTTPException(400, "use trecho ou cortes, não os dois")
+    job = queue.create(audio.filename or "musica.mp3", await _read_limited(audio), lyrics, style, background, clip,
+                       CUTS[cuts])
     return {"id": job.id}
 
 
@@ -95,11 +101,13 @@ def job_status(job_id: str) -> dict:
 
 
 @app.get("/jobs/{job_id}/video", dependencies=[Depends(_check_token)])
-def job_video(job_id: str) -> FileResponse:
+def job_video(job_id: str, n: int = 0) -> FileResponse:
     job = _find(job_id)
     if job.status != "done" or job.video is None:
         raise HTTPException(409, "o vídeo ainda não está pronto")
-    return FileResponse(job.video, media_type="video/mp4")
+    if not 0 <= n < len(job.videos):  # só os arquivos da lista do job; o cliente não escolhe caminho
+        raise HTTPException(404, "corte não encontrado")
+    return FileResponse(job.videos[n], media_type="video/mp4")
 
 
 app.mount("/", StaticFiles(directory=STATIC, html=True), name="static")

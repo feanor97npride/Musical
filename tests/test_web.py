@@ -106,6 +106,7 @@ def test_pagina_carrega_o_script_separado(client):
     assert client.get("/app.js").status_code == 200
 
 
+
 def test_pipeline_recebe_o_fundo_na_linha_de_comando(tmp_path, monkeypatch):
     comandos = []
 

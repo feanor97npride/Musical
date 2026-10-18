@@ -52,7 +52,8 @@ async function failure(response) {
   show(body.detail || "O servidor respondeu com erro " + response.status, true);
 }
 
-async function showVideo(id) {
+async function showVideo(id, videos) {
+  if (videos.length > 1) return showCuts(id, videos);
   const response = await api(`/jobs/${id}/video`);
   if (!response.ok) return failure(response);
   const url = URL.createObjectURL(await response.blob());
@@ -71,6 +72,34 @@ async function showVideo(id) {
   output.append(video, link);
 }
 
+function showCuts(id, names) {
+  finish();
+  show(names.length + " cortes prontos");
+  detail.textContent = "";
+  output.innerHTML = "";
+  output.append(...names.map((name, index) => {
+    const link = document.createElement("a");
+    link.className = "download";
+    link.href = "#";
+    link.textContent = `Baixar corte ${index + 1} de ${names.length}`;
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      downloadCut(id, index, name);
+    });
+    return link;
+  }));
+}
+
+// o download passa pelo fetch para levar a senha no cabeçalho; um link comum não levaria
+async function downloadCut(id, index, name) {
+  const response = await api(`/jobs/${id}/video?n=${index}`);
+  if (!response.ok) return failure(response);
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(await response.blob());
+  link.download = name;
+  link.click();
+}
+
 async function poll(id) {
   try {
     const response = await api(`/jobs/${id}`);
@@ -82,7 +111,7 @@ async function poll(id) {
       detail.textContent = job.message;
     } else if (job.status === "done") {
       clearInterval(timer);
-      await showVideo(id);
+      await showVideo(id, job.videos);
     } else {
       show(job.stage + "...");
       detail.textContent = job.message;
@@ -117,9 +146,13 @@ form.addEventListener("submit", async (event) => {
 // prévia: envia o mesmo formulário com o trecho de 0 a 30 s; o FormData é montado na hora do envio,
 // então dá para limpar o trecho logo em seguida e um envio normal não sai com 30 s por engano
 preview.addEventListener("click", () => {
+  const cuts = document.getElementById("cuts");
+  const savedCuts = cuts.value;
   document.getElementById("clip_start").value = "0";
   document.getElementById("clip_end").value = "30";
+  cuts.value = ""; // prévia é um trecho só: não junta com cortes
   form.requestSubmit();
   document.getElementById("clip_start").value = "";
   document.getElementById("clip_end").value = "";
+  cuts.value = savedCuts;
 });

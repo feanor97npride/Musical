@@ -1,4 +1,5 @@
 # Fila de jobs em memória: um por vez, cada um roda a pipeline num subprocess e lê o progresso do stdout.
+import json
 import os
 import queue
 import re
@@ -9,6 +10,7 @@ import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
+from engine.cuts import plan_cuts
 from engine.names import clean_name, make_slug, variant_name
 from engine.pipeline import OUTPUT, ROOT
 
@@ -30,10 +32,20 @@ class Job:
     status: str = "queued"
     stage: str = "Na fila"
     message: str = ""
+    cuts: int | None = None  # segundos por corte; None = um vídeo só
 
     @property
     def lyrics(self) -> Path:
         return self.folder / "lyrics.txt"
+
+    @property
+    def videos(self) -> list[Path]:
+        """Arquivos prontos do job: um por corte, ou o vídeo único."""
+        if not self.cuts:
+            return [self.video]
+        song = json.loads((self.video.parent / "song.json").read_text(encoding="utf-8"))
+        return [self.video.parent / f"video-{variant_name(self.style, self.background, clip)}.mp4"
+                for clip in plan_cuts(song, self.cuts)]
 
     def read_line(self, line: str) -> None:
         stage = STAGE_LINE.match(line)
@@ -47,7 +59,10 @@ class Job:
             self.message = f"quadro {frame.group(1)} de {frame.group(2)}"
 
     def to_dict(self) -> dict:
-        return {"status": self.status, "stage": self.stage, "message": self.message}
+        data = {"status": self.status, "stage": self.stage, "message": self.message}
+        if self.status == "done":
+            data["videos"] = [path.name for path in self.videos]
+        return data
 
 
 def run_pipeline(job: Job) -> int:
@@ -55,6 +70,8 @@ def run_pipeline(job: Job) -> int:
                "--lyrics", str(job.lyrics), "--style", job.style, "--background", job.background]
     if job.clip:
         command += ["--clip", f"{job.clip[0]}:{job.clip[1]}"]
+    if job.cuts:
+        command += ["--cuts", str(job.cuts)]
     # no Windows o filho escreve em cp1252 por padrão; forçamos UTF-8 para o texto com acento não quebrar a leitura
     process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                                encoding="utf-8", errors="replace",
@@ -71,11 +88,12 @@ class JobQueue:
         self._worker: threading.Thread | None = None
 
     def create(self, filename: str, audio: bytes, lyrics: str, style: str, background: str,
-               clip: tuple[float, float] | None) -> Job:
+               clip: tuple[float, float] | None, cuts: int | None = None) -> Job:
         job_id = uuid.uuid4().hex
         folder = UPLOADS / job_id
         folder.mkdir(parents=True)
-        job = Job(job_id, folder, folder / f"{clean_name(Path(filename).stem)}.mp3", style, background, clip)
+        job = Job(job_id, folder, folder / f"{clean_name(Path(filename).stem)}.mp3", style, background, clip,
+                  cuts=cuts)
         job.audio.write_bytes(audio)
         job.lyrics.write_text(lyrics, encoding="utf-8", newline="")  # no Windows, sem isso cada \n vira \r\n
         # lê o arquivo de volta: o navegador manda \r\n e o pipeline normaliza, o nome da pasta tem que bater
@@ -98,9 +116,10 @@ class JobQueue:
         job.status = "running"
         try:
             code = run_pipeline(job)
-        except Exception as error:  # a pipeline nem chegou a rodar
-            code, job.message = 1, str(error)
-        if code == 0 and job.video.exists():
+            ready = code == 0 and all(path.exists() for path in job.videos)  # lê o song.json dos cortes
+        except Exception as error:  # a pipeline nem chegou a rodar, ou o song.json não está lá
+            code, ready, job.message = 1, False, str(error)
+        if ready:
             job.status, job.stage, job.message = "done", "Concluído", ""
         else:
             job.status = "error"
