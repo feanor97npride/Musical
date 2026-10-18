@@ -23,8 +23,17 @@ export const activeLine = (lines: Line[], t: number): Line | null => {
 export const activeWordIndex = (line: Line, t: number): number =>
   line.words.reduce((last, word, index) => (word.start <= t ? index : last), -1);
 
-// Pulso da batida: pico de 3% no tempo da batida e decai até a próxima.
-export const beatPulse = (t: number, bpm: number): number => {
+// Pulso da batida: pico de 3% na batida e decai depois dela. Usa as batidas reais (em segundos) quando existem;
+// sem elas, cai na grade de batida pelo bpm, contada desde o tempo zero.
+export const beatPulse = (t: number, bpm: number, beats: number[] = []): number => {
+  if (beats.length > 0) {
+    let last = -Infinity;
+    for (const beat of beats) {
+      if (beat > t) break;
+      last = beat;
+    }
+    return last === -Infinity ? 0 : 0.03 * Math.exp(-(t - last) * 8);
+  }
   if (bpm <= 0) return 0;
   const beat = ((t * bpm) / 60) % 1;
   return 0.03 * Math.exp(-beat * 8);

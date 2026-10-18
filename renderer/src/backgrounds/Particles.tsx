@@ -1,4 +1,4 @@
-// Partículas que sobem devagar. As posições vêm de uma semente fixa, então o render é sempre igual.
+// Partículas que sobem devagar e tremulam. As posições vêm de uma semente fixa, então o render é sempre igual.
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
 
 const WIDTH = 1080;
@@ -20,6 +20,7 @@ const PARTICLES = Array.from({ length: MAX }, () => ({
   y: random() * HEIGHT,
   size: 4 + random() * 8,
   speed: 40 + random() * 60,
+  phase: random() * Math.PI * 2, // cada partícula pisca em seu próprio tempo
 }));
 
 export const Particles: React.FC<{ intensity: number }> = ({ intensity }) => {
@@ -31,7 +32,8 @@ export const Particles: React.FC<{ intensity: number }> = ({ intensity }) => {
       {PARTICLES.map((p, i) => {
         const y = (((p.y - seconds * p.speed) % HEIGHT) + HEIGHT) % HEIGHT;
         // no refrão, as partículas extras entram por opacidade, sem aparecer de repente
-        const opacity = i < BASE ? 0.35 + 0.35 * intensity : 0.7 * intensity;
+        const base = i < BASE ? 0.35 + 0.35 * intensity : 0.7 * intensity;
+        const twinkle = 0.6 + 0.4 * Math.sin(seconds * 2 + p.phase);
         return (
           <div
             key={i}
@@ -43,7 +45,8 @@ export const Particles: React.FC<{ intensity: number }> = ({ intensity }) => {
               height: p.size,
               borderRadius: "50%",
               background: "#FFFFFF",
-              opacity,
+              opacity: base * twinkle,
+              transform: `scale(${1 + 0.3 * intensity})`, // cresce no refrão sem mudar a posição
             }}
           />
         );

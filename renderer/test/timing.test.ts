@@ -37,6 +37,9 @@ check(activeWordIndex(lines[0], 2.5) === 1, "palavra atual é a segunda");
 check(close(beatPulse(0, 120), 0.03), "pulso no tempo da batida é 3%");
 check(beatPulse(0.25, 120) < 0.001, "meio tempo depois da batida o pulso já decaiu");
 check(beatPulse(1, 0) === 0, "sem bpm não há pulso");
+check(close(beatPulse(0.5, 0, [0.5]), 0.03), "pulso na batida real é 3%");
+check(beatPulse(1.0, 0, [0.5]) < 0.001, "meio segundo depois da batida real o pulso já decaiu");
+check(beatPulse(0.2, 120, [0.5]) === 0, "antes da primeira batida real não há pulso");
 check(clamp01(1.5) === 1 && clamp01(-1) === 0, "clamp01 limita entre 0 e 1");
 
 // refrão: entra e sai em rampa de 0,6 s, sem salto

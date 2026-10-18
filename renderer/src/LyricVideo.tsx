@@ -19,7 +19,7 @@ export const LyricVideo: React.FC<LyricProps> = ({ song, audioFile, style, clip 
   const line = activeLine(song.lines, t);
   const current = line ? activeWordIndex(line, t) : -1;
   const intensity = chorusWeight(song.lines, t);
-  const pulse = beatPulse(t, song.audio.bpm);
+  const pulse = beatPulse(t, song.audio.bpm, song.audio.beats);
   const palette = song.theme?.palette ?? DEFAULT_PALETTE;
   const Subtitle = SUBTITLES[style.subtitle];
 

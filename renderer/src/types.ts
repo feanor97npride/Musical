@@ -24,7 +24,7 @@ export type Theme = {
 export type Song = {
   version: number;
   language: string;
-  audio: { file: string; duration: number; bpm: number };
+  audio: { file: string; duration: number; bpm: number; beats?: number[] };
   lines: Line[];
   theme: Theme | null;
 };
