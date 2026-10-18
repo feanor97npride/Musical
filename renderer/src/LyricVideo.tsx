@@ -4,6 +4,7 @@ import { Background } from "./backgrounds/Background";
 import { fontFor } from "./fonts";
 import { Highlight } from "./subtitles/Highlight";
 import { Karaoke } from "./subtitles/Karaoke";
+import { Motion } from "./subtitles/Motion";
 import { OneWord } from "./subtitles/OneWord";
 import { activeLine, activeWordIndex, beatPulse, chorusWeight } from "./timing";
 import type { LyricProps } from "./types";
@@ -32,7 +33,9 @@ export const LyricVideo: React.FC<LyricProps> = ({ song, audioFile, style, clip 
           durationInFrames={clip ? Math.round((clip.end - clip.start) * fps) : undefined}
         />
       )}
-      <Subtitle line={line} current={current} t={t} font={fontFor(song.theme?.font)} />
+      <Motion line={line} t={t} intensity={intensity}>
+        <Subtitle line={line} current={current} t={t} font={fontFor(song.theme?.font)} />
+      </Motion>
     </AbsoluteFill>
   );
 };
