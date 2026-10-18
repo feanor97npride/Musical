@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from engine import align, separate, theme
 from engine.audio import beats
 from engine.cuts import plan_cuts
+from engine.export import export_all
 from engine.lyrics import flat_text
 from engine.names import make_slug, variant_name
 from engine.props import build_props, parse_clip
@@ -150,11 +151,12 @@ def run(args: argparse.Namespace) -> int:
         for number, item in enumerate(jobs, 1):
             label = "Renderizando vídeo" if len(jobs) == 1 else f"Renderizando corte {number} de {len(jobs)}"
             run_step(6, label, lambda item=item: _render(item))
+        for item in jobs:
+            print(f"vídeo: {item.video}")  # antes da exportação: um erro nela não esconde onde está o vídeo
+        run_step(7, "Exportando para postar", lambda: export_all(args, [(item.video, item.variant) for item in jobs]))
     except StepError as error:
         print(f"erro: {error}", file=sys.stderr)
         return 1
-    for item in jobs:
-        print(f"vídeo: {item.video}")
     print(f"tempo total: {time.monotonic() - began:.0f} s")
     return 0
 
@@ -166,6 +168,7 @@ def build_options() -> argparse.ArgumentParser:
     parser.add_argument("--background", default="gradient", help="gradient (animado), solid ou aurora")
     parser.add_argument("--clip", type=parse_clip, default=None, help="início:fim em segundos, ex.: 30:75")
     parser.add_argument("--cuts", type=float, default=None, help="um vídeo por corte de cerca de N segundos, ex.: 30")
+    parser.add_argument("--export", action="store_true", help="também gera uma cópia pronta para postar em para-postar/")
     parser.add_argument("--no-separate", action="store_true", help="não separar vocais com Demucs")
     parser.add_argument("--skip-theme", action="store_true", help="não chamar a Claude API")
     parser.add_argument("--force", action="store_true", help="refazer todas as etapas")
@@ -179,6 +182,7 @@ def check_options(parser: argparse.ArgumentParser, args: argparse.Namespace) -> 
         parser.error("--cuts precisa ser maior que zero")
     if args.cuts is not None and args.clip is not None:
         parser.error("use --clip ou --cuts, não os dois")
+    if args.export and shutil.which("ffmpeg") is None: parser.error("--export precisa do ffmpeg no PATH")
 
 
 def main(argv: list[str] | None = None) -> int:

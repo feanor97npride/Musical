@@ -2,7 +2,7 @@
 import time
 from collections.abc import Callable
 
-TOTAL_STEPS = 6
+TOTAL_STEPS = 7
 
 
 class StepError(Exception):
