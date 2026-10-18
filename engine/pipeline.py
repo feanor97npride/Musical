@@ -159,11 +159,9 @@ def run(args: argparse.Namespace) -> int:
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
-    load_dotenv(ROOT / ".env")
-    parser = argparse.ArgumentParser(description="Gera o vídeo a partir de MP3 + letra")
-    parser.add_argument("--audio", type=Path, required=True)
-    parser.add_argument("--lyrics", type=Path, required=True)
+def build_options() -> argparse.ArgumentParser:
+    """Opções que valem para cada música (sem o áudio e a letra). O lote reaproveita esta lista."""
+    parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--style", default="karaoke", help="highlight, oneword ou karaoke")
     parser.add_argument("--background", default="gradient", help="gradient (animado), solid ou aurora")
     parser.add_argument("--clip", type=parse_clip, default=None, help="início:fim em segundos, ex.: 30:75")
@@ -173,11 +171,23 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--force", action="store_true", help="refazer todas as etapas")
     parser.add_argument("--model", default=os.getenv("WHISPER_MODEL", "small"))
     parser.add_argument("--language", default="pt")
-    args = parser.parse_args(argv)
+    return parser
+
+
+def check_options(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     if args.cuts is not None and args.cuts <= 0:
         parser.error("--cuts precisa ser maior que zero")
     if args.cuts is not None and args.clip is not None:
         parser.error("use --clip ou --cuts, não os dois")
+
+
+def main(argv: list[str] | None = None) -> int:
+    load_dotenv(ROOT / ".env")
+    parser = argparse.ArgumentParser(description="Gera o vídeo a partir de MP3 + letra", parents=[build_options()])
+    parser.add_argument("--audio", type=Path, required=True)
+    parser.add_argument("--lyrics", type=Path, required=True)
+    args = parser.parse_args(argv)
+    check_options(parser, args)
     return run(args)
 
 
