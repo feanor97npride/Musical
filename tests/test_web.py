@@ -101,6 +101,11 @@ def test_fundo_aurora_e_aceito_pela_web(client, monkeypatch):
     assert web_app.queue.jobs[job_id].video.name == "video-karaoke-aurora.mp4"
 
 
+def test_pagina_carrega_o_script_separado(client):
+    assert 'src="app.js"' in client.get("/").text
+    assert client.get("/app.js").status_code == 200
+
+
 def test_pipeline_recebe_o_fundo_na_linha_de_comando(tmp_path, monkeypatch):
     comandos = []
 

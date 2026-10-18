@@ -50,7 +50,7 @@ Cada etapa lê e escreve arquivos em `output/<slug>/`. Se o arquivo de saída da
 │       └── subtitles/     # Highlight, OneWord, Karaoke
 ├── web/
 │   ├── app.py         # FastAPI
-│   └── static/index.html
+│   └── static/           # index.html (formulário) e app.js (script da página)
 ├── tests/
 ├── samples/           # áudio e letras de teste (áudio fora do Git)
 └── output/<slug>/     # artefatos de cada job
@@ -180,4 +180,4 @@ Regras que `validate_song()` verifica:
 - Se o servidor ou o túnel cair, o iniciador reinicia o processo; se cair mais de 5 vezes em 1 minuto, desiste e avisa.
 - `python -m web.launcher --criar-atalho` cria o atalho na Área de Trabalho (sem binário novo; usa o PowerShell, sem as flags que o antivírus marca).
 - Fechar a janela pelo botão X também encerra o servidor e o túnel (no Windows, o iniciador recebe o aviso de fechamento e para tudo antes de sair). `Ctrl + C` continua funcionando.
-- Modelo de ameaça do link: a página só aceita no `#server=` o endereço fixo definido em `FIXED_SERVER` (em `web/static/index.html`), e não grava esse endereço no navegador. Mesmo assim, quem recebe um link falso pode induzir a digitação da senha num servidor alheio. Por isso a página mostra o aviso "Se você não abriu pelo iniciador, não digite a senha". Melhoria futura: prova de posse da senha (HMAC com desafio).
+- Modelo de ameaça do link: a página só aceita no `#server=` o endereço fixo definido em `FIXED_SERVER` (em `web/static/app.js`), e não grava esse endereço no navegador. Mesmo assim, quem recebe um link falso pode induzir a digitação da senha num servidor alheio. Por isso a página mostra o aviso "Se você não abriu pelo iniciador, não digite a senha". Melhoria futura: prova de posse da senha (HMAC com desafio).
