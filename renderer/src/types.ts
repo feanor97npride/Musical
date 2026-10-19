@@ -34,7 +34,7 @@ export type Clip = { start: number; end: number };
 export type LyricProps = {
   song: Song;
   audioFile: string;
-  style: { subtitle: "highlight" | "oneword" | "karaoke"; background: "solid" | "gradient" | "aurora" };
+  style: { subtitle: "highlight" | "oneword" | "karaoke"; background: "solid" | "gradient" | "aurora" | "aurora-gl" };
   clip: Clip | null;
 };
 

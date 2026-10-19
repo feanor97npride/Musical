@@ -78,3 +78,12 @@ Registre os resultados na tabela de baixo.
   - Isolamento: gradiente antigo com partículas novas: 26,2 s de média (+2%). Gradiente novo com partículas antigas: 30,3 s (+19%). O custo está no gradiente.
   - Tentativa descartada: gradiente em um só elemento, com cores transparentes no lugar de camadas com opacidade: 33,5 s de média (+31%). Mais lenta, por isso não foi para o repositório.
 - Render da música inteira com as animações (commit `5ffff54`, estilo karaokê, máquina de 4 vCPU): 643 s (10 min 43 s), 7277 quadros. Arquivo de 171,9 MB, cerca de 5,7 Mbps. O vídeo anterior desta música tinha 125,6 MB (cerca de 4,1 Mbps). A medição antiga de 539 s era de outro código e, pelo registro, de outro estilo, então a comparação é aproximada.
+
+## Fundo aurora em WebGL (`aurora-gl`)
+Mesmo desenho da aurora em DOM, num shader de tela cheia com three.js (`@remotion/three` 4.0.535). Máquina de 4 vCPU; 10 s do trecho de "O Deserto Vai Florir" (estilo karaokê), repetições por versão (3 ou 6, conforme a medição), feitas na mesma sessão de cada medição.
+- Aurora em DOM: 33, 31 e 32 s (média 32 s) em uma medição; 28, 28 e 28 s (média 28 s) em outra, feita depois.
+- Aurora WebGL: 38, 38, 39, 38, 38 e 38 s (média 38 s) na segunda medição. Na mesma janela, **+36%** em relação ao DOM. Acima do limite de +20%; o usuário decidiu manter (18/10/2026).
+- Medições de um momento anterior, com um erro de uniforme já corrigido (o tempo não era atualizado), deram 40, 39 e 40 s. Não entram no resultado.
+- Determinismo: as 3 repetições do WebGL deram quadros idênticos (`framemd5`, quadros 0, 1, 150 e 299).
+- Visual, contra a aurora em DOM: PSNR de 53,4 dB no quadro 150 e 53,9 dB no quadro 299 (acima de 40 dB, praticamente igual). Antes da calibração: 14,8 dB, com o eixo vertical invertido, e 24,6 dB, com o raio sem o canto mais distante.
+- `npm audit`: 10 vulnerabilidades altas. A mesma contagem existia antes das bibliotecas novas.

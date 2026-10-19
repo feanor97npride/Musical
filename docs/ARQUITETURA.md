@@ -135,7 +135,7 @@ Regras que `validate_song()` verifica:
 }
 ```
 - `audioFile` é relativo a `renderer/public/`.
-- `style.subtitle` ∈ {`highlight`, `oneword`, `karaoke`}; `style.background` ∈ {`solid`, `gradient`, `aurora`}.
+- `style.subtitle` ∈ {`highlight`, `oneword`, `karaoke`}; `style.background` ∈ {`solid`, `gradient`, `aurora`, `aurora-gl`}. `aurora-gl` é a mesma aurora desenhada por um shader WebGL (three.js): visual igual, custo de render maior (ver `docs/TESTES.md`).
 - `clip` pode ser `null` (música inteira). Com `clip`, o vídeo começa em `clip.start` e o tempo das legendas é deslocado de acordo.
 
 ## Regras do renderer

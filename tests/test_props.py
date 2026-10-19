@@ -55,10 +55,15 @@ def test_fundo_aurora_e_aceito(files):
     assert build_props(song, audio, background="aurora", public_audio=public)["style"]["background"] == "aurora"
 
 
+def test_fundo_aurora_gl_e_aceito(files):
+    song, audio, public = files
+    assert build_props(song, audio, background="aurora-gl", public_audio=public)["style"]["background"] == "aurora-gl"
+
+
 def test_lista_de_fundos_bate_com_o_tipo_do_renderer():
     types = (ROOT / "renderer" / "src" / "types.ts").read_text(encoding="utf-8")
-    listed = re.search(r'background: ("\w+"(?:\s*\|\s*"\w+")*)', types).group(1)
-    assert set(re.findall(r'"(\w+)"', listed)) == BACKGROUNDS
+    listed = re.search(r'background: ("[\w-]+"(?:\s*\|\s*"[\w-]+")*)', types).group(1)
+    assert set(re.findall(r'"([\w-]+)"', listed)) == BACKGROUNDS
 
 
 def test_song_invalido_e_recusado(files):

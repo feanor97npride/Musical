@@ -89,16 +89,17 @@ def test_fundo_escolhido_chega_ao_job(client, monkeypatch):
     assert web_app.queue.jobs[job_id].video.name == "video-karaoke-solid.mp4"  # cada fundo tem seu vídeo
 
 
-def test_fundo_aurora_e_aceito_pela_web(client, monkeypatch):
+@pytest.mark.parametrize("fundo", ["aurora", "aurora-gl"])
+def test_fundo_aurora_e_aceito_pela_web(client, monkeypatch, fundo):
     def fake_pipeline(job):
         job.video.parent.mkdir(parents=True)
         job.video.write_bytes(b"mp4")
         return 0
 
     monkeypatch.setattr(jobs, "run_pipeline", fake_pipeline)
-    job_id = send(client, background="aurora").json()["id"]
+    job_id = send(client, background=fundo).json()["id"]
     wait_for(client, job_id, "done")
-    assert web_app.queue.jobs[job_id].video.name == "video-karaoke-aurora.mp4"
+    assert web_app.queue.jobs[job_id].video.name == f"video-karaoke-{fundo}.mp4"
 
 
 def test_pagina_carrega_o_script_separado(client):
