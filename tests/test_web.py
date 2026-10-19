@@ -89,7 +89,7 @@ def test_fundo_escolhido_chega_ao_job(client, monkeypatch):
     assert web_app.queue.jobs[job_id].video.name == "video-karaoke-solid.mp4"  # cada fundo tem seu vídeo
 
 
-@pytest.mark.parametrize("fundo", ["aurora", "aurora-gl"])
+@pytest.mark.parametrize("fundo", ["aurora", "aurora-gl", "sunrise"])
 def test_fundo_aurora_e_aceito_pela_web(client, monkeypatch, fundo):
     def fake_pipeline(job):
         job.video.parent.mkdir(parents=True)

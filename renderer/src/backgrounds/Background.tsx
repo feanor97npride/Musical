@@ -6,15 +6,17 @@ import { Aurora } from "./Aurora";
 import { AuroraGL } from "./AuroraGL";
 import { Gradient } from "./Gradient";
 import { Particles } from "./Particles";
+import { Sunrise } from "./Sunrise";
 
 type Props = {
   kind: LyricProps["style"]["background"];
   palette: string[];
   intensity: number;
   pulse: number;
+  progress: number; // 0 no início do vídeo, 1 no fim; só o sol usa
 };
 
-export const Background: React.FC<Props> = ({ kind, palette, intensity, pulse }) => {
+export const Background: React.FC<Props> = ({ kind, palette, intensity, pulse, progress }) => {
   switch (kind) {
     case "gradient":
       return (
@@ -27,6 +29,8 @@ export const Background: React.FC<Props> = ({ kind, palette, intensity, pulse })
       return <Aurora palette={palette} intensity={intensity} pulse={pulse} />;
     case "aurora-gl":
       return <AuroraGL palette={palette} intensity={intensity} pulse={pulse} />;
+    case "sunrise":
+      return <Sunrise palette={palette} intensity={intensity} pulse={pulse} progress={progress} />;
     case "solid":
       return (
         <AbsoluteFill style={{ backgroundColor: palette[0], filter: `brightness(${lightFactor(pulse, intensity)})` }} />

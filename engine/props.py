@@ -13,7 +13,7 @@ from engine.schema import validate_song
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC_AUDIO = ROOT / "renderer" / "public" / "audio"
 SUBTITLE_STYLES = {"highlight", "oneword", "karaoke"}
-BACKGROUNDS = {"solid", "gradient", "aurora", "aurora-gl"}
+BACKGROUNDS = {"solid", "gradient", "aurora", "aurora-gl", "sunrise"}
 
 
 def build_props(song_path: Path, audio_path: Path, subtitle: str = "highlight", background: str = "gradient",
@@ -57,7 +57,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--song", type=Path, required=True)
     parser.add_argument("--audio", type=Path, required=True)
     parser.add_argument("--style", default="highlight", help="highlight, oneword ou karaoke")
-    parser.add_argument("--background", default="gradient", help="gradient, solid, aurora ou aurora-gl")
+    parser.add_argument("--background", default="gradient", help="gradient, solid, aurora, aurora-gl ou sunrise")
     parser.add_argument("--clip", type=parse_clip, default=None, help="início:fim em segundos, ex.: 30:75")
     parser.add_argument("--out", type=Path, required=True, help="caminho do props.json")
     args = parser.parse_args(argv)

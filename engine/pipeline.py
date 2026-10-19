@@ -165,7 +165,7 @@ def build_options() -> argparse.ArgumentParser:
     """Opções que valem para cada música (sem o áudio e a letra). O lote reaproveita esta lista."""
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--style", default="karaoke", help="highlight, oneword ou karaoke")
-    parser.add_argument("--background", default="gradient", help="gradient (animado), solid, aurora ou aurora-gl")
+    parser.add_argument("--background", default="gradient", help="gradient (animado), solid, aurora, aurora-gl ou sunrise")
     parser.add_argument("--clip", type=parse_clip, default=None, help="início:fim em segundos, ex.: 30:75")
     parser.add_argument("--cuts", type=float, default=None, help="um vídeo por corte de cerca de N segundos, ex.: 30")
     parser.add_argument("--export", action="store_true", help="também gera uma cópia pronta para postar em para-postar/")

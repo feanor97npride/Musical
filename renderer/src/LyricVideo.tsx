@@ -14,8 +14,9 @@ const DEFAULT_PALETTE = ["#111111", "#1B1B3A", "#3A1F4A"];
 
 export const LyricVideo: React.FC<LyricProps> = ({ song, audioFile, style, clip }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, durationInFrames } = useVideoConfig();
   const t = (clip ? clip.start : 0) + frame / fps; // tempo da música, não do vídeo
+  const progress = frame / durationInFrames; // do início ao fim do vídeo: o sol nasce no próprio vídeo, mesmo em corte
   const line = activeLine(song.lines, t);
   const current = line ? activeWordIndex(line, t) : -1;
   const intensity = chorusWeight(song.lines, t);
@@ -25,7 +26,7 @@ export const LyricVideo: React.FC<LyricProps> = ({ song, audioFile, style, clip 
 
   return (
     <AbsoluteFill>
-      <Background kind={style.background} palette={palette} intensity={intensity} pulse={pulse} />
+      <Background kind={style.background} palette={palette} intensity={intensity} pulse={pulse} progress={progress} />
       {audioFile && (
         <Audio
           src={staticFile(audioFile)}

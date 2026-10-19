@@ -87,3 +87,10 @@ Mesmo desenho da aurora em DOM, num shader de tela cheia com three.js (`@remotio
 - Determinismo: as 3 repetições do WebGL deram quadros idênticos (`framemd5`, quadros 0, 1, 150 e 299).
 - Visual, contra a aurora em DOM: PSNR de 53,4 dB no quadro 150 e 53,9 dB no quadro 299 (acima de 40 dB, praticamente igual). Antes da calibração: 14,8 dB, com o eixo vertical invertido, e 24,6 dB, com o raio sem o canto mais distante.
 - `npm audit`: 10 vulnerabilidades altas. A mesma contagem existia antes das bibliotecas novas.
+
+## Fundo sol nascendo (`sunrise`)
+Desenho em Canvas 2D; o sol sobe com o progresso do vídeo (quadro / duração). Máquina de 4 vCPU; 10 s do trecho de "O Deserto Vai Florir" (estilo karaokê, paleta do tema), 3 repetições por versão, na mesma janela de tempo.
+- Degradê (padrão): 39, 37 e 37 s (média 38 s).
+- `sunrise`: 25, 25 e 24 s (média 25 s). Nesta janela, **34% mais rápido** que o degradê.
+- Determinismo: as 3 repetições de `sunrise` deram quadros idênticos (`framemd5`, quadros 0, 150 e 270).
+- Visual: quadros em 0 s, 5 s e 9 s, conferidos a olho: o sol sobe do horizonte até o alto. A linha do horizonte é reta e dura; pode ser suavizada depois.
