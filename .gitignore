@@ -7,3 +7,4 @@ output/
 renderer/public/audio/
 __pycache__/
 .pytest_cache/
+.playwright-mcp/

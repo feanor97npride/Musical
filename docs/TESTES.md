@@ -26,7 +26,7 @@ Registre os resultados na tabela de baixo.
 
 ## Critérios
 - **Bom:** desvio de até 0,3 s em pelo menos 9 dos 10 versos.
-- **Aceitável:** desvio constante (todos adiantados ou atrasados). Resolve com `--offset`.
+- **Aceitável:** desvio constante (todos adiantados ou atrasados). Hoje não há correção automática de deslocamento; ver Plano 7, pacote 6.
 - **Falha:** desvio crescente ao longo da música ou versos inteiros no lugar errado. Investigar: letra diferente do que foi cantado, refrão abreviado, vocais não separados, modelo pequeno demais (tente `--model medium`).
 
 ## Checklist de cada vídeo

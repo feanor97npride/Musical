@@ -11,13 +11,12 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from engine.pipeline import ROOT
+from engine.props import BACKGROUNDS, SUBTITLE_STYLES as STYLES
 from engine.write_lyrics import write_lyrics
 from web.jobs import Job, JobQueue
 
 load_dotenv(ROOT / ".env")
 MAX_BYTES = 25 * 1024 * 1024
-STYLES = {"highlight", "oneword", "karaoke"}
-BACKGROUNDS = {"gradient", "solid", "aurora", "aurora-gl", "sunrise"}
 CUTS = {"": None, "15": 15, "30": 30, "60": 60}  # segundos por corte; vazio = um vídeo só
 STATIC = Path(__file__).resolve().parent / "static"
 # senha opcional: sem ela, qualquer um que acessa o servidor usa (uso local)

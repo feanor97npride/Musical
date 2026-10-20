@@ -26,11 +26,13 @@ Gera um vídeo vertical com legendas palavra por palavra (estilo TikTok) e fundo
 | `docs/PROMPTS.md` | Prompts prontos, um por fase |
 | `docs/TESTES.md` | Músicas de teste, critérios de sincronia e checklist |
 
-## Uso (quando o MVP estiver pronto)
+## Uso
 ```
 python -m engine.pipeline --audio samples/minha.mp3 --lyrics samples/minha.txt --style karaoke --clip 30:75
+python -m engine.batch --folder samples
 ```
 O vídeo sai em `output/<slug>/video-<variante>.mp4`: sem `--clip` é `video-karaoke-gradient.mp4`; com `--clip 30:75` é `video-karaoke-gradient-30-75.mp4`.
+O segundo comando processa cada par MP3 + letra da pasta. No Windows, o site e o servidor sobem com um duplo clique em `iniciar.bat`.
 
 ## Direitos autorais
 Use apenas músicas próprias ou com autorização do titular.

@@ -38,7 +38,16 @@ Cada etapa lê e escreve arquivos em `output/<slug>/`. Se o arquivo de saída da
 │   ├── align.py       # alinhamento forçado + CLI
 │   ├── theme.py       # análise de tema (Claude API)
 │   ├── props.py       # build_props()
-│   └── pipeline.py    # CLI de ponta a ponta
+│   ├── pipeline.py    # CLI de ponta a ponta
+│   ├── batch.py       # lote: cada par MP3 + letra de uma pasta
+│   ├── cuts.py        # divide a música em cortes
+│   ├── export.py      # cópia pronta para postar (ffmpeg)
+│   ├── names.py       # nomes de pastas e arquivos
+│   ├── checks.py      # regras do song.json
+│   ├── postprocess.py # ajustes dos tempos do alinhador
+│   ├── steps.py       # etapas da pipeline e progresso
+│   ├── write_lyrics.py # letra a partir de um contexto (Claude API)
+│   └── posting.py     # textos para postar (YouTube, TikTok, hashtags)
 ├── renderer/          # projeto Remotion
 │   ├── public/audio/  # MP3 copiado pelo pipeline (não versionar)
 │   └── src/
@@ -46,11 +55,14 @@ Cada etapa lê e escreve arquivos em `output/<slug>/`. Se o arquivo de saída da
 │       ├── Root.tsx
 │       ├── LyricVideo.tsx
 │       ├── types.ts
-│       ├── backgrounds/   # Background, Gradient, Particles, Aurora
-│       └── subtitles/     # Highlight, OneWord, Karaoke
+│       ├── motion.ts, sun.ts, text.ts, timing.ts, fonts.ts
+│       ├── backgrounds/   # Background, Gradient, Particles, Aurora, AuroraGL, Sunrise
+│       └── subtitles/     # Highlight, OneWord, Karaoke, Motion, SafeArea
 ├── web/
 │   ├── app.py         # FastAPI
-│   └── static/           # index.html (formulário) e app.js (script da página)
+│   ├── jobs.py        # fila de jobs (um por vez)
+│   ├── launcher/      # iniciador do Windows (python -m web.launcher)
+│   └── static/        # index.html, style.css, app.js, forms.js, lyrics.js, _headers, termos.html, privacidade.html
 ├── tests/
 ├── samples/           # áudio e letras de teste (áudio fora do Git)
 └── output/<slug>/     # artefatos de cada job
@@ -164,6 +176,8 @@ Regras que `validate_song()` verifica:
 - `SITE_URL` — endereço fixo do site no Cloudflare Pages, usado pelo iniciador para abrir o site (sem barra no final)
 - `PORT` — porta do servidor local usada pelo iniciador (padrão `8000`)
 - `CLOUDFLARED_BIN` — caminho do `cloudflared` quando ele não está no PATH (opcional)
+- `RENDER_CONCURRENCY` — número de processos do render (opcional; vazio = padrão do Remotion). Lido por `renderer/scripts/render.mjs`
+- `BROWSER_EXECUTABLE` — caminho de um Chrome ou headless shell já instalado, para o render (opcional). Lido por `renderer/scripts/render.mjs`
 - `TUNNEL_TOKEN` — token do túnel fixo da Cloudflare. É uma senha: nunca versionar. Vazio = túnel aleatório
 - `TUNNEL_HOSTNAME` — endereço fixo do túnel, ex.: `meu-servidor.seudominio.com`. Obrigatório junto com `TUNNEL_TOKEN`
 

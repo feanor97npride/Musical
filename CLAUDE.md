@@ -6,7 +6,7 @@ Ferramenta (CLI + web simples) que recebe um MP3 e a letra da música e gera um 
 Pipeline: MP3 + letra → separação de vocais (Demucs) → alinhamento forçado (stable-ts) → `song.json` → tema via Claude API → render (Remotion) → MP4.
 
 ## Estado atual
-- **Fase atual:** MVP concluído (F6: web mínima com FastAPI). Plano 6 (automações): Fases A, B e C concluídas; próxima é a D (postagem pela API), bloqueada até liberar a rede e registrar o app; Plano 8 (letra gerada por IA, com estilo para o Suno) concluído  <!-- atualize esta linha ao concluir cada fase -->
+- **Fase atual:** MVP concluído (F6: web mínima com FastAPI). Plano 6 (automações): Fases A, B e C concluídas; Fase D (postagem pela API) pausada. Planos 8 e 10 a 16 (letra por IA, visual, layout, progresso, cache e segurança do site) concluídos e publicados  <!-- atualize esta linha ao concluir cada fase -->
 - Escopo e critérios de aceite: `docs/ESCOPO.md`
 - Contratos de dados, pastas e CLI: `docs/ARQUITETURA.md`
 - Prompts de cada fase: `docs/PROMPTS.md`
