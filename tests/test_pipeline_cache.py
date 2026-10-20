@@ -92,7 +92,7 @@ def test_render_que_falha_mantem_os_arquivos_anteriores(tmp_path, monkeypatch):
 
 def test_props_usa_o_fundo_escolhido(tmp_path, monkeypatch):
     job = make_job(tmp_path, background="solid")
-    monkeypatch.setattr(pipeline, "build_props", lambda *args: {"fundo": args[3]})  # args[3] é o fundo
+    monkeypatch.setattr(pipeline, "build_props", lambda *args, **kwargs: {"fundo": args[3]})  # args[3] é o fundo
     pipeline._props(job)
     assert json.loads(job.new_props) == {"fundo": "solid"}
 

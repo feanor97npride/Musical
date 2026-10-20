@@ -75,7 +75,7 @@ def _find(job_id: str) -> Job:
 @app.post("/jobs", dependencies=[Depends(_check_token)])
 async def create_job(audio: UploadFile = File(...), lyrics: str = Form(""), style: str = Form("karaoke"),
                      background: str = Form("gradient"), clip_start: str = Form(""), clip_end: str = Form(""),
-                     cuts: str = Form(""), confirm: bool = Form(False)) -> dict:
+                     cuts: str = Form(""), description: str = Form(""), confirm: bool = Form(False)) -> dict:
     if not confirm:
         raise HTTPException(400, "confirme que a música é sua ou que você tem autorização para usá-la")
     if not (audio.filename or "").lower().endswith(".mp3"):
@@ -88,11 +88,13 @@ async def create_job(audio: UploadFile = File(...), lyrics: str = Form(""), styl
         raise HTTPException(400, "fundo desconhecido")
     if cuts not in CUTS:
         raise HTTPException(400, "duração de corte desconhecida")
+    if len(description) > 300:
+        raise HTTPException(400, "a descrição da imagem tem no máximo 300 caracteres")
     clip = _clip(clip_start, clip_end)
     if CUTS[cuts] and clip:
         raise HTTPException(400, "use trecho ou cortes, não os dois")
     job = queue.create(audio.filename or "musica.mp3", await _read_limited(audio), lyrics, style, background, clip,
-                       CUTS[cuts])
+                       CUTS[cuts], description.strip())
     return {"id": job.id}
 
 

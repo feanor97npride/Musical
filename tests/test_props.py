@@ -90,3 +90,27 @@ def test_estilo_fundo_e_clip_invalidos_sao_recusados(files):
         build_props(song, audio, clip=(5.0, 1.0), public_audio=public)
     with pytest.raises(ValueError, match="clip"):
         build_props(song, audio, clip=(0.0, 999.0), public_audio=public)
+
+
+def test_fundo_imagem_copia_a_imagem_e_grava_o_caminho(files, tmp_path):
+    song, audio, public = files
+    slug_dir = tmp_path / "output" / "musica-abc"
+    slug_dir.mkdir(parents=True)
+    image_file = slug_dir / "background.jpg"
+    image_file.write_bytes(b"jpg")
+    props = build_props(song, audio, "karaoke", "image", None, public_audio=public,
+                        background_image=image_file, public_bg=tmp_path / "bg")
+    assert props["style"]["background"] == "image"
+    assert props["backgroundFile"] == "bg/musica-abc.jpg"
+    assert (tmp_path / "bg" / "musica-abc.jpg").read_bytes() == b"jpg"
+
+
+def test_fundo_imagem_sem_arquivo_e_recusado(files, tmp_path):
+    song, audio, public = files
+    with pytest.raises(ValueError, match="sem o arquivo"):
+        build_props(song, audio, "karaoke", "image", None, public_audio=public, public_bg=tmp_path / "bg")
+
+
+def test_fundo_que_nao_e_imagem_nao_grava_caminho(files):
+    song, audio, public = files
+    assert "backgroundFile" not in build_props(song, audio, "highlight", "solid", None, public_audio=public)

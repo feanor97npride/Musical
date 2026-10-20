@@ -1,7 +1,9 @@
 # Dataclasses e validate_song(): contrato do song.json.
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
+from pathlib import Path
 
 from engine.checks import check_audio, check_line, check_theme, is_num
 
@@ -105,6 +107,13 @@ class Song:
         theme = Theme.from_dict(data["theme"]) if data.get("theme") is not None else None
         lines = [Line.from_dict(line) for line in data["lines"]]
         return cls(data["language"], Audio.from_dict(data["audio"]), lines, theme, data["version"])
+
+
+def write_song(path: Path, song: dict) -> None:
+    errors = validate_song(song)
+    if errors:
+        raise ValueError("song.json inválido: " + "; ".join(errors))
+    path.write_text(json.dumps(song, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def validate_song(data: dict) -> list[str]:

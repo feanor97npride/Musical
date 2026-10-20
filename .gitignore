@@ -5,6 +5,7 @@ samples/*.mp3
 samples/*.wav
 output/
 renderer/public/audio/
+renderer/public/bg/
 __pycache__/
 .pytest_cache/
 .playwright-mcp/

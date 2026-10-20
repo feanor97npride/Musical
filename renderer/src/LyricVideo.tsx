@@ -12,7 +12,7 @@ import type { LyricProps } from "./types";
 const SUBTITLES = { highlight: Highlight, oneword: OneWord, karaoke: Karaoke };
 const DEFAULT_PALETTE = ["#111111", "#1B1B3A", "#3A1F4A"];
 
-export const LyricVideo: React.FC<LyricProps> = ({ song, audioFile, style, clip }) => {
+export const LyricVideo: React.FC<LyricProps> = ({ song, audioFile, style, backgroundFile, clip }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
   const t = (clip ? clip.start : 0) + frame / fps; // tempo da música, não do vídeo
@@ -26,7 +26,7 @@ export const LyricVideo: React.FC<LyricProps> = ({ song, audioFile, style, clip 
 
   return (
     <AbsoluteFill>
-      <Background kind={style.background} palette={palette} intensity={intensity} pulse={pulse} progress={progress} />
+      <Background kind={style.background} palette={palette} intensity={intensity} pulse={pulse} progress={progress} file={backgroundFile} />
       {audioFile && (
         <Audio
           src={staticFile(audioFile)}

@@ -28,10 +28,13 @@ Uso pessoal, com músicas próprias e a letra em mãos. Abrir para o público fi
 8. CLI de ponta a ponta e uma web mínima (upload, progresso, prévia, download).
 9. Cache por job para não reprocessar etapas já feitas.
 
+## Incluído depois do MVP (com aviso)
+- Fundo com uma imagem gerada por IA (Gemini), uma por música, a partir do tema da letra e de uma descrição opcional. Dados enviados ao Google: o tema e a descrição. Custo por imagem; exige chave `GEMINI_API_KEY`.
+
 ## Fora do MVP
 - Transcrição sem letra (Whisper puro)
 - Editor visual de legendas
-- Imagens ou vídeos de fundo gerados por IA, ou clipes de banco
+- Vídeos de fundo gerados por IA, ou clipes de banco
 - Formatos 1:1 e 16:9
 - Contas de usuário, pagamento, fila distribuída
 - Next.js, deploy em nuvem, GPU dedicada

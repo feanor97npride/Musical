@@ -12,12 +12,14 @@ from engine.schema import validate_song
 
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC_AUDIO = ROOT / "renderer" / "public" / "audio"
+PUBLIC_BG = ROOT / "renderer" / "public" / "bg"
 SUBTITLE_STYLES = {"highlight", "oneword", "karaoke"}
-BACKGROUNDS = {"solid", "gradient", "aurora", "aurora-gl", "sunrise"}
+BACKGROUNDS = {"solid", "gradient", "aurora", "aurora-gl", "sunrise", "image"}
 
 
 def build_props(song_path: Path, audio_path: Path, subtitle: str = "highlight", background: str = "gradient",
-                clip: tuple[float, float] | None = None, public_audio: Path = PUBLIC_AUDIO) -> dict:
+                clip: tuple[float, float] | None = None, public_audio: Path = PUBLIC_AUDIO,
+                background_image: Path | None = None, public_bg: Path = PUBLIC_BG) -> dict:
     song = json.loads(song_path.read_text(encoding="utf-8"))
     errors = validate_song(song)
     if errors:
@@ -26,17 +28,26 @@ def build_props(song_path: Path, audio_path: Path, subtitle: str = "highlight", 
         raise ValueError(f"estilo de legenda desconhecido: {subtitle}")
     if background not in BACKGROUNDS:
         raise ValueError(f"fundo desconhecido: {background}")
+    if background == "image" and (background_image is None or not background_image.exists()):
+        raise ValueError("fundo de imagem sem o arquivo da imagem gerada")
     if clip is not None and not 0 <= clip[0] < clip[1] <= song["audio"]["duration"]:
         raise ValueError("clip fora da duração da música")
     name = _audio_name(audio_path, song)
     public_audio.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(audio_path, public_audio / name)
-    return {
+    props = {
         "song": song,
         "audioFile": f"audio/{name}",
         "style": {"subtitle": subtitle, "background": background},
         "clip": {"start": clip[0], "end": clip[1]} if clip else None,
     }
+    if background == "image":
+        # a pasta da música (output/<slug>) dá um nome único à imagem no renderer
+        bg_name = f"{background_image.parent.name}.jpg"
+        public_bg.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(background_image, public_bg / bg_name)
+        props["backgroundFile"] = f"bg/{bg_name}"
+    return props
 
 
 def _audio_name(audio_path: Path, song: dict) -> str:

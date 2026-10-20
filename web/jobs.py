@@ -44,6 +44,7 @@ class Job:
     step: int = 0  # etapa atual e total, lidos de "[3/7] ..." na saída da pipeline
     total: int = 0
     progress: float = 0.0  # de 0 a 1; nunca diminui (os cortes renderizam um depois do outro)
+    description: str = ""  # o que a imagem por IA deve mostrar; só vale com fundo "image"
 
     @property
     def lyrics(self) -> Path:
@@ -91,6 +92,8 @@ def run_pipeline(job: Job) -> int:
         command += ["--clip", f"{job.clip[0]}:{job.clip[1]}"]
     if job.cuts:
         command += ["--cuts", str(job.cuts)]
+    if job.background == "image":
+        command += [f"--image-description={job.description}"]  # com "=": a descrição nunca vira uma opção do argparse
     # no Windows o filho escreve em cp1252 por padrão; forçamos UTF-8 para o texto com acento não quebrar a leitura
     process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                                encoding="utf-8", errors="replace",
@@ -107,12 +110,12 @@ class JobQueue:
         self._worker: threading.Thread | None = None
 
     def create(self, filename: str, audio: bytes, lyrics: str, style: str, background: str,
-               clip: tuple[float, float] | None, cuts: int | None = None) -> Job:
+               clip: tuple[float, float] | None, cuts: int | None = None, description: str = "") -> Job:
         job_id = uuid.uuid4().hex
         folder = UPLOADS / job_id
         folder.mkdir(parents=True)
         job = Job(job_id, folder, folder / f"{clean_name(Path(filename).stem)}.mp3", style, background, clip,
-                  cuts=cuts)
+                  cuts=cuts, description=description)
         job.audio.write_bytes(audio)
         job.lyrics.write_text(lyrics, encoding="utf-8", newline="")  # no Windows, sem isso cada \n vira \r\n
         # lê o arquivo de volta: o navegador manda \r\n e o pipeline normaliza, o nome da pasta tem que bater

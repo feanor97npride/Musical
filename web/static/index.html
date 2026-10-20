@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700&family=Figtree:wght@400;600&display=swap">
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
 <main>
@@ -64,7 +64,14 @@
         <label class="choice" for="bg-aurora-gl"><input type="radio" id="bg-aurora-gl" name="background" value="aurora-gl"><span><strong>Aurora WebGL</strong><small>Animado</small></span></label>
         <label class="choice" for="bg-sunrise"><input type="radio" id="bg-sunrise" name="background" value="sunrise"><span><strong>Sol nascendo</strong><small>Animado</small></span></label>
         <label class="choice" for="bg-solid"><input type="radio" id="bg-solid" name="background" value="solid"><span><strong>Sólido</strong><small>Cor única</small></span></label>
+        <label class="choice" for="bg-image"><input type="radio" id="bg-image" name="background" value="image"><span><strong>Imagem por IA</strong><small>Gerada pelo Gemini</small></span></label>
       </fieldset>
+
+      <div class="image-field">
+        <label for="description">Descreva a imagem (opcional)</label>
+        <textarea id="description" name="description" maxlength="300" aria-describedby="description-hint" placeholder="ex.: praia ao amanhecer, sem pessoas"></textarea>
+        <p class="hint" id="description-hint">Se ficar vazio, a imagem sai do tema da letra. Até 300 caracteres.</p>
+      </div>
 
       <fieldset class="choices cols-4">
         <legend>Dividir em cortes</legend>
