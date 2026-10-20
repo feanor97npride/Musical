@@ -1,0 +1,3 @@
+# o navegador sempre confere se o arquivo mudou (evita HTML novo com CSS ou JS antigo em cache)
+/*
+  Cache-Control: no-cache

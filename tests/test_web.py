@@ -103,7 +103,7 @@ def test_fundo_aurora_e_aceito_pela_web(client, monkeypatch, fundo):
 
 
 def test_pagina_carrega_o_script_separado(client):
-    assert 'src="app.js"' in client.get("/").text
+    assert 'src="app.js?v=' in client.get("/").text
     assert client.get("/app.js").status_code == 200
 
 

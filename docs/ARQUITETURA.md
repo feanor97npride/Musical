@@ -169,6 +169,7 @@ Regras que `validate_song()` verifica:
 
 ## Publicação em duas partes (opção B1)
 - A página `web/static/` vai para o Cloudflare Pages (projeto Pages com build output directory `web/static`, sem build command).
+- Contra cache antigo: `web/static/_headers` manda o navegador revalidar (`Cache-Control: no-cache`), e o `index.html` chama `style.css?v=N`, `app.js?v=N`, `forms.js?v=N` e `lyrics.js?v=N`. Ao mudar um desses arquivos, suba o número `N` no `index.html`.
 - A API roda no seu computador (`uvicorn web.app:app --port 8000`) e fica acessível por um túnel (ex.: Cloudflare Tunnel).
 - No seu computador, o `.env` precisa de `ACCESS_TOKEN` (uma senha longa) e `ALLOWED_ORIGINS=https://SEU-SITE` (o endereço do site, sem barra no fim).
 - Na página, o campo "Endereço do servidor" recebe a URL do túnel, e o campo "Senha de acesso" recebe a senha.

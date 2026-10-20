@@ -46,3 +46,10 @@ def test_pagina_tem_favicon_fontes_e_esquema_de_cores():
     assert 'rel="icon"' in HTML
     assert "fonts.googleapis.com/css2?family=Bricolage+Grotesque" in HTML
     assert '<meta name="color-scheme" content="light dark">' in HTML
+
+
+def test_arquivos_locais_tem_versao_para_nao_ficar_em_cache():
+    refs = re.findall(r'(?:href|src)="([^":/]+\.(?:css|js))(\?v=\d+)?"', HTML)
+    assert len(refs) == 4, refs  # style.css, app.js, forms.js, lyrics.js
+    assert [name for name, version in refs if not version] == []
+    assert [name for name, _ in refs if not (STATIC / name).exists()] == []
