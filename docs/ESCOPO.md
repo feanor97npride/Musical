@@ -10,6 +10,7 @@ Uso pessoal, com músicas próprias e a letra em mãos. Abrir para o público fi
 **Entradas**
 - Arquivo MP3
 - Letra em texto (`.txt` ou campo de texto), com marcadores opcionais de seção como `[Refrão]`
+- Ou um contexto (tema, história, estilo, idioma) para a letra ser escrita pela Claude API, com o prompt de estilo para gerar a música no Suno (feito à mão; o Suno não tem API aberta)
 - Opções: estilo de legenda (`highlight`, `oneword`, `karaoke`) e trecho (início e fim em segundos)
 
 **Saídas**
@@ -58,7 +59,7 @@ Uso pessoal, com músicas próprias e a letra em mãos. Abrir para o público fi
 ## Requisitos não funcionais
 - Roda em CPU. GPU é opcional.
 - Tempo total para uma música de 3 minutos: medir na F5 e registrar em `TESTES.md`. Ainda não há meta fixa.
-- Custo por vídeo: só a chamada de tema, que é de poucos centavos.
+- Custo por vídeo: a chamada de tema, de poucos centavos. Gerar a letra com IA (opcional) é outra chamada, de alguns centavos.
 
 ## Riscos
 - **Alinhamento falhar em refrões repetidos, rap rápido ou muito instrumental.** Mitigação: separar vocais, testar com 5 músicas diferentes e manter opção de deslocamento global de tempo.

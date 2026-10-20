@@ -9,7 +9,7 @@ Gera um vídeo vertical com legendas palavra por palavra (estilo TikTok) e fundo
 - Node.js 18 ou superior
 - FFmpeg
 - Git
-- Chave da API da Anthropic (opcional; sem ela o tema usa uma paleta padrão)
+- Chave da API da Anthropic (opcional; sem ela o tema usa uma paleta padrão e não dá para gerar a letra com IA)
 
 ## Como começar com o Claude Code
 1. Crie uma pasta para o projeto e copie estes arquivos para ela, mantendo a estrutura (`CLAUDE.md`, `README.md`, `docs/`).

@@ -46,7 +46,7 @@ def analyze_theme(lines_text: str, client: anthropic.Anthropic | None = None) ->
     reason = "sem resposta"
     for _ in range(2):  # uma tentativa e mais uma
         try:
-            data = _parse(_ask(client, lines_text))
+            data = parse_reply(_ask(client, lines_text))
         except Exception as error:  # rede, cota ou JSON inválido: a pipeline segue com o tema padrão
             reason = type(error).__name__
             continue
@@ -69,7 +69,7 @@ def _ask(client: anthropic.Anthropic, lines_text: str) -> str:
     return "".join(block.text for block in message.content if block.type == "text")
 
 
-def _parse(text: str) -> object:
+def parse_reply(text: str) -> object:
     return json.loads(FENCE.sub("", text.strip()))
 
 

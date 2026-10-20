@@ -28,6 +28,19 @@
     <label for="audio">Arquivo MP3 (até 25 MB)</label>
     <input type="file" id="audio" name="audio" accept=".mp3,audio/mpeg" required>
 
+    <details>
+      <summary>Gerar letra com IA (opcional)</summary>
+      <label for="context">Conte sobre a música: tema, história, estilo e idioma</label>
+      <textarea id="context" maxlength="4000" placeholder="ex.: pop em português sobre recomeçar depois de uma perda, com refrão esperançoso"></textarea>
+      <p class="hint">O contexto vai para a API da Anthropic (Claude). Revise a letra antes de usar.</p>
+      <button type="button" id="write-lyrics" class="secondary">Gerar letra</button>
+      <p class="hint" id="lyrics-status" aria-live="polite"></p>
+      <label for="suno-style">Estilo para colar no Suno</label>
+      <input type="text" id="suno-style" readonly>
+      <button type="button" id="copy-lyrics" class="secondary">Copiar letra</button>
+      <button type="button" id="copy-style" class="secondary">Copiar estilo</button>
+    </details>
+
     <label for="lyrics">Letra</label>
     <textarea id="lyrics" name="lyrics" placeholder="Cole a letra aqui. Use [Refrão] etc. para marcar seções." required></textarea>
 
@@ -78,5 +91,6 @@
 </main>
 
 <script src="app.js"></script>
+<script src="lyrics.js"></script>
 </body>
 </html>

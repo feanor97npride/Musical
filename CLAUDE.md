@@ -6,7 +6,7 @@ Ferramenta (CLI + web simples) que recebe um MP3 e a letra da música e gera um 
 Pipeline: MP3 + letra → separação de vocais (Demucs) → alinhamento forçado (stable-ts) → `song.json` → tema via Claude API → render (Remotion) → MP4.
 
 ## Estado atual
-- **Fase atual:** MVP concluído (F6: web mínima com FastAPI). Plano 6 (automações): Fases A, B e C concluídas; próxima é a D (postagem pela API), bloqueada até liberar a rede e registrar o app  <!-- atualize esta linha ao concluir cada fase -->
+- **Fase atual:** MVP concluído (F6: web mínima com FastAPI). Plano 6 (automações): Fases A, B e C concluídas; próxima é a D (postagem pela API), bloqueada até liberar a rede e registrar o app; Plano 8 (letra gerada por IA, com estilo para o Suno) concluído  <!-- atualize esta linha ao concluir cada fase -->
 - Escopo e critérios de aceite: `docs/ESCOPO.md`
 - Contratos de dados, pastas e CLI: `docs/ARQUITETURA.md`
 - Prompts de cada fase: `docs/PROMPTS.md`
@@ -31,6 +31,7 @@ Detalhes e árvore completa em `docs/ARQUITETURA.md`.
 ## Comandos
 Passam a existir conforme as fases avançam. Quando um comando mudar, atualize esta seção.
 
+- Gerar letra a partir de um contexto: `python -m engine.write_lyrics --context "tema, história, estilo, idioma" --out samples/nome.txt` (grava também `samples/nome.estilo.txt` para o Suno)
 - Alinhar: `python -m engine.align --audio samples/a.mp3 --lyrics samples/a.txt --out output/a/song.json`
 - Pipeline completa: `python -m engine.pipeline --audio samples/a.mp3 --lyrics samples/a.txt`
 - Lote (cada `.mp3` com `.txt` de mesmo nome na pasta): `python -m engine.batch --folder samples --variants "background=gradient,aurora;style=karaoke,oneword"` (`--variants` é opcional: um vídeo por combinação; `--export` gera também a cópia para postar em `para-postar/`)

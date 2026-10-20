@@ -11,6 +11,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from engine.pipeline import ROOT
+from engine.write_lyrics import write_lyrics
 from web.jobs import Job, JobQueue
 
 load_dotenv(ROOT / ".env")
@@ -112,6 +113,17 @@ def job_video(job_id: str, n: int | None = None) -> FileResponse:
     if not 0 <= n < len(job.ready_videos):  # só os arquivos da lista do job; o cliente não escolhe caminho
         raise HTTPException(404, "corte não encontrado")
     return FileResponse(job.ready_videos[n], media_type="video/mp4")
+
+
+@app.post("/lyrics", dependencies=[Depends(_check_token)])
+def create_lyrics(context: str = Form("")) -> dict:
+    # def, não async: a chamada à API leva segundos e o FastAPI roda a rota fora do laço do servidor
+    try:
+        return write_lyrics(context)
+    except ValueError as error:
+        raise HTTPException(400, str(error))
+    except RuntimeError as error:
+        raise HTTPException(503, str(error))
 
 
 app.mount("/", StaticFiles(directory=STATIC, html=True), name="static")
