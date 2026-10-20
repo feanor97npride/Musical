@@ -28,6 +28,10 @@ def test_hashtags_fora_do_formato_sao_recusadas(tags):
         "hashtags fora do formato: de 3 a 6, cada uma com # e sem espaço"]
 
 
+def test_espacos_nas_bordas_nao_contam_no_limite():
+    assert posting_problems({**GOOD, "youtube_title": "x" * 100 + "\n"}) == []
+
+
 def test_texto_para_postar_tem_um_rotulo_por_linha():
     text = posting_text({**GOOD, "title": "Manhã"})
     assert text.splitlines() == [

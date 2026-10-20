@@ -12,13 +12,9 @@ from engine.write_lyrics import MAX_CONTEXT, main, write_lyrics
 
 LYRICS = "[Verse]\nAcordei com o sol na janela\nO café esfriando na mesa\n[Chorus]\nVem comigo\nVem comigo agora"
 GOOD = {
-    "title": "Manhã",
-    "lyrics": LYRICS,
-    "style": "acoustic pop, warm female vocals, 90 bpm",
-    "youtube_title": "Manhã de fé",
-    "youtube_description": "Uma música de esperança para o amanhecer.",
-    "tiktok_caption": "Depois da noite vem o sol",
-    "hashtags": ["#gospel", "#esperanca", "#louvor"],
+    "title": "Manhã", "lyrics": LYRICS, "style": "acoustic pop, warm female vocals, 90 bpm",
+    "youtube_title": "Manhã de fé", "youtube_description": "Uma música de esperança para o amanhecer.",
+    "tiktok_caption": "Depois da noite vem o sol", "hashtags": ["#gospel", "#esperanca", "#louvor"],
 }
 REQUEST = httpx2.Request("POST", "https://api.anthropic.com/v1/messages")
 
@@ -169,6 +165,17 @@ def test_cli_grava_letra_e_estilo_e_nao_sobrescreve(tmp_path, monkeypatch, capsy
     with pytest.raises(SystemExit):
         main(["--context", "manhã", "--out", str(out)])
     assert main(["--context", "manhã", "--out", str(out), "--force"]) == 0
+
+
+def test_cli_nao_sobrescreve_postar_solto_sem_force(tmp_path, monkeypatch):
+    monkeypatch.setattr(module, "write_lyrics", lambda context: GOOD)
+    out = tmp_path / "samples" / "outro.txt"
+    out.parent.mkdir()
+    out.with_suffix(".postar.txt").write_text("editado à mão\n", encoding="utf-8")
+    with pytest.raises(SystemExit):
+        main(["--context", "c", "--out", str(out)])
+    assert main(["--context", "c", "--out", str(out), "--force"]) == 0
+    assert "Título (YouTube)" in out.with_suffix(".postar.txt").read_text(encoding="utf-8")
 
 
 def test_cli_le_o_contexto_de_arquivo(tmp_path, monkeypatch):

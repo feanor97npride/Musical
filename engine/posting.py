@@ -16,7 +16,7 @@ LABELS = {
 
 
 def posting_problems(data: dict) -> list[str]:
-    problems = [f"{field} com mais de {limit} caracteres" for field, limit in LIMITS.items() if len(data[field]) > limit]
+    problems = [f"{field} com mais de {limit} caracteres" for field, limit in LIMITS.items() if len(data[field].strip()) > limit]
     tags = data.get("hashtags")
     low, high = TAG_RANGE
     if not (isinstance(tags, list) and low <= len(tags) <= high and all(isinstance(t, str) and TAG.fullmatch(t) for t in tags)):

@@ -162,8 +162,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.out.suffix != ".txt":
         parser.error("--out precisa terminar em .txt")
-    if args.out.exists() and not args.force:
-        parser.error(f"{args.out} já existe; use --force para sobrescrever")
+    existing = [path for path in (args.out, style_path(args.out), args.out.with_suffix(".postar.txt")) if path.exists()]
+    if existing and not args.force:
+        parser.error(f"{existing[0]} já existe; use --force para sobrescrever")
     try:
         context = args.context if args.context is not None else args.context_file.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError):

@@ -4,7 +4,15 @@ from fastapi.testclient import TestClient
 
 from web import app as web_app
 
-DRAFT = {"title": "Manhã", "lyrics": "[Chorus]\num\ndois\ntrês\nquatro", "style": "acoustic pop"}
+DRAFT = {
+    "title": "Manhã",
+    "lyrics": "[Chorus]\num\ndois\ntrês\nquatro",
+    "style": "acoustic pop",
+    "youtube_title": "Manhã de fé",
+    "youtube_description": "Uma música de esperança.",
+    "tiktok_caption": "Depois da noite vem o sol",
+    "hashtags": ["#gospel", "#louvor", "#esperanca"],
+}
 
 
 @pytest.fixture
