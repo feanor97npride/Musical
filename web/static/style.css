@@ -155,8 +155,10 @@ a.download { display: inline-flex; align-items: center; min-block-size: 44px; ma
 @media (min-width: 1440px) {
   form { display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px; }
   .choices.cols-4 { grid-template-columns: repeat(2, 1fr); } /* 4 cortes em 2 colunas: o texto de cada cartão não quebra em 3 linhas */
-  form section + section { margin: 0; padding: 0; border: 0; }
-  form section:nth-of-type(2) { margin-block-start: 32px; padding-block-start: 24px; border-block-start: 1px solid var(--line); }
-  form section:nth-of-type(3) { grid-column: 2; grid-row: 1 / span 2; }
+  .col-left { display: flex; flex-direction: column; gap: 32px; }
+  .col-left section + section { margin: 0; padding: 0; border: 0; }
+  .col-left > section:nth-of-type(2) { display: flex; flex-direction: column; flex: 1; } /* a letra cresce até a altura do Visual */
+  #lyrics { flex: 1; }
+  form > section { grid-column: 2; }
   .actions { grid-column: 1 / -1; }
 }
