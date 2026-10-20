@@ -26,6 +26,7 @@ serverInput.addEventListener("change", () => {
   const notice = document.getElementById("hash-notice");
   notice.textContent = "Servidor preenchido por link: " + value + ". Se você não abriu pelo iniciador, não digite a senha.";
   notice.hidden = false;
+  document.querySelector("details.server").open = true; // o aviso fica dentro de "Servidor e senha"
 })();
 
 function api(path, options = {}) {
@@ -145,6 +146,7 @@ form.addEventListener("submit", async (event) => {
   clearInterval(timer);
   timer = setInterval(() => poll(body.id), 2000);
   poll(body.id);
+  result.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
 });
 
 // prévia: envia o mesmo formulário com o trecho de 0 a 30 s; o FormData é montado na hora do envio,

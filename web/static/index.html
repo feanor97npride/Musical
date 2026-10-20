@@ -4,95 +4,118 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Gerador de lyric video</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23FFD60A'/%3E%3Ctext x='16' y='21' font-family='Arial' font-weight='700' font-size='13' text-anchor='middle' fill='%2315130A'%3ELV%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700&family=Figtree:wght@400;600&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <main>
   <h1>Gerador de lyric video</h1>
-  <p class="lead">Envie um MP3 e a letra. Você recebe um vídeo vertical com legendas no tempo da música.</p>
-
-  <section class="card">
-    <label for="server">Endereço do servidor</label>
-    <input type="text" id="server" placeholder="ex.: https://algo.trycloudflare.com">
-    <p class="hint">Deixe vazio se esta página foi aberta direto do servidor. Este endereço fica salvo neste navegador.</p>
-    <p class="hint warning" id="hash-notice" hidden></p>
-
-    <label for="token">Senha de acesso</label>
-    <input type="password" id="token" placeholder="a senha definida no seu computador">
-    <p class="hint">Se o servidor não tiver senha, deixe vazio.</p>
-  </section>
+  <p class="lead">Envie a música e a letra. Você recebe o vídeo vertical com legenda e os textos para postar.</p>
 
   <form id="form">
-    <div class="warning">Envie apenas músicas próprias ou com autorização.</div>
+    <section>
+      <h2>Música</h2>
+      <label for="audio">Arquivo MP3 (até 25 MB)</label>
+      <input type="file" id="audio" name="audio" accept=".mp3,audio/mpeg" required>
+      <div class="warning">Envie apenas músicas próprias ou com autorização.</div>
+    </section>
 
-    <label for="audio">Arquivo MP3 (até 25 MB)</label>
-    <input type="file" id="audio" name="audio" accept=".mp3,audio/mpeg" required>
+    <section>
+      <h2>Letra</h2>
+      <div class="label-row">
+        <label for="lyrics">Cole a letra aqui</label>
+        <button type="button" data-copy="lyrics" data-done="Letra copiada. Cole no campo de letra do Suno.">Copiar letra</button>
+      </div>
+      <textarea id="lyrics" name="lyrics" placeholder="Use [Refrão] etc. para marcar as seções." required></textarea>
 
-    <details>
-      <summary>Gerar letra com IA (opcional)</summary>
-      <label for="context">Conte sobre a música: tema, história, estilo e idioma</label>
-      <textarea id="context" maxlength="4000" placeholder="ex.: pop em português sobre recomeçar depois de uma perda, com refrão esperançoso"></textarea>
-      <p class="hint">O contexto vai para a API da Anthropic (Claude). Revise a letra antes de usar.</p>
-      <button type="button" id="write-lyrics" class="secondary">Gerar letra</button>
-      <p class="hint" id="lyrics-status" aria-live="polite"></p>
-      <label for="suno-style">Estilo para colar no Suno</label>
-      <input type="text" id="suno-style" readonly>
-      <button type="button" class="secondary" data-copy="lyrics" data-done="Letra copiada. Cole no campo de letra do Suno.">Copiar letra</button>
-      <button type="button" class="secondary" data-copy="suno-style" data-done="Estilo copiado. Cole no campo de estilo do Suno.">Copiar estilo</button>
-      <label for="yt-title">Título para o YouTube</label>
-      <input type="text" id="yt-title" readonly>
-      <button type="button" class="secondary" data-copy="yt-title" data-done="Título copiado.">Copiar título</button>
-      <label for="yt-description">Descrição para o YouTube</label>
-      <textarea id="yt-description" readonly></textarea>
-      <button type="button" class="secondary" data-copy="yt-description" data-done="Descrição copiada.">Copiar descrição</button>
-      <label for="tiktok-caption">Legenda para o TikTok</label>
-      <input type="text" id="tiktok-caption" readonly>
-      <button type="button" class="secondary" data-copy="tiktok-caption" data-done="Legenda copiada.">Copiar legenda</button>
-      <label for="hashtags">Hashtags</label>
-      <input type="text" id="hashtags" readonly>
-      <button type="button" class="secondary" data-copy="hashtags" data-done="Hashtags copiadas.">Copiar hashtags</button>
-    </details>
+      <details>
+        <summary>Escrever a letra com IA (opcional)</summary>
+        <label for="context">Conte sobre a música: tema, história, estilo e idioma</label>
+        <textarea id="context" maxlength="4000" placeholder="ex.: pop em português sobre recomeçar depois de uma perda, com refrão esperançoso"></textarea>
+        <p class="hint">O que você escrever aqui vai para a API da Anthropic (Claude). Revise a letra antes de usar.</p>
+        <button type="button" id="write-lyrics">Escrever a letra</button>
+        <p class="hint" id="lyrics-status" aria-live="polite"></p>
 
-    <label for="lyrics">Letra</label>
-    <textarea id="lyrics" name="lyrics" placeholder="Cole a letra aqui. Use [Refrão] etc. para marcar seções." required></textarea>
+        <h3>Para o Suno</h3>
+        <label for="suno-style">Estilo</label>
+        <div class="copy-row">
+          <input type="text" id="suno-style" readonly>
+          <button type="button" data-copy="suno-style" data-done="Estilo copiado. Cole no campo de estilo do Suno.">Copiar</button>
+        </div>
 
-    <label for="style">Estilo da legenda</label>
-    <select id="style" name="style">
-      <option value="karaoke">Karaokê (palavras acendendo)</option>
-      <option value="highlight">Destaque (linha inteira, palavra atual)</option>
-      <option value="oneword">Uma palavra por vez</option>
-    </select>
+        <h3>Para postar</h3>
+        <label for="yt-title">Título do YouTube</label>
+        <div class="copy-row">
+          <input type="text" id="yt-title" readonly>
+          <button type="button" data-copy="yt-title" data-done="Título copiado.">Copiar</button>
+        </div>
+        <label for="yt-description">Descrição do YouTube</label>
+        <div class="copy-row">
+          <textarea id="yt-description" readonly></textarea>
+          <button type="button" data-copy="yt-description" data-done="Descrição copiada.">Copiar</button>
+        </div>
+        <label for="tiktok-caption">Legenda do TikTok</label>
+        <div class="copy-row">
+          <input type="text" id="tiktok-caption" readonly>
+          <button type="button" data-copy="tiktok-caption" data-done="Legenda copiada.">Copiar</button>
+        </div>
+        <label for="hashtags">Hashtags</label>
+        <div class="copy-row">
+          <input type="text" id="hashtags" readonly>
+          <button type="button" data-copy="hashtags" data-done="Hashtags copiadas.">Copiar</button>
+        </div>
+      </details>
+    </section>
 
-    <label for="background">Fundo</label>
-    <select id="background" name="background">
-      <option value="gradient">Degradê (animado)</option>
-      <option value="aurora">Aurora (animado)</option>
-      <option value="aurora-gl">Aurora WebGL (animado)</option>
-      <option value="sunrise">Sol nascendo (animado)</option>
-      <option value="solid">Sólido</option>
-    </select>
+    <section>
+      <h2>Visual</h2>
+      <div class="pair">
+        <div>
+          <label for="style">Legenda</label>
+          <select id="style" name="style">
+            <option value="karaoke">Karaokê (palavras acendendo)</option>
+            <option value="highlight">Destaque (linha inteira, palavra atual)</option>
+            <option value="oneword">Uma palavra por vez</option>
+          </select>
+        </div>
+        <div>
+          <label for="background">Fundo</label>
+          <select id="background" name="background">
+            <option value="gradient">Degradê (animado)</option>
+            <option value="aurora">Aurora (animado)</option>
+            <option value="aurora-gl">Aurora WebGL (animado)</option>
+            <option value="sunrise">Sol nascendo (animado)</option>
+            <option value="solid">Sólido</option>
+          </select>
+        </div>
+      </div>
 
-    <label for="cuts">Formato</label>
-    <select id="cuts" name="cuts">
-      <option value="">Um vídeo inteiro</option>
-      <option value="15">Cortes de ~15 s</option>
-      <option value="30">Cortes de ~30 s</option>
-      <option value="60">Cortes de ~60 s</option>
-    </select>
+      <label for="cuts">Dividir em cortes</label>
+      <select id="cuts" name="cuts">
+        <option value="">Um vídeo inteiro</option>
+        <option value="15">Cortes de ~15 s</option>
+        <option value="30">Cortes de ~30 s</option>
+        <option value="60">Cortes de ~60 s</option>
+      </select>
 
-    <label>Trecho (opcional, em segundos)</label>
-    <div class="row">
-      <div><input type="number" id="clip_start" name="clip_start" min="0" step="0.1" placeholder="início, ex.: 30"></div>
-      <div><input type="number" id="clip_end" name="clip_end" min="0" step="0.1" placeholder="fim, ex.: 75"></div>
-    </div>
+      <fieldset class="pair">
+        <legend>Só um trecho (opcional, em segundos)</legend>
+        <label>Início <input type="number" id="clip_start" name="clip_start" min="0" step="0.1" placeholder="ex.: 30"></label>
+        <label>Fim <input type="number" id="clip_end" name="clip_end" min="0" step="0.1" placeholder="ex.: 75"></label>
+      </fieldset>
+    </section>
 
-    <label class="check">
-      <input type="checkbox" id="confirm" name="confirm" required>
-      <span>Esta música é minha ou tenho autorização para usá-la.</span>
-    </label>
-
-    <button type="submit" id="submit">Gerar vídeo</button>
-    <button type="button" id="preview" class="secondary">Gerar prévia (30 s)</button>
+    <section>
+      <label class="check">
+        <input type="checkbox" id="confirm" name="confirm" required>
+        <span>Esta música é minha ou tenho autorização para usá-la.</span>
+      </label>
+      <button type="submit" id="submit" class="primary block">Gerar vídeo</button>
+      <button type="button" id="preview" class="block">Ver prévia de 30 s</button>
+    </section>
   </form>
 
   <section class="result" id="result" aria-live="polite">
@@ -100,6 +123,18 @@
     <div class="detail" id="detail"></div>
     <div id="output"></div>
   </section>
+
+  <details class="server">
+    <summary>Servidor e senha</summary>
+    <label for="server">Endereço do servidor</label>
+    <input type="text" id="server" placeholder="ex.: https://algo.trycloudflare.com">
+    <p class="hint">Normalmente já vem preenchido. Mude só se alguém indicar outro endereço. Fica salvo neste navegador.</p>
+    <p class="hint warning" id="hash-notice" hidden></p>
+
+    <label for="token">Senha de acesso</label>
+    <input type="password" id="token" placeholder="a senha definida no seu computador">
+    <p class="hint">Se o servidor não tiver senha, deixe vazio.</p>
+  </details>
 </main>
 
 <script src="app.js"></script>
