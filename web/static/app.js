@@ -9,8 +9,10 @@ const jobProgress = document.getElementById("job-progress");
 const serverInput = document.getElementById("server");
 const tokenInput = document.getElementById("token");
 const SERVER_KEY = "lyricVideo.server";
+const JOB_KEY = "lyricVideo.job";
 const FIXED_SERVER = "https://whimsical.musicas.space"; // único endereço que o link do iniciador pode preencher
 let timer = null;
+let failures = 0; // falhas de rede seguidas: a página só desiste depois de algumas
 
 try { serverInput.value = localStorage.getItem(SERVER_KEY) || ""; } catch (error) { /* navegador sem armazenamento */ }
 serverInput.addEventListener("change", () => {
@@ -48,6 +50,11 @@ function finish() {
   jobProgress.hidden = true;
   submit.disabled = preview.disabled = false;
 }
+
+// o id do envio fica no navegador para a página retomar após recarregar; o estado continua no servidor
+function rememberJob(id) { try { localStorage.setItem(JOB_KEY, id); } catch (error) { /* sem armazenamento: não retoma */ } }
+function forgetJob() { try { localStorage.removeItem(JOB_KEY); } catch (error) { /* nada a fazer */ } }
+function recallJob() { try { return localStorage.getItem(JOB_KEY); } catch (error) { return null; } }
 
 async function failure(response) {
   const body = await response.json().catch(() => ({}));
@@ -110,13 +117,22 @@ async function downloadCut(id, index, name) {
 async function poll(id) {
   try {
     const response = await api(`/jobs/${id}`);
+    failures = 0;
+    if (response.status === 404) { // o servidor reiniciou: a fila fica só na memória
+      forgetJob();
+      finish();
+      show("O servidor reiniciou e perdeu este envio. Envie de novo.", true);
+      return;
+    }
     if (!response.ok) return failure(response);
     const job = await response.json();
     if (job.status === "error") {
+      forgetJob();
       finish();
       show("Falhou: " + job.stage, true);
       detail.textContent = job.message;
     } else if (job.status === "done") {
+      forgetJob();
       clearInterval(timer);
       await showVideo(id, job.videos);
     } else {
@@ -126,6 +142,8 @@ async function poll(id) {
       jobProgress.hidden = !job.total;
     }
   } catch (error) {
+    failures += 1;
+    if (failures < 5) return; // uma falha de rede não para o acompanhamento (cerca de 10 s seguidos param)
     finish();
     show("Não consegui falar com o servidor. Confira o endereço e a conexão.", true);
   }
@@ -147,6 +165,8 @@ form.addEventListener("submit", async (event) => {
   }
   if (!response.ok) return failure(response);
   const body = await response.json();
+  rememberJob(body.id);
+  failures = 0;
   clearInterval(timer);
   timer = setInterval(() => poll(body.id), 2000);
   poll(body.id);
@@ -167,3 +187,10 @@ preview.addEventListener("click", () => {
   form.requestSubmit();
   set(saved); // devolve o que o usuário tinha digitado
 });
+
+// envio feito antes de recarregar a página: retoma o acompanhamento
+const pending = recallJob();
+if (pending) {
+  timer = setInterval(() => poll(pending), 2000);
+  poll(pending);
+}

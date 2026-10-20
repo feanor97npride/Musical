@@ -1,3 +1,6 @@
 # o navegador sempre confere se o arquivo mudou (evita HTML novo com CSS ou JS antigo em cache)
 /*
   Cache-Control: no-cache
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer

@@ -1,5 +1,6 @@
 # Fila de jobs em memória: um por vez, cada um roda a pipeline num subprocess e lê o progresso do stdout.
 import json
+import logging
 import os
 import queue
 import re
@@ -18,6 +19,12 @@ UPLOADS = ROOT / "output" / "web"
 STAGE_LINE = re.compile(r"^\[(\d+)/(\d+)\] (.+?)\.\.\.")
 ERROR_LINE = re.compile(r"^erro: (.+)")
 FRAME_LINE = re.compile(r"Rendered (\d+)/(\d+)")
+PATH_IN_TEXT = re.compile(r"(?<![\w.])(?:[A-Za-z]:)?[\\/]\S*")  # caminho do PC: não vai para o navegador
+logger = logging.getLogger(__name__)
+
+
+def hide_paths(text: str) -> str:
+    return PATH_IN_TEXT.sub("<caminho>", text)
 
 
 @dataclass
@@ -58,7 +65,7 @@ class Job:
             self._advance(self.step - 1)
         error = ERROR_LINE.match(line)
         if error:
-            self.message = error.group(1)
+            self.message = hide_paths(error.group(1))
         frame = FRAME_LINE.search(line)
         if frame:
             self.message = f"quadro {frame.group(1)} de {frame.group(2)}"
@@ -131,8 +138,9 @@ class JobQueue:
             ready = code == 0 and all(path.exists() for path in job.videos)  # lê o song.json dos cortes
             if ready:
                 job.ready_videos = job.videos  # guarda a lista: depois o song.json pode não estar mais lá
-        except Exception as error:  # a pipeline nem chegou a rodar, ou o song.json não está lá
-            code, ready, job.message = 1, False, str(error)
+        except Exception:  # a pipeline nem chegou a rodar, ou o song.json não está lá
+            logger.exception("erro inesperado no job %s", job.id)  # o detalhe com caminhos fica no terminal
+            code, ready, job.message = 1, False, "erro inesperado no servidor; veja a janela do iniciador"
         if ready:
             job.status, job.stage, job.message, job.progress = "done", "Concluído", "", 1.0
         else:

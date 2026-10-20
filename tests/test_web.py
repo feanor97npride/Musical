@@ -2,6 +2,7 @@
 import time
 
 import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 from engine import pipeline
@@ -190,3 +191,30 @@ def test_senha_obrigatoria_quando_configurada(client, monkeypatch):
 
 def test_job_desconhecido_da_404(client):
     assert client.get("/jobs/nao-existe").status_code == 404
+
+
+def test_documentacao_da_api_fica_desligada(client):
+    assert [client.get(path).status_code for path in ("/docs", "/redoc", "/openapi.json")] == [404, 404, 404]
+
+
+def test_senha_com_acento_nao_da_erro_500(monkeypatch):
+    monkeypatch.setattr(web_app, "ACCESS_TOKEN", "coração")
+    web_app._check_token("coração")  # senha certa, com acento: não levanta
+    with pytest.raises(HTTPException):
+        web_app._check_token("coracao")
+    with pytest.raises(HTTPException):
+        web_app._check_token(None)
+
+
+def test_erro_inesperado_nao_mostra_caminho_do_pc(client, monkeypatch):
+    def crashing_pipeline(job):
+        raise FileNotFoundError(r"C:\Users\maria\musicas\a.mp3")
+
+    monkeypatch.setattr(jobs, "run_pipeline", crashing_pipeline)
+    body = wait_for(client, send(client).json()["id"], "error")
+    assert body["message"] == "erro inesperado no servidor; veja a janela do iniciador"
+
+
+def test_erro_da_pipeline_esconde_caminhos():
+    assert jobs.hide_paths(r"falta C:\Users\maria\a.mp3 e /home/x/b.txt") == "falta <caminho> e <caminho>"
+    assert jobs.hide_paths("linha 39: 1/2 da música") == "linha 39: 1/2 da música"

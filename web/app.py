@@ -33,14 +33,15 @@ async def lifespan(_app: FastAPI):
     yield
 
 
-app = FastAPI(title="Lyric Video Generator", lifespan=lifespan)
+app = FastAPI(title="Lyric Video Generator", lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)  # sem /docs pelo túnel
 if ALLOWED_ORIGINS:
     app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_methods=["GET", "POST"],
                        allow_headers=["X-Access-Token"])
 
 
 def _check_token(x_access_token: str | None = Header(None)) -> None:
-    if ACCESS_TOKEN and not secrets.compare_digest(x_access_token or "", ACCESS_TOKEN):
+    # compare_digest só aceita ASCII em str: em bytes, senha com acento não dá erro 500
+    if ACCESS_TOKEN and not secrets.compare_digest((x_access_token or "").encode("utf-8"), ACCESS_TOKEN.encode("utf-8")):
         raise HTTPException(401, "senha de acesso incorreta")
 
 

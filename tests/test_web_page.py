@@ -53,3 +53,9 @@ def test_arquivos_locais_tem_versao_para_nao_ficar_em_cache():
     assert len(refs) == 4, refs  # style.css, app.js, forms.js, lyrics.js
     assert [name for name, version in refs if not version] == []
     assert [name for name, _ in refs if not (STATIC / name).exists()] == []
+
+
+def test_rodape_linka_termos_e_privacidade():
+    for name in ("termos.html", "privacidade.html"):
+        assert f'href="{name}"' in HTML
+        assert (STATIC / name).exists()
