@@ -37,8 +37,20 @@
       <p class="hint" id="lyrics-status" aria-live="polite"></p>
       <label for="suno-style">Estilo para colar no Suno</label>
       <input type="text" id="suno-style" readonly>
-      <button type="button" id="copy-lyrics" class="secondary">Copiar letra</button>
-      <button type="button" id="copy-style" class="secondary">Copiar estilo</button>
+      <button type="button" class="secondary" data-copy="lyrics" data-done="Letra copiada. Cole no campo de letra do Suno.">Copiar letra</button>
+      <button type="button" class="secondary" data-copy="suno-style" data-done="Estilo copiado. Cole no campo de estilo do Suno.">Copiar estilo</button>
+      <label for="yt-title">Título para o YouTube</label>
+      <input type="text" id="yt-title" readonly>
+      <button type="button" class="secondary" data-copy="yt-title" data-done="Título copiado.">Copiar título</button>
+      <label for="yt-description">Descrição para o YouTube</label>
+      <textarea id="yt-description" readonly></textarea>
+      <button type="button" class="secondary" data-copy="yt-description" data-done="Descrição copiada.">Copiar descrição</button>
+      <label for="tiktok-caption">Legenda para o TikTok</label>
+      <input type="text" id="tiktok-caption" readonly>
+      <button type="button" class="secondary" data-copy="tiktok-caption" data-done="Legenda copiada.">Copiar legenda</button>
+      <label for="hashtags">Hashtags</label>
+      <input type="text" id="hashtags" readonly>
+      <button type="button" class="secondary" data-copy="hashtags" data-done="Hashtags copiadas.">Copiar hashtags</button>
     </details>
 
     <label for="lyrics">Letra</label>

@@ -8,10 +8,18 @@ import pytest
 
 from engine import write_lyrics as module
 from engine.lyrics import parse_lyrics
-from engine.write_lyrics import MAX_CONTEXT, MAX_WORDS, main, subtitle_lines, write_lyrics
+from engine.write_lyrics import MAX_CONTEXT, main, write_lyrics
 
 LYRICS = "[Verse]\nAcordei com o sol na janela\nO café esfriando na mesa\n[Chorus]\nVem comigo\nVem comigo agora"
-GOOD = {"title": "Manhã", "lyrics": LYRICS, "style": "acoustic pop, warm female vocals, 90 bpm"}
+GOOD = {
+    "title": "Manhã",
+    "lyrics": LYRICS,
+    "style": "acoustic pop, warm female vocals, 90 bpm",
+    "youtube_title": "Manhã de fé",
+    "youtube_description": "Uma música de esperança para o amanhecer.",
+    "tiktok_caption": "Depois da noite vem o sol",
+    "hashtags": ["#gospel", "#esperanca", "#louvor"],
+}
 REQUEST = httpx2.Request("POST", "https://api.anthropic.com/v1/messages")
 
 
@@ -139,26 +147,14 @@ def test_contexto_vazio_ou_longo_e_recusado_sem_chamar_a_api(context):
     ({"lyrics": LYRICS + "\n[Solo]\nlá lá lá"}, "marcador"),
     ({"style": "x" * 201}, "estilo"),
     ({"title": ""}, "campos vazios"),
+    ({"youtube_title": "x" * 101}, "youtube_title com mais de 100"),
+    ({"hashtags": ["#a", "#b"]}, "hashtags fora do formato"),
+    ({"hashtags": ["gospel", "#a", "#b"]}, "hashtags fora do formato"),
 ])
 def test_resposta_fora_do_formato_e_recusada(changes, motivo):
     client = FakeClient(good_json(**changes), good_json(**changes))
     with pytest.raises(RuntimeError, match=motivo):
         write_lyrics("contexto", client=client)
-
-
-def test_virgula_perto_do_meio_vira_quebra():
-    assert subtitle_lines("[Verse]\nEu caminhei por vales, sem ver a luz nenhuma vez") == (
-        "[Verse]\nEu caminhei por vales,\nsem ver a luz nenhuma vez")
-
-
-def test_verso_longo_quebra_em_linhas_curtas_sem_perder_palavras():
-    lyrics = "[Verse]\nEu caminhei por vales sem ver a luz, carreguei no peito um peso\n\n[Chorus]\nVem comigo"
-    result = subtitle_lines(lyrics).splitlines()
-    assert result[0] == "[Verse]" and result[-2] == "[Chorus]"
-    lines = [line for line in result if not line.startswith("[")]
-    assert all(len(line.split()) <= MAX_WORDS for line in lines)
-    assert [word for line in lines for word in line.split()] == (
-        "Eu caminhei por vales sem ver a luz, carreguei no peito um peso Vem comigo".split())
 
 
 def test_cli_grava_letra_e_estilo_e_nao_sobrescreve(tmp_path, monkeypatch, capsys):
@@ -167,6 +163,8 @@ def test_cli_grava_letra_e_estilo_e_nao_sobrescreve(tmp_path, monkeypatch, capsy
     assert main(["--context", "manhã", "--out", str(out)]) == 0
     assert out.read_text(encoding="utf-8") == LYRICS + "\n"
     assert (tmp_path / "samples" / "manha.estilo.txt").read_text(encoding="utf-8") == GOOD["style"] + "\n"
+    postar = (tmp_path / "samples" / "manha.postar.txt").read_text(encoding="utf-8")
+    assert "Título (YouTube): Manhã de fé" in postar and "Hashtags: #gospel #esperanca #louvor" in postar
     assert "acoustic pop" in capsys.readouterr().out
     with pytest.raises(SystemExit):
         main(["--context", "manhã", "--out", str(out)])

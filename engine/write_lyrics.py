@@ -8,6 +8,7 @@ import anthropic
 from dotenv import load_dotenv
 
 from engine.lyrics import MARKER, parse_lyrics
+from engine.posting import posting_problems, posting_text
 from engine.theme import ROOT, parse_reply
 
 MODEL_DEFAULT = "claude-sonnet-5-5"
@@ -20,21 +21,29 @@ CONNECTORS = {"a", "as", "com", "da", "das", "de", "do", "dos", "e", "em", "mas"
               "por", "que", "sem", "uma", "um"}
 # shortcut: 45 s por tentativa, 2 tentativas, para caber no corte de 100 s do túnel da Cloudflare; subir se a letra chegar cortada
 TIMEOUT = 45.0
-FIELDS = ("title", "lyrics", "style")
+FIELDS = ("title", "lyrics", "style", "youtube_title", "youtube_description", "tiktok_caption")
 SCHEMA = {
     "type": "object",
-    "properties": {field: {"type": "string"} for field in FIELDS},
-    "required": list(FIELDS),
+    "properties": {
+        **{field: {"type": "string"} for field in FIELDS},
+        "hashtags": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": [*FIELDS, "hashtags"],
     "additionalProperties": False,
 }
 SYSTEM = (
     "Você escreve letras de música a partir do contexto que a pessoa der. Responda com um JSON com os campos "
-    "title, lyrics e style. "
+    "title, lyrics, style, youtube_title, youtube_description, tiktok_caption e hashtags. "
     "lyrics: a letra no idioma do contexto, um verso por linha. Marque as seções com marcadores sozinhos na linha, "
     "usando só estes: [Intro], [Verse], [Pre-Chorus], [Chorus], [Bridge], [Outro]. Tenha ao menos um [Chorus]. "
     "Não escreva indicações de instrumento, de palco ou entre parênteses dentro da letra: tudo nela será cantado. "
     f"style: gênero, clima, instrumentos, tipo de voz e andamento, para o campo de estilo do Suno, em inglês, "
-    f"com até {MAX_STYLE} caracteres, sem nomes de artistas ou bandas reais."
+    f"com até {MAX_STYLE} caracteres, sem nomes de artistas ou bandas reais. "
+    "youtube_title: título para o YouTube, até 100 caracteres. "
+    "youtube_description: de 2 a 4 frases sobre o tema e o clima, até 1000 caracteres, sem copiar versos da letra. "
+    "tiktok_caption: frase curta e chamativa para o TikTok, até 150 caracteres, sem hashtags. "
+    "hashtags: de 3 a 6, cada uma começando com # e sem espaço, misturando gênero e tema. "
+    "Escreva os textos para postar no mesmo idioma do contexto."
 )
 
 
@@ -75,6 +84,7 @@ def write_lyrics(context: str, client: anthropic.Anthropic | None = None) -> dic
         if not problems:
             draft = {field: data[field].strip() for field in FIELDS}
             draft["lyrics"] = subtitle_lines(draft["lyrics"])
+            draft["hashtags"] = data["hashtags"]
             return draft
         reason = "; ".join(problems)
     raise RuntimeError(f"não consegui gerar a letra ({reason})")
@@ -124,7 +134,7 @@ def _problems(data: object) -> list[str]:
     missing = [field for field in FIELDS if not (isinstance(data.get(field), str) and data[field].strip())]
     if missing:
         return ["campos vazios: " + ", ".join(missing)]
-    problems = []
+    problems = posting_problems(data)
     lines = parse_lyrics(data["lyrics"])
     if len(lines) < MIN_LINES:
         problems.append(f"letra com menos de {MIN_LINES} versos")
@@ -166,9 +176,12 @@ def main(argv: list[str] | None = None) -> int:
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(draft["lyrics"] + "\n", encoding="utf-8")
     style_path(args.out).write_text(draft["style"] + "\n", encoding="utf-8")
+    postar = args.out.with_suffix(".postar.txt")
+    postar.write_text(posting_text(draft), encoding="utf-8")
     print(f"título: {draft['title']}")
     print(f"letra: {args.out}")
     print(f"estilo para o Suno ({style_path(args.out)}): {draft['style']}")
+    print(f"para postar ({postar}): {draft['youtube_title']}")
     return 0
 
 

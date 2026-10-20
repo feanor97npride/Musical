@@ -150,7 +150,7 @@ Regras que `validate_song()` verifica:
 ## CLI
 - `python -m engine.align --audio A --lyrics L --out O [--model small] [--no-separate] [--language pt]`
 - `python -m engine.theme --song O` (grava `theme` no mesmo JSON)
-- `python -m engine.write_lyrics --context "texto" | --context-file C --out samples/nome.txt [--force]` (gera a letra com `[Verse]`/`[Chorus]` e grava o prompt de estilo do Suno em `samples/nome.estilo.txt`)
+- `python -m engine.write_lyrics --context "texto" | --context-file C --out samples/nome.txt [--force]` (gera a letra com `[Verse]`/`[Chorus]`; grava o prompt de estilo do Suno em `samples/nome.estilo.txt` e as informações para postar em `samples/nome.postar.txt`)
 - `python -m engine.pipeline --audio A --lyrics L [--style karaoke] [--background gradient] [--clip 30:75] [--no-separate] [--skip-theme] [--force]`
 - `cd renderer && npm run render -- <props.json> <saida.mp4>`
 
@@ -172,7 +172,7 @@ Regras que `validate_song()` verifica:
 - A API roda no seu computador (`uvicorn web.app:app --port 8000`) e fica acessível por um túnel (ex.: Cloudflare Tunnel).
 - No seu computador, o `.env` precisa de `ACCESS_TOKEN` (uma senha longa) e `ALLOWED_ORIGINS=https://SEU-SITE` (o endereço do site, sem barra no fim).
 - Na página, o campo "Endereço do servidor" recebe a URL do túnel, e o campo "Senha de acesso" recebe a senha.
-- `POST /lyrics` (campo `context`, até 4000 caracteres, com a mesma senha) devolve `{title, lyrics, style}`. Contexto vazio ou longo dá 400; sem chave da API ou resposta inválida dá 503. A página preenche o campo da letra e o estilo do Suno.
+- `POST /lyrics` (campo `context`, até 4000 caracteres, com a mesma senha) devolve `{title, lyrics, style, youtube_title, youtube_description, tiktok_caption, hashtags}` (hashtags é uma lista de 3 a 6). Contexto vazio ou longo dá 400; sem chave da API ou resposta inválida dá 503. A página preenche o campo da letra e o estilo do Suno.
 
 ## Iniciador (Windows)
 - `iniciar.bat` (duplo clique) ou `python -m web.launcher` faz, nesta ordem:

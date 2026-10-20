@@ -31,7 +31,7 @@ Detalhes e árvore completa em `docs/ARQUITETURA.md`.
 ## Comandos
 Passam a existir conforme as fases avançam. Quando um comando mudar, atualize esta seção.
 
-- Gerar letra a partir de um contexto: `python -m engine.write_lyrics --context "tema, história, estilo, idioma" --out samples/nome.txt` (grava também `samples/nome.estilo.txt` para o Suno)
+- Gerar letra a partir de um contexto: `python -m engine.write_lyrics --context "tema, história, estilo, idioma" --out samples/nome.txt` (grava também `samples/nome.estilo.txt` para o Suno e `samples/nome.postar.txt` com títulos, descrição, legenda e hashtags)
 - Alinhar: `python -m engine.align --audio samples/a.mp3 --lyrics samples/a.txt --out output/a/song.json`
 - Pipeline completa: `python -m engine.pipeline --audio samples/a.mp3 --lyrics samples/a.txt`
 - Lote (cada `.mp3` com `.txt` de mesmo nome na pasta): `python -m engine.batch --folder samples --variants "background=gradient,aurora;style=karaoke,oneword"` (`--variants` é opcional: um vídeo por combinação; `--export` gera também a cópia para postar em `para-postar/`)
