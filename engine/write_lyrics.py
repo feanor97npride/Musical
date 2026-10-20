@@ -7,13 +7,17 @@ from pathlib import Path
 import anthropic
 from dotenv import load_dotenv
 
-from engine.lyrics import parse_lyrics
+from engine.lyrics import MARKER, parse_lyrics
 from engine.theme import ROOT, parse_reply
 
 MODEL_DEFAULT = "claude-sonnet-5-5"
 MAX_CONTEXT = 4000
 MAX_STYLE = 200  # shortcut: limite chutado para o campo de estilo do Suno, subir se o campo aceitar mais
 MIN_LINES = 4
+# shortcut: 6 palavras por linha cabem na tela 1080x1920 com a fonte de 88 px, subir se a legenda ficar apertada
+MAX_WORDS = 6
+CONNECTORS = {"a", "as", "com", "da", "das", "de", "do", "dos", "e", "em", "mas", "na", "no", "os", "para", "pra",
+              "por", "que", "sem", "uma", "um"}
 # shortcut: 45 s por tentativa, 2 tentativas, para caber no corte de 100 s do túnel da Cloudflare; subir se a letra chegar cortada
 TIMEOUT = 45.0
 FIELDS = ("title", "lyrics", "style")
@@ -69,7 +73,9 @@ def write_lyrics(context: str, client: anthropic.Anthropic | None = None) -> dic
             continue
         problems = _problems(data)
         if not problems:
-            return {field: data[field].strip() for field in FIELDS}
+            draft = {field: data[field].strip() for field in FIELDS}
+            draft["lyrics"] = subtitle_lines(draft["lyrics"])
+            return draft
         reason = "; ".join(problems)
     raise RuntimeError(f"não consegui gerar a letra ({reason})")
 
@@ -87,6 +93,29 @@ def _ask(client: anthropic.Anthropic, context: str) -> str:
         raise RuntimeError("o modelo recusou este contexto; reescreva o pedido")
     # o modelo pode enviar bloco "thinking" antes do texto; junta só os blocos de texto
     return "".join(block.text for block in message.content if block.type == "text")
+
+
+def subtitle_lines(lyrics: str) -> str:
+    """Quebra versos com mais de MAX_WORDS palavras; marcadores ficam, linhas vazias somem."""
+    out = []
+    for line in lyrics.splitlines():
+        if MARKER.fullmatch(line.strip()):
+            out.append(line.strip())
+        else:
+            out.extend(_pieces(line.split()))
+    return "\n".join(out)
+
+
+def _pieces(words: list[str]) -> list[str]:
+    if not words:
+        return []
+    if len(words) <= MAX_WORDS:
+        return [" ".join(words)]
+    # quebra depois de vírgula; senão, antes de conectivo; cada lado com pelo menos 3 palavras
+    spots = [i for i in range(3, len(words) - 2) if words[i - 1].endswith(",")]
+    spots = spots or [i for i in range(3, len(words) - 2) if words[i].lower() in CONNECTORS]
+    cut = min(spots, key=lambda i: abs(i - len(words) / 2)) if spots else len(words) // 2
+    return _pieces(words[:cut]) + _pieces(words[cut:])
 
 
 def _problems(data: object) -> list[str]:
