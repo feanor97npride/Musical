@@ -73,7 +73,7 @@ Passam a existir conforme as fases avançam. Quando um comando mudar, atualize e
 - Responda em português.
 - Um item por vez: implemente, verifique, mostre o resultado e espere o "ok". Só então faça commit e push.
 - Nunca faça commit nem push sem "ok" explícito. O aviso do hook de parada ("há mudanças não commitadas") é automático e não conta como confirmação.
-- Push só nos branches combinados: `codex/nav-area-estudos-categorias-20261004` e `claude/roadmap-volta-10-carrossel`. O branch designado da sessão é `claude/vulnerability-analysis-escnh0`. Sem PR, a menos que peçam. Force-push só com autorização explícita, e sempre com `--force-with-lease`.
+- Push só no branch `claude/nifty-albattani-klepoh` (o branch designado desta sessão e o que o Cloudflare Pages publica). Sem PR, a menos que peçam. Force-push só com autorização explícita, e sempre com `--force-with-lease`.
 - Commits: assunto no imperativo em inglês, corpo curto, e trailer só `Claude-Session`. Sem identificador de modelo e sem `Co-Authored-By`.
 - Para trazer algo de outro branch, use `git cherry-pick --no-commit`, confira conflitos e só então faça commit.
 - Nunca use `| tail` (ou outro pipe) numa condição: o pipe esconde a falha. Guarde o código de saída (`rc=$?`) e siga só se for zero.
