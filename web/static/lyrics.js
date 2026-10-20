@@ -26,6 +26,7 @@
       lyricsInput.value = data.lyrics;
       for (const [key, id] of Object.entries(FILLED)) document.getElementById(id).value = data[key] || "";
       document.getElementById("hashtags").value = (data.hashtags || []).join(" ");
+      document.getElementById("posting").hidden = false;
       say("Letra pronta: " + data.title + ". Revise antes de usar.");
     } catch (error) {
       say("Não consegui falar com o servidor, ou ele demorou demais. Confira o endereço e tente de novo.", true);
