@@ -1,101 +1,147 @@
 /* Estúdio de legenda: fundo quase preto e o amarelo da legenda do vídeo como única cor de ação. */
 :root {
   color-scheme: light dark;
-  --bg: #f4f3f7; --surface: #ffffff; --fg: #15131c; --muted: #5f5b6b; --line: #d6d3de;
+  --bg: #f4f3f7; --surface: #ffffff; --fg: #15131c; --muted: #5f5b6b; --line: #d6d3de; --field-line: #7b7788;
   --accent: #ffd60a; --accent-ink: #15130a; --accent-edge: #15131c; --focus: #15131c;
   --error: #b3261e; --warn-bg: #fff4d6; --warn-fg: #4a3800;
   --display: "Bricolage Grotesque", system-ui, sans-serif;
   --text: "Figtree", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --bg: #0f0e12; --surface: #1a1820; --fg: #f4f2f7; --muted: #9c98a8; --line: #36323f;
+  :root {
+    --bg: #0f0e12; --surface: #1a1820; --fg: #f4f2f7; --muted: #9c98a8; --line: #36323f; --field-line: #77718a;
     --accent-edge: transparent; --focus: #ffd60a; --error: #ff8a80; --warn-bg: #2a2412; --warn-fg: #ffe38a;
   }
 }
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --bg: #0f0e12; --surface: #1a1820; --fg: #f4f2f7; --muted: #9c98a8; --line: #36323f;
-  --accent-edge: transparent; --focus: #ffd60a; --error: #ff8a80; --warn-bg: #2a2412; --warn-fg: #ffe38a;
-}
 
 * { box-sizing: border-box; }
+html { scroll-padding-block-end: 9rem; } /* a barra fixa de ações não cobre o campo em foco */
 body { margin: 0; background: var(--bg); color: var(--fg); font: 400 1rem/1.5 var(--text); }
-main { max-width: 720px; margin: 0 auto; padding: 32px 16px 72px; }
+main { max-inline-size: 720px; margin-inline: auto; padding: 32px 16px 72px; }
 h1 { font: 700 clamp(1.75rem, 4vw + 0.5rem, 2.5rem)/1.1 var(--display); letter-spacing: -0.02em; margin: 0 0 8px; }
 h2 { font: 700 1.25rem/1.2 var(--display); margin: 0 0 12px; }
-h3 { font: 700 1rem/1.2 var(--display); margin: 20px 0 8px; }
-.lead { color: var(--muted); max-width: 60ch; margin: 0 0 24px; }
+.lead { color: var(--muted); max-inline-size: 60ch; margin: 0 0 24px; }
 .hint { color: var(--muted); font-size: 0.9rem; margin: 6px 0 0; }
+.req { font-weight: 400; color: var(--muted); font-size: 0.9rem; }
 .warning { background: var(--warn-bg); color: var(--warn-fg); border-radius: 10px; padding: 12px 14px; font-size: 0.95rem; margin: 12px 0 0; }
+.visually-hidden:where(:not(:focus-within, :active)) {
+  position: absolute !important; clip-path: inset(50%) !important; overflow: hidden !important; inline-size: 1px !important;
+  block-size: 1px !important; margin: -1px !important; padding: 0 !important; border: 0 !important; white-space: nowrap !important;
+}
 
 /* um só nível de caixa: o formulário é a superfície; as seções são separadas por espaço e uma linha */
 form { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 24px; }
-form section + section { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
+form section + section { margin-block-start: 32px; padding-block-start: 24px; border-block-start: 1px solid var(--line); }
+fieldset { border: 0; margin: 0; padding: 0; min-inline-size: 0; }
+legend { font-weight: 600; padding: 0; margin-block: 16px 6px; }
+label { display: block; font-weight: 600; margin-block: 16px 6px; }
 
-label { display: block; font-weight: 600; margin: 16px 0 6px; }
-input[type="text"], input[type="password"], input[type="number"], select, textarea {
-  width: 100%; min-height: 44px; padding: 10px 12px; font: inherit; color: var(--fg);
-  background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+input[type="text"], input[type="password"], input[type="number"], textarea {
+  inline-size: 100%; min-block-size: 44px; padding: 10px 12px; font: inherit; color: var(--fg);
+  background: var(--bg); border: 1px solid var(--field-line); border-radius: 10px;
 }
-textarea { min-height: 140px; resize: vertical; }
-.label-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; margin-top: 16px; }
-.label-row label { margin: 0 0 6px; }
+textarea { min-block-size: 140px; resize: vertical; }
+input[type="file"] { font: inherit; inline-size: 100%; }
+input[type="file"]::file-selector-button, button {
+  font: inherit; font-weight: 600; min-block-size: 44px; padding: 10px 16px; border-radius: 10px;
+  border: 1px solid var(--muted); background: transparent; color: var(--fg); cursor: pointer;
+}
+input[type="file"]::file-selector-button { margin-inline-end: 12px; }
+.label-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; margin-block-start: 16px; }
+.label-row label { margin-block: 0 6px; }
 
-.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
-fieldset.pair { border: 0; margin: 16px 0 0; padding: 0; min-width: 0; }
-.pair legend { font-weight: 600; padding: 0; margin: 16px 0 6px; }
+/* erro só depois da interação (:user-invalid), com texto e símbolo, nunca só cor */
+.error-msg { display: none; color: var(--error); font-size: 0.9rem; margin: 6px 0 0; }
+.error-msg::before { content: "✕ "; }
+input:user-invalid, textarea:user-invalid { border-color: var(--error); }
+.check input:user-invalid { outline: 2px solid var(--error); outline-offset: 2px; }
+input:user-invalid + .error-msg, textarea:user-invalid + .error-msg,
+.check:has(input:user-invalid) + .error-msg, fieldset:has(input:user-invalid) > .error-msg { display: block; }
+
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-block-start: 16px; }
 .pair label { margin: 0; }
-.pair input { display: block; margin-top: 6px; }
+.pair input { display: block; margin-block-start: 6px; }
+.pair .error-msg { grid-column: 1 / -1; margin: 0; }
 
-.check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; margin: 0 0 20px; }
-.check input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--fg); }
+/* opções visíveis como cartões de rádio: com até 5 opções, ver tudo é mais rápido que abrir uma lista */
+.choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.choices.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.choice { display: flex; align-items: flex-start; gap: 10px; margin: 0; padding: 12px; font-weight: 400; cursor: pointer;
+  border: 1px solid var(--field-line); border-radius: 10px; }
+.choice input { inline-size: 18px; block-size: 18px; margin: 2px 0 0; flex: none; accent-color: var(--fg); }
+.choice strong { display: block; font-weight: 600; }
+.choice small { display: block; color: var(--muted); }
+.choice:has(input:checked) { border-color: var(--fg); box-shadow: inset 0 0 0 1px var(--fg);
+  background: color-mix(in oklab, var(--accent) 12%, var(--surface)); }
+.choice:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
 
-/* botões: o padrão é contorno; só a ação principal é amarela. Largura total só onde faz sentido */
-button { font: inherit; font-weight: 600; min-height: 44px; padding: 10px 16px; border-radius: 10px;
-  border: 1px solid var(--muted); background: transparent; color: var(--fg); cursor: pointer; }
+/* barra de ações fixa no fim do formulário: o botão principal fica sempre à vista */
+.actions { position: sticky; inset-block-end: 0; margin: 32px -24px -24px; padding: 16px 24px; background: var(--surface);
+  border-block-start: 1px solid var(--line); border-radius: 0 0 16px 16px; box-shadow: 0 -8px 16px -12px rgb(0 0 0 / 0.35); }
+.check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; margin: 0; }
+.check input { inline-size: 20px; block-size: 20px; margin: 2px 0 0; flex: none; accent-color: var(--fg); }
+.buttons { display: flex; gap: 8px; margin-block-start: 12px; }
+.buttons button { flex: 1; min-block-size: 52px; }
+.buttons .primary { flex: 2; font-size: 1.05rem; }
+
 button:hover { border-color: var(--fg); }
 button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent-edge); }
-button.block { width: 100%; min-height: 52px; font-size: 1.05rem; margin-top: 8px; }
 button:disabled { opacity: 0.5; cursor: wait; }
+button[data-copied] { position: relative; border-color: var(--fg); }
+button[data-copied] .label { visibility: hidden; }
+button[data-copied]::after { content: "Copiado ✓"; position: absolute; inset: 0; display: grid; place-items: center; }
 
-/* linha de copiar: campo e botão lado a lado, botão do tamanho do texto */
 .copy-row { display: flex; gap: 8px; align-items: flex-start; }
-.copy-row > input, .copy-row > textarea { flex: 1; min-width: 0; }
+.copy-row > input, .copy-row > textarea { flex: 1; min-inline-size: 0; }
 .copy-row > button { flex: none; }
 
-details { margin-top: 16px; }
-summary { font-weight: 600; cursor: pointer; min-height: 44px; display: flex; align-items: center; list-style: none; }
+details { margin-block-start: 16px; }
+summary { font-weight: 600; cursor: pointer; min-block-size: 44px; display: flex; align-items: center; list-style: none; }
 summary::-webkit-details-marker { display: none; }
-summary::before { content: "▸"; margin-right: 8px; color: var(--muted); }
+summary::before { content: "▸"; margin-inline-end: 8px; color: var(--muted); }
 details[open] > summary::before { content: "▾"; }
-details.server { margin-top: 32px; padding-top: 8px; border-top: 1px solid var(--line); }
-
-.result { display: none; margin-top: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px 24px; }
-.result.visible { display: block; }
-.stage { font: 700 1.25rem/1.25 var(--display); }
-.error { color: var(--error); }
-.detail { color: var(--muted); font-size: 0.95rem; min-height: 1.5em; margin-top: 4px; }
-video { display: block; width: 100%; border-radius: 12px; margin-top: 16px; background: #000; }
-a.download { display: inline-flex; align-items: center; min-height: 44px; margin-top: 12px; font-weight: 600; color: var(--fg);
-  text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+details.server { margin-block-start: 32px; padding-block-start: 8px; border-block-start: 1px solid var(--line); }
 
 .side { display: grid; gap: 16px; }
 .side-empty { color: var(--muted); border: 1px dashed var(--line); border-radius: 16px; padding: 24px; margin: 0; }
 .side:has(.visible, .posting:not([hidden])) .side-empty { display: none; }
-.posting { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px 24px; }
-.posting h2 { margin-top: 16px; }
-.posting h2:first-child { margin-top: 0; }
+.result, .posting { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px 24px; }
+.result { display: none; }
+.result.visible { display: block; }
+.posting h2 { margin-block: 16px 12px; }
+.posting h2:first-child { margin-block-start: 0; }
+.stage { font: 700 1.25rem/1.25 var(--display); }
+.error { color: var(--error); }
+.error::before { content: "✕ "; }
+progress { inline-size: 100%; margin-block-start: 12px; accent-color: var(--accent); }
+.detail { color: var(--muted); font-size: 0.95rem; min-block-size: 1.5em; margin-block-start: 4px; }
+video { display: block; aspect-ratio: 9 / 16; block-size: min(56dvh, 560px); inline-size: auto; max-inline-size: 100%;
+  margin: 16px auto 0; border-radius: 12px; background: #000; }
+a.download { display: inline-flex; align-items: center; min-block-size: 44px; margin-block-start: 12px; font-weight: 600; color: var(--fg);
+  text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+
+/* aviso único de copiar e erros de cópia: aparece por poucos segundos e some */
+.toast { position: fixed; inset-block-end: 24px; inset-inline-end: 32px; max-inline-size: min(90vw, 360px);
+  padding: 10px 16px; border-radius: 10px; background: var(--fg); color: var(--bg); z-index: 10; }
+.toast:empty { display: none; }
 
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+@media (forced-colors: active) {
+  .toast { border: 1px solid CanvasText; }
+  button.primary { border-color: ButtonText; }
+  .choice:has(input:checked) { border-color: Highlight; }
+}
 
-/* computador: formulário à esquerda, coluna fixa à direita com o vídeo e os textos para postar */
+/* computador: cabeçalho em cima; à esquerda formulário e servidor; à direita a coluna fixa, que ocupa as duas linhas
+   (o sticky é limitado pela grade inteira, então ela não pode passar por baixo de uma área vizinha) */
 @media (min-width: 960px) {
-  main { max-width: 1120px; padding: 48px 32px 96px; }
+  main { max-inline-size: 1120px; padding: 48px 32px 96px; display: grid; gap: 32px; align-items: start;
+    grid-template-columns: minmax(0, 1fr) 380px; grid-template-areas: "head head" "form side" "server side"; }
+  header { grid-area: head; }
   h1 { font-size: 3rem; }
-  .lead { font-size: 1.125rem; }
-  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 32px; align-items: start; }
-  .side { position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; }
-  video { width: auto; max-width: 100%; max-height: 70vh; margin: 16px auto 0; }
+  .lead { font-size: 1.125rem; margin: 0; }
+  form { grid-area: form; }
+  .side { grid-area: side; position: sticky; inset-block-start: 24px; max-block-size: calc(100dvh - 48px); overflow-y: auto;
+    scrollbar-gutter: stable; overscroll-behavior: contain; padding: 4px; margin: -4px; }
+  details.server { grid-area: server; margin: 0; }
 }

@@ -35,20 +35,34 @@
     }
   });
 
+  // aviso único (visível e anunciado): o bloco da IA pode estar fechado, então o aviso de copiar não fica nele
+  const announcer = document.getElementById("announcer");
+  let announceTimer = null;
+  function announce(text) {
+    clearTimeout(announceTimer);
+    announcer.textContent = "";
+    setTimeout(() => { announcer.textContent = text; }, 50); // limpar antes faz o mesmo texto ser anunciado de novo
+    announceTimer = setTimeout(() => { announcer.textContent = ""; }, 3500);
+  }
+
   // copia o campo indicado no data-copy; sem permissão de área de transferência, deixa o texto selecionado para Ctrl+C
-  function copyFrom(field, done) {
-    if (!field.value.trim()) return say("Ainda não há nada para copiar. Gere a letra primeiro.", true);
+  function copyFrom(button, field, done) {
+    if (!field.value.trim()) return announce("Ainda não há nada para copiar. Gere a letra primeiro.");
     // Promise.resolve: sem navigator.clipboard (página fora de https), o erro cai no mesmo aviso
     Promise.resolve().then(() => navigator.clipboard.writeText(field.value)).then(
-      () => say(done),
+      () => {
+        announce(done);
+        button.dataset.copied = "";
+        setTimeout(() => delete button.dataset.copied, 1500);
+      },
       () => {
         field.select();
-        say("Não consegui copiar sozinho. O texto ficou selecionado: use Ctrl+C.", true);
+        announce("Não consegui copiar sozinho. O texto ficou selecionado: use Ctrl+C.");
       },
     );
   }
 
   document.querySelectorAll("[data-copy]").forEach((button) => {
-    button.addEventListener("click", () => copyFrom(document.getElementById(button.dataset.copy), button.dataset.done));
+    button.addEventListener("click", () => copyFrom(button, document.getElementById(button.dataset.copy), button.dataset.done));
   });
 })();

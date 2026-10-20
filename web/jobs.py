@@ -15,7 +15,7 @@ from engine.names import clean_name, make_slug, variant_name
 from engine.pipeline import OUTPUT, ROOT
 
 UPLOADS = ROOT / "output" / "web"
-STAGE_LINE = re.compile(r"^\[\d/\d\] (.+?)\.\.\.")
+STAGE_LINE = re.compile(r"^\[(\d+)/(\d+)\] (.+?)\.\.\.")
 ERROR_LINE = re.compile(r"^erro: (.+)")
 FRAME_LINE = re.compile(r"Rendered (\d+)/(\d+)")
 
@@ -34,6 +34,9 @@ class Job:
     message: str = ""
     cuts: int | None = None  # segundos por corte; None = um vídeo só
     ready_videos: list[Path] = field(default_factory=list)  # guardados quando o job termina
+    step: int = 0  # etapa atual e total, lidos de "[3/7] ..." na saída da pipeline
+    total: int = 0
+    progress: float = 0.0  # de 0 a 1; nunca diminui (os cortes renderizam um depois do outro)
 
     @property
     def lyrics(self) -> Path:
@@ -51,16 +54,24 @@ class Job:
     def read_line(self, line: str) -> None:
         stage = STAGE_LINE.match(line)
         if stage:
-            self.stage, self.message = stage.group(1), ""
+            self.step, self.total, self.stage, self.message = int(stage.group(1)), int(stage.group(2)), stage.group(3), ""
+            self._advance(self.step - 1)
         error = ERROR_LINE.match(line)
         if error:
             self.message = error.group(1)
         frame = FRAME_LINE.search(line)
         if frame:
             self.message = f"quadro {frame.group(1)} de {frame.group(2)}"
+            if int(frame.group(2)):
+                self._advance(self.step - 1 + int(frame.group(1)) / int(frame.group(2)))
+
+    def _advance(self, steps_done: float) -> None:
+        if self.total:
+            self.progress = max(self.progress, min(steps_done / self.total, 1.0))
 
     def to_dict(self) -> dict:
-        data = {"status": self.status, "stage": self.stage, "message": self.message}
+        data = {"status": self.status, "stage": self.stage, "message": self.message,
+                "step": self.step, "total": self.total, "progress": round(self.progress, 3)}
         if self.status == "done":
             data["videos"] = [path.name for path in self.ready_videos]
         return data
@@ -123,7 +134,7 @@ class JobQueue:
         except Exception as error:  # a pipeline nem chegou a rodar, ou o song.json não está lá
             code, ready, job.message = 1, False, str(error)
         if ready:
-            job.status, job.stage, job.message = "done", "Concluído", ""
+            job.status, job.stage, job.message, job.progress = "done", "Concluído", "", 1.0
         else:
             job.message = job.message or f"a pipeline terminou com código {code}"  # antes do status: o polling para em error
             job.status = "error"

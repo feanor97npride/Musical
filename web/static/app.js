@@ -5,6 +5,7 @@ const result = document.getElementById("result");
 const stage = document.getElementById("stage");
 const detail = document.getElementById("detail");
 const output = document.getElementById("output");
+const jobProgress = document.getElementById("job-progress");
 const serverInput = document.getElementById("server");
 const tokenInput = document.getElementById("token");
 const SERVER_KEY = "lyricVideo.server";
@@ -38,12 +39,13 @@ function api(path, options = {}) {
 
 function show(message, isError) {
   result.classList.add("visible");
-  stage.textContent = message;
+  if (stage.textContent !== message) stage.textContent = message; // mesmo texto não é relido pelo leitor de tela
   stage.className = isError ? "stage error" : "stage";
 }
 
 function finish() {
   clearInterval(timer);
+  jobProgress.hidden = true;
   submit.disabled = preview.disabled = false;
 }
 
@@ -118,8 +120,10 @@ async function poll(id) {
       clearInterval(timer);
       await showVideo(id, job.videos);
     } else {
-      show(job.stage + "...");
+      show(job.total ? `Etapa ${job.step} de ${job.total}: ${job.stage}` : job.stage + "...");
       detail.textContent = job.message;
+      jobProgress.value = job.progress;
+      jobProgress.hidden = !job.total;
     }
   } catch (error) {
     finish();
@@ -152,11 +156,14 @@ form.addEventListener("submit", async (event) => {
 // prévia: envia o mesmo formulário com o trecho de 0 a 30 s; o FormData é montado na hora do envio,
 // então dá para limpar o trecho logo em seguida e um envio normal não sai com 30 s por engano
 preview.addEventListener("click", () => {
-  const fields = ["cuts", "clip_start", "clip_end"].map((id) => document.getElementById(id));
+  const fields = ["cuts", "clip_start", "clip_end"].map((name) => form.elements[name]); // cuts é um grupo de rádios
   const saved = fields.map((field) => field.value);
-  document.getElementById("clip_start").value = "0";
-  document.getElementById("clip_end").value = "30";
-  document.getElementById("cuts").value = ""; // prévia é um trecho só: não junta com cortes
+  const set = (values) => {
+    fields.forEach((field, index) => { field.value = values[index]; });
+    // valor mudado por código não dispara "input": avisa a validação do trecho (forms.js)
+    for (const name of ["clip_start", "clip_end"]) form.elements[name].dispatchEvent(new Event("input", { bubbles: true }));
+  };
+  set(["", "0", "30"]); // prévia é um trecho só: não junta com cortes
   form.requestSubmit();
-  fields.forEach((field, index) => { field.value = saved[index]; }); // devolve o que o usuário tinha digitado
+  set(saved); // devolve o que o usuário tinha digitado
 });

@@ -173,6 +173,7 @@ Regras que `validate_song()` verifica:
 - No seu computador, o `.env` precisa de `ACCESS_TOKEN` (uma senha longa) e `ALLOWED_ORIGINS=https://SEU-SITE` (o endereço do site, sem barra no fim).
 - Na página, o campo "Endereço do servidor" recebe a URL do túnel, e o campo "Senha de acesso" recebe a senha.
 - `POST /lyrics` (campo `context`, até 4000 caracteres, com a mesma senha) devolve `{title, lyrics, style, youtube_title, youtube_description, tiktok_caption, hashtags}` (hashtags é uma lista de 3 a 6). Contexto vazio ou longo dá 400; sem chave da API ou resposta inválida dá 503. A página preenche a letra, o estilo do Suno, o título e a descrição do YouTube, a legenda do TikTok e as hashtags.
+- `GET /jobs/{id}` devolve, além de `status`, `stage` e `message`, os campos `step` e `total` (etapa atual e número de etapas, lidos da linha `[n/total] Nome...` da pipeline; `0` até a primeira etapa) e `progress` (de 0 a 1, nunca diminui; durante o render conta os quadros `Rendered a/b`; vale 1 quando termina). A página usa `progress` na barra e `step`/`total` no texto "Etapa X de Y".
 
 ## Iniciador (Windows)
 - `iniciar.bat` (duplo clique) ou `python -m web.launcher` faz, nesta ordem:
