@@ -29,7 +29,7 @@ Uso pessoal, com músicas próprias e a letra em mãos. Abrir para o público fi
 9. Cache por job para não reprocessar etapas já feitas.
 
 ## Incluído depois do MVP (com aviso)
-- Fundo com uma imagem gerada por IA (Gemini), uma por música, a partir do tema da letra e de uma descrição opcional. Dados enviados ao Google: o tema e a descrição. Custo por imagem; exige chave `GEMINI_API_KEY`.
+- Fundo com uma imagem enviada pelo usuário (JPG ou PNG, até 10 MB), animada no vídeo com zoom e movimento. A imagem é de quem envia: o usuário confirma que tem o direito de usá-la. Nenhum dado vai para terceiros.
 
 ## Fora do MVP
 - Transcrição sem letra (Whisper puro)

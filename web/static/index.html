@@ -64,13 +64,13 @@
         <label class="choice" for="bg-aurora-gl"><input type="radio" id="bg-aurora-gl" name="background" value="aurora-gl"><span><strong>Aurora WebGL</strong><small>Animado</small></span></label>
         <label class="choice" for="bg-sunrise"><input type="radio" id="bg-sunrise" name="background" value="sunrise"><span><strong>Sol nascendo</strong><small>Animado</small></span></label>
         <label class="choice" for="bg-solid"><input type="radio" id="bg-solid" name="background" value="solid"><span><strong>Sólido</strong><small>Cor única</small></span></label>
-        <label class="choice" for="bg-image"><input type="radio" id="bg-image" name="background" value="image"><span><strong>Imagem por IA</strong><small>Gerada pelo Gemini</small></span></label>
+        <label class="choice" for="bg-image"><input type="radio" id="bg-image" name="background" value="image"><span><strong>Minha imagem</strong><small>Animada no vídeo</small></span></label>
       </fieldset>
 
       <div class="image-field">
-        <label for="description">Descreva a imagem (opcional)</label>
-        <textarea id="description" name="description" maxlength="300" aria-describedby="description-hint" placeholder="ex.: praia ao amanhecer, sem pessoas"></textarea>
-        <p class="hint" id="description-hint">Se ficar vazio, a imagem sai do tema da letra. Até 300 caracteres.</p>
+        <label for="background_image">Imagem de fundo (JPG ou PNG, até 10 MB)</label>
+        <input type="file" id="background_image" name="background_image" accept=".jpg,.jpeg,.png,image/jpeg,image/png" aria-describedby="image-hint">
+        <p class="hint" id="image-hint">Use uma imagem vertical, de pelo menos 1080 px de largura. Você precisa ter o direito de usá-la.</p>
       </div>
 
       <fieldset class="choices cols-4">

@@ -90,7 +90,7 @@ def _theme(job: Job) -> str | None:
 
 
 def _props(job: Job) -> str | None:
-    background = image.ensure_background(job.out, job.song, job.args.image_description, job.args.force) if job.args.background == "image" else None
+    background = image.ensure_background(job.out, job.args.background_image, job.args.force) if job.args.background == "image" else None
     props = build_props(job.song, job.args.audio, job.args.style, job.args.background, job.args.clip, background_image=background)
     job.new_props = json.dumps(props, ensure_ascii=False, indent=2)
     return None
@@ -141,7 +141,7 @@ def run(args: argparse.Namespace) -> int:
         run_step(3, "Achando batidas", lambda: _beats(job))
         run_step(4, "Gerando tema", lambda: _theme(job))
         jobs = _cut_jobs(job) if args.cuts else [job]  # o song.json já existe aqui: o alinhamento acabou
-        run_step(5, "Gerando imagem e montando props" if args.background == "image" else "Montando props", lambda: _props_all(jobs))
+        run_step(5, "Preparando imagem e montando props" if args.background == "image" else "Montando props", lambda: _props_all(jobs))
         for number, item in enumerate(jobs, 1):
             label = "Renderizando vídeo" if len(jobs) == 1 else f"Renderizando corte {number} de {len(jobs)}"
             run_step(6, label, lambda item=item: _render(item))
@@ -159,8 +159,8 @@ def build_options() -> argparse.ArgumentParser:
     """Opções que valem para cada música (sem o áudio e a letra). O lote reaproveita esta lista."""
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--style", default="karaoke", help="highlight, oneword ou karaoke")
-    parser.add_argument("--background", default="gradient", help="gradient (animado), solid, aurora, aurora-gl, sunrise ou image (IA)")
-    parser.add_argument("--image-description", default="", help="o que a imagem por IA deve mostrar (opcional)")
+    parser.add_argument("--background", default="gradient", help="gradient (animado), solid, aurora, aurora-gl, sunrise ou image (imagem enviada)")
+    parser.add_argument("--background-image", type=Path, default=None, help="imagem JPG ou PNG para o fundo image (cortada para 9:16)")
     parser.add_argument("--clip", type=parse_clip, default=None, help="início:fim em segundos, ex.: 30:75")
     parser.add_argument("--cuts", type=float, default=None, help="um vídeo por corte de cerca de N segundos, ex.: 30")
     parser.add_argument("--export", action="store_true", help="também gera uma cópia pronta para postar em para-postar/")

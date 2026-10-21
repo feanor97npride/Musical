@@ -35,7 +35,7 @@ export type LyricProps = {
   song: Song;
   audioFile: string;
   style: { subtitle: "highlight" | "oneword" | "karaoke"; background: "solid" | "gradient" | "aurora" | "aurora-gl" | "sunrise" | "image" };
-  backgroundFile?: string; // caminho da imagem gerada por IA, dentro de public/ (só com background "image")
+  backgroundFile?: string; // caminho da imagem enviada, dentro de public/ (só com background "image")
   clip: Clip | null;
 };
 

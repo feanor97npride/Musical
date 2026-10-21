@@ -44,7 +44,7 @@ class Job:
     step: int = 0  # etapa atual e total, lidos de "[3/7] ..." na saída da pipeline
     total: int = 0
     progress: float = 0.0  # de 0 a 1; nunca diminui (os cortes renderizam um depois do outro)
-    description: str = ""  # o que a imagem por IA deve mostrar; só vale com fundo "image"
+    background_image: Path | None = None  # imagem enviada pelo usuário; só vale com fundo "image"
 
     @property
     def lyrics(self) -> Path:
@@ -93,7 +93,7 @@ def run_pipeline(job: Job) -> int:
     if job.cuts:
         command += ["--cuts", str(job.cuts)]
     if job.background == "image":
-        command += [f"--image-description={job.description}"]  # com "=": a descrição nunca vira uma opção do argparse
+        command += ["--background-image", str(job.background_image)]
     # no Windows o filho escreve em cp1252 por padrão; forçamos UTF-8 para o texto com acento não quebrar a leitura
     process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                                encoding="utf-8", errors="replace",
@@ -110,13 +110,17 @@ class JobQueue:
         self._worker: threading.Thread | None = None
 
     def create(self, filename: str, audio: bytes, lyrics: str, style: str, background: str,
-               clip: tuple[float, float] | None, cuts: int | None = None, description: str = "") -> Job:
+               clip: tuple[float, float] | None, cuts: int | None = None,
+               image: tuple[bytes, str] | None = None) -> Job:
         job_id = uuid.uuid4().hex
         folder = UPLOADS / job_id
         folder.mkdir(parents=True)
         job = Job(job_id, folder, folder / f"{clean_name(Path(filename).stem)}.mp3", style, background, clip,
-                  cuts=cuts, description=description)
+                  cuts=cuts)
         job.audio.write_bytes(audio)
+        if image:  # a imagem fica na pasta do job, com a extensão que o usuário enviou
+            job.background_image = folder / f"fundo{image[1]}"
+            job.background_image.write_bytes(image[0])
         job.lyrics.write_text(lyrics, encoding="utf-8", newline="")  # no Windows, sem isso cada \n vira \r\n
         # lê o arquivo de volta: o navegador manda \r\n e o pipeline normaliza, o nome da pasta tem que bater
         slug = make_slug(job.audio, job.lyrics.read_text(encoding="utf-8"))

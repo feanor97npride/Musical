@@ -148,8 +148,8 @@ Regras que `validate_song()` verifica:
 }
 ```
 - `audioFile` é relativo a `renderer/public/`.
-- `backgroundFile` só existe com `style.background` = `image`: é a imagem gerada por IA, copiada para `renderer/public/bg/` (relativo a `renderer/public/`).
-- `style.subtitle` ∈ {`highlight`, `oneword`, `karaoke`}; `style.background` ∈ {`solid`, `gradient`, `aurora`, `aurora-gl`, `sunrise`, `image`}. `image` usa uma imagem por música, gerada pelo Gemini em `output/<slug>/background.jpg` (1080x1920, cortada de 9:16); zoom lento e sobreposição escura para a legenda. `aurora-gl` é a mesma aurora desenhada por um shader WebGL (three.js): visual igual, custo de render maior (ver `docs/TESTES.md`).
+- `backgroundFile` só existe com `style.background` = `image`: é a imagem enviada pelo usuário, cortada para 9:16 e copiada para `renderer/public/bg/` (relativo a `renderer/public/`).
+- `style.subtitle` ∈ {`highlight`, `oneword`, `karaoke`}; `style.background` ∈ {`solid`, `gradient`, `aurora`, `aurora-gl`, `sunrise`, `image`}. `image` usa a imagem enviada pelo usuário, cortada no centro para 1080x1920 em `output/<slug>/background.jpg` (refeita só quando a imagem muda); zoom e deslocamento suave, com sobreposição escura para a legenda. `aurora-gl` é a mesma aurora desenhada por um shader WebGL (three.js): visual igual, custo de render maior (ver `docs/TESTES.md`).
 - `clip` pode ser `null` (música inteira). Com `clip`, o vídeo começa em `clip.start` e o tempo das legendas é deslocado de acordo.
 
 ## Regras do renderer
@@ -165,12 +165,10 @@ Regras que `validate_song()` verifica:
 - `python -m engine.align --audio A --lyrics L --out O [--model small] [--no-separate] [--language pt]`
 - `python -m engine.theme --song O` (grava `theme` no mesmo JSON)
 - `python -m engine.write_lyrics --context "texto" | --context-file C --out samples/nome.txt [--force]` (gera a letra com `[Verse]`/`[Chorus]`; grava o prompt de estilo do Suno em `samples/nome.estilo.txt` e as informações para postar em `samples/nome.postar.txt`)
-- `python -m engine.pipeline --audio A --lyrics L [--style karaoke] [--background gradient] [--clip 30:75] [--no-separate] [--skip-theme] [--image-description TEXTO] [--force]` (com `--background image`, a imagem é gerada uma vez por música e reaproveitada)
+- `python -m engine.pipeline --audio A --lyrics L [--style karaoke] [--background gradient] [--clip 30:75] [--no-separate] [--skip-theme] [--background-image ARQUIVO.jpg] [--force]` (com `--background image`, o arquivo é obrigatório)
 - `cd renderer && npm run render -- <props.json> <saida.mp4>`
 
 ## Variáveis de ambiente (`.env`)
-- `GEMINI_API_KEY` — chave do Google AI Studio para gerar a imagem de fundo (só com `--background image`; sem ela, o job falha com aviso)
-- `IMAGE_MODEL` — modelo de imagem do Gemini (padrão `gemini-2.5-flash-image`; confirmar o nome na documentação oficial)
 - `THEME_API_KEY` — chave da Claude API para o tema (opcional; aceita `ANTHROPIC_API_KEY` como reserva; sem nenhuma usa tema padrão)
 - `THEME_MODEL` — modelo para a análise de tema (padrão `claude-haiku-5-5`)
 - `LYRICS_MODEL` — modelo que escreve a letra a partir do contexto (padrão `claude-sonnet-5-5`; usa a mesma `THEME_API_KEY`)

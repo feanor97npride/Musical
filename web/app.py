@@ -17,6 +17,7 @@ from web.jobs import Job, JobQueue
 
 load_dotenv(ROOT / ".env")
 MAX_BYTES = 25 * 1024 * 1024
+MAX_IMAGE_BYTES = 10 * 1024 * 1024
 CUTS = {"": None, "15": 15, "30": 30, "60": 60}  # segundos por corte; vazio = um vídeo só
 STATIC = Path(__file__).resolve().parent / "static"
 # senha opcional: sem ela, qualquer um que acessa o servidor usa (uso local)
@@ -56,12 +57,12 @@ def _clip(start: str, end: str) -> tuple[float, float] | None:
     return begin, finish
 
 
-async def _read_limited(upload: UploadFile) -> bytes:
+async def _read_limited(upload: UploadFile, limit: int = MAX_BYTES) -> bytes:
     data = bytearray()
     while chunk := await upload.read(1024 * 1024):
         data.extend(chunk)
-        if len(data) > MAX_BYTES:
-            raise HTTPException(413, "o arquivo passa do limite de 25 MB")
+        if len(data) > limit:
+            raise HTTPException(413, f"o arquivo passa do limite de {limit // (1024 * 1024)} MB")
     return bytes(data)
 
 
@@ -75,7 +76,8 @@ def _find(job_id: str) -> Job:
 @app.post("/jobs", dependencies=[Depends(_check_token)])
 async def create_job(audio: UploadFile = File(...), lyrics: str = Form(""), style: str = Form("karaoke"),
                      background: str = Form("gradient"), clip_start: str = Form(""), clip_end: str = Form(""),
-                     cuts: str = Form(""), description: str = Form(""), confirm: bool = Form(False)) -> dict:
+                     cuts: str = Form(""), background_image: UploadFile | None = File(None),
+                     confirm: bool = Form(False)) -> dict:
     if not confirm:
         raise HTTPException(400, "confirme que a música é sua ou que você tem autorização para usá-la")
     if not (audio.filename or "").lower().endswith(".mp3"):
@@ -88,13 +90,17 @@ async def create_job(audio: UploadFile = File(...), lyrics: str = Form(""), styl
         raise HTTPException(400, "fundo desconhecido")
     if cuts not in CUTS:
         raise HTTPException(400, "duração de corte desconhecida")
-    if len(description) > 300:
-        raise HTTPException(400, "a descrição da imagem tem no máximo 300 caracteres")
+    image = None
+    if background == "image":
+        suffix = Path(background_image.filename or "").suffix.lower() if background_image else ""
+        if suffix not in (".jpg", ".jpeg", ".png"):
+            raise HTTPException(400, "envie a imagem de fundo em JPG ou PNG")
+        image = (await _read_limited(background_image, MAX_IMAGE_BYTES), suffix)
     clip = _clip(clip_start, clip_end)
     if CUTS[cuts] and clip:
         raise HTTPException(400, "use trecho ou cortes, não os dois")
     job = queue.create(audio.filename or "musica.mp3", await _read_limited(audio), lyrics, style, background, clip,
-                       CUTS[cuts], description.strip())
+                       CUTS[cuts], image)
     return {"id": job.id}
 
 

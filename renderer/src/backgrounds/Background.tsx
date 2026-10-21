@@ -15,7 +15,7 @@ type Props = {
   intensity: number;
   pulse: number;
   progress: number; // 0 no início do vídeo, 1 no fim; só o sol usa
-  file?: string; // imagem gerada por IA; só o fundo "image" usa
+  file?: string; // imagem enviada pelo usuário; só o fundo "image" usa
 };
 
 export const Background: React.FC<Props> = ({ kind, palette, intensity, pulse, progress, file }) => {

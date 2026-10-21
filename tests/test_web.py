@@ -218,29 +218,3 @@ def test_erro_inesperado_nao_mostra_caminho_do_pc(client, monkeypatch):
 def test_erro_da_pipeline_esconde_caminhos():
     assert jobs.hide_paths(r"falta C:\Users\maria\a.mp3 e /home/x/b.txt") == "falta <caminho> e <caminho>"
     assert jobs.hide_paths("linha 39: 1/2 da música") == "linha 39: 1/2 da música"
-
-
-def test_descricao_da_imagem_tem_limite(client, monkeypatch):
-    monkeypatch.setattr(jobs, "run_pipeline", lambda job: 0)
-    assert send(client, background="image", description="x" * 301).status_code == 400
-    assert send(client, background="image", description="praia ao amanhecer").status_code == 200
-
-
-def test_fundo_imagem_passa_a_descricao_para_a_pipeline(tmp_path, monkeypatch):
-    captured = []
-
-    class FakeProcess:
-        stdout: list = []
-
-        def __init__(self, command, **kwargs):
-            captured.extend(command)
-
-        def wait(self):
-            return 0
-
-    monkeypatch.setattr(jobs.subprocess, "Popen", FakeProcess)
-    folder = tmp_path / "job"
-    folder.mkdir()
-    job = jobs.Job("abc", folder, folder / "m.mp3", "karaoke", "image", None, description="--ignorado")
-    jobs.run_pipeline(job)
-    assert "--image-description=--ignorado" in captured
