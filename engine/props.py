@@ -19,7 +19,7 @@ BACKGROUNDS = {"solid", "gradient", "aurora", "aurora-gl", "sunrise", "image"}
 
 def build_props(song_path: Path, audio_path: Path, subtitle: str = "highlight", background: str = "gradient",
                 clip: tuple[float, float] | None = None, public_audio: Path = PUBLIC_AUDIO,
-                background_image: Path | None = None, public_bg: Path = PUBLIC_BG) -> dict:
+                background_image: Path | None = None, public_bg: Path = PUBLIC_BG, fmt: str = "vertical") -> dict:
     song = json.loads(song_path.read_text(encoding="utf-8"))
     errors = validate_song(song)
     if errors:
@@ -29,7 +29,7 @@ def build_props(song_path: Path, audio_path: Path, subtitle: str = "highlight", 
     if background not in BACKGROUNDS:
         raise ValueError(f"fundo desconhecido: {background}")
     if background == "image" and (background_image is None or not background_image.exists()):
-        raise ValueError("fundo de imagem sem o arquivo da imagem gerada")
+        raise ValueError("fundo de imagem sem o arquivo da imagem enviada")
     if clip is not None and not 0 <= clip[0] < clip[1] <= song["audio"]["duration"]:
         raise ValueError("clip fora da duração da música")
     name = _audio_name(audio_path, song)
@@ -41,9 +41,12 @@ def build_props(song_path: Path, audio_path: Path, subtitle: str = "highlight", 
         "style": {"subtitle": subtitle, "background": background},
         "clip": {"start": clip[0], "end": clip[1]} if clip else None,
     }
+    if fmt == "horizontal":
+        props["format"] = "horizontal"  # ausente = vertical, para os props antigos continuarem iguais
     if background == "image":
-        # a pasta da música (output/<slug>) dá um nome único à imagem no renderer
-        bg_name = f"{background_image.parent.name}.jpg"
+        # a pasta da música (output/<slug>) dá um nome único à imagem no renderer; 16:9 leva sufixo próprio
+        suffix = "-16x9" if fmt == "horizontal" else ""
+        bg_name = f"{background_image.parent.name}{suffix}.jpg"
         public_bg.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(background_image, public_bg / bg_name)
         props["backgroundFile"] = f"bg/{bg_name}"

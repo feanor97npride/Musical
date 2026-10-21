@@ -49,7 +49,7 @@ def run_batch(folder: Path, options: argparse.Namespace,
     for audio, lyrics in pairs(folder):
         for variant in variants or [{}]:
             args = argparse.Namespace(**{**vars(options), **variant, "audio": audio, "lyrics": lyrics})
-            name = f"{audio.name} {variant_name(args.style, args.background, args.clip)}" if variant else audio.name
+            name = f"{audio.name} {variant_name(args.style, args.background, args.clip, args.format)}" if variant else audio.name
             print(f"== {name} ==", flush=True)
             began = time.monotonic()
             try:

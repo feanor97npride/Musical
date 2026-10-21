@@ -15,9 +15,9 @@ def make_slug(audio: Path, lyrics: str) -> str:
     return f"{clean_name(audio.stem)}-{digest}"
 
 
-def variant_name(style: str, background: str, clip: tuple[float, float] | None) -> str:
-    """Estilo, fundo e trecho juntos: cada combinação tem props e vídeo próprios."""
-    name = f"{style}-{background}"
+def variant_name(style: str, background: str, clip: tuple[float, float] | None, fmt: str = "vertical") -> str:
+    """Estilo, fundo, formato e trecho juntos: cada combinação tem props e vídeo próprios."""
+    name = f"{style}-{background}" + ("-16x9" if fmt == "horizontal" else "")
     if clip is None:
         return name
     # sem o int, 30.0 viraria "30.0"; com :g, 30.00001 viraria "30" e colidiria com 30.0

@@ -51,6 +51,12 @@
     <section>
       <h2>Visual</h2>
       <fieldset class="choices">
+        <legend>Formato</legend>
+        <label class="choice" for="format-vertical"><input type="radio" id="format-vertical" name="format" value="vertical" checked><span><strong>Vertical 9:16</strong><small>Shorts e TikTok</small></span></label>
+        <label class="choice" for="format-horizontal"><input type="radio" id="format-horizontal" name="format" value="horizontal"><span><strong>Horizontal 16:9</strong><small>YouTube</small></span></label>
+      </fieldset>
+
+      <fieldset class="choices">
         <legend>Legenda</legend>
         <label class="choice" for="style-karaoke"><input type="radio" id="style-karaoke" name="style" value="karaoke" checked><span><strong>Karaokê</strong><small>Palavras acendendo</small></span></label>
         <label class="choice" for="style-highlight"><input type="radio" id="style-highlight" name="style" value="highlight"><span><strong>Destaque</strong><small>Linha inteira, palavra atual</small></span></label>
@@ -70,7 +76,7 @@
       <div class="image-field">
         <label for="background_image">Imagem de fundo (JPG ou PNG, até 10 MB)</label>
         <input type="file" id="background_image" name="background_image" accept=".jpg,.jpeg,.png,image/jpeg,image/png" aria-describedby="image-hint">
-        <p class="hint" id="image-hint">Use uma imagem vertical, de pelo menos 1080 px de largura. Você precisa ter o direito de usá-la.</p>
+        <p class="hint" id="image-hint">Use uma imagem de pelo menos 1080 px de largura: vertical para o formato 9:16, horizontal para o 16:9. Você precisa ter o direito de usá-la.</p>
       </div>
 
       <fieldset class="choices cols-4">

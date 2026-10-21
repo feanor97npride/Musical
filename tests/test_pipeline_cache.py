@@ -12,7 +12,7 @@ from engine import pipeline
 def make_job(tmp_path: Path, **flags: bool) -> pipeline.Job:
     audio = tmp_path / "Minha Música.mp3"
     audio.write_bytes(b"audio")
-    args = argparse.Namespace(audio=audio, lyrics=tmp_path / "a.txt", style="karaoke", background="gradient", clip=None,
+    args = argparse.Namespace(audio=audio, lyrics=tmp_path / "a.txt", style="karaoke", background="gradient", clip=None, format="vertical",
                               no_separate=False, skip_theme=False, force=False, model="small", language="pt")
     for name, value in flags.items():
         setattr(args, name, value)
@@ -119,7 +119,7 @@ def test_fundo_imagem_prepara_o_arquivo_enviado_e_passa_o_caminho(tmp_path, monk
     job = make_job(tmp_path, background="image", background_image=tmp_path / "foto.jpg")
     job.args.background_image.write_bytes(b"jpg")
     job.song.write_text(json.dumps({"theme": None}), encoding="utf-8")
-    monkeypatch.setattr(pipeline.image, "crop_to_vertical", lambda src, dst: dst.write_bytes(b"corte"))
+    monkeypatch.setattr(pipeline.image, "crop_to", lambda src, dst, w, h: dst.write_bytes(b"corte"))
     seen = {}
     monkeypatch.setattr(pipeline, "build_props", lambda *args, **kwargs: seen.update(kwargs) or {"ok": True})
     pipeline._props(job)

@@ -35,7 +35,7 @@ Uso pessoal, com músicas próprias e a letra em mãos. Abrir para o público fi
 - Transcrição sem letra (Whisper puro)
 - Editor visual de legendas
 - Vídeos de fundo gerados por IA, ou clipes de banco
-- Formatos 1:1 e 16:9
+- Formato 1:1
 - Contas de usuário, pagamento, fila distribuída
 - Next.js, deploy em nuvem, GPU dedicada
 - Marca d'água, logo e thumbnail automática

@@ -71,7 +71,7 @@ Cada etapa lê e escreve arquivos em `output/<slug>/`. Se o arquivo de saída da
 `<slug>` = nome do arquivo de áudio sem extensão + `-` + 8 primeiros caracteres do SHA-1 de (bytes do áudio + texto da letra). Mudou áudio ou letra, muda o slug.
 
 Artefatos em `output/<slug>/`: `vocals.wav`, `song.json`, `props-<variante>.json`, `video-<variante>.mp4`.
-`<variante>` = `<estilo>-<fundo>`, com `-<início>-<fim>` quando há trecho (ex.: `karaoke-gradient`, `karaoke-solid-0-30`). Cada variante tem o seu vídeo: trocar estilo, fundo ou trecho não apaga os outros.
+`<variante>` = `<estilo>-<fundo>`, com `-16x9` no formato horizontal e `-<início>-<fim>` quando há trecho (ex.: `karaoke-gradient`, `karaoke-gradient-16x9`, `karaoke-solid-0-30`). Cada variante tem o seu vídeo: trocar estilo, fundo ou trecho não apaga os outros.
 
 ## Formato da letra
 
@@ -148,7 +148,8 @@ Regras que `validate_song()` verifica:
 }
 ```
 - `audioFile` é relativo a `renderer/public/`.
-- `backgroundFile` só existe com `style.background` = `image`: é a imagem enviada pelo usuário, cortada para 9:16 e copiada para `renderer/public/bg/` (relativo a `renderer/public/`).
+- `backgroundFile` só existe com `style.background` = `image`: é a imagem enviada pelo usuário, cortada no centro (9:16, ou 16:9 com `format` horizontal) e copiada para `renderer/public/bg/` (relativo a `renderer/public/`).
+- `format` (opcional) = `"horizontal"` para 16:9 (1920x1080), para o YouTube. Ausente = vertical 9:16 (1080x1920), como antes; por isso os `props.json` verticais não mudam.
 - `style.subtitle` ∈ {`highlight`, `oneword`, `karaoke`}; `style.background` ∈ {`solid`, `gradient`, `aurora`, `aurora-gl`, `sunrise`, `image`}. `image` usa a imagem enviada pelo usuário, cortada no centro para 1080x1920 em `output/<slug>/background.jpg` (refeita só quando a imagem muda); zoom e deslocamento suave, com sobreposição escura para a legenda. `aurora-gl` é a mesma aurora desenhada por um shader WebGL (three.js): visual igual, custo de render maior (ver `docs/TESTES.md`).
 - `clip` pode ser `null` (música inteira). Com `clip`, o vídeo começa em `clip.start` e o tempo das legendas é deslocado de acordo.
 
@@ -165,7 +166,7 @@ Regras que `validate_song()` verifica:
 - `python -m engine.align --audio A --lyrics L --out O [--model small] [--no-separate] [--language pt]`
 - `python -m engine.theme --song O` (grava `theme` no mesmo JSON)
 - `python -m engine.write_lyrics --context "texto" | --context-file C --out samples/nome.txt [--force]` (gera a letra com `[Verse]`/`[Chorus]`; grava o prompt de estilo do Suno em `samples/nome.estilo.txt` e as informações para postar em `samples/nome.postar.txt`)
-- `python -m engine.pipeline --audio A --lyrics L [--style karaoke] [--background gradient] [--clip 30:75] [--no-separate] [--skip-theme] [--background-image ARQUIVO.jpg] [--force]` (com `--background image`, o arquivo é obrigatório)
+- `python -m engine.pipeline --audio A --lyrics L [--style karaoke] [--background gradient] [--clip 30:75] [--no-separate] [--skip-theme] [--background-image ARQUIVO.jpg] [--format vertical|horizontal] [--force]` (com `--background image`, o arquivo é obrigatório; `--format horizontal` gera 16:9)
 - `cd renderer && npm run render -- <props.json> <saida.mp4>`
 
 ## Variáveis de ambiente (`.env`)

@@ -39,7 +39,7 @@ class Job:
 
     @property
     def variant(self) -> str:
-        return variant_name(self.args.style, self.args.background, self.args.clip)
+        return variant_name(self.args.style, self.args.background, self.args.clip, self.args.format)
 
     @property
     def props(self) -> Path:
@@ -90,8 +90,8 @@ def _theme(job: Job) -> str | None:
 
 
 def _props(job: Job) -> str | None:
-    background = image.ensure_background(job.out, job.args.background_image, job.args.force) if job.args.background == "image" else None
-    props = build_props(job.song, job.args.audio, job.args.style, job.args.background, job.args.clip, background_image=background)
+    background = image.ensure_background(job.out, job.args.background_image, job.args.force, job.args.format) if job.args.background == "image" else None
+    props = build_props(job.song, job.args.audio, job.args.style, job.args.background, job.args.clip, background_image=background, fmt=job.args.format)
     job.new_props = json.dumps(props, ensure_ascii=False, indent=2)
     return None
 
@@ -160,7 +160,8 @@ def build_options() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--style", default="karaoke", help="highlight, oneword ou karaoke")
     parser.add_argument("--background", default="gradient", help="gradient (animado), solid, aurora, aurora-gl, sunrise ou image (imagem enviada)")
-    parser.add_argument("--background-image", type=Path, default=None, help="imagem JPG ou PNG para o fundo image (cortada para 9:16)")
+    parser.add_argument("--background-image", type=Path, default=None, help="imagem JPG ou PNG para o fundo image (cortada no centro)")
+    parser.add_argument("--format", default="vertical", choices=["vertical", "horizontal"], help="vertical 9:16 (Shorts, TikTok) ou horizontal 16:9 (YouTube)")
     parser.add_argument("--clip", type=parse_clip, default=None, help="início:fim em segundos, ex.: 30:75")
     parser.add_argument("--cuts", type=float, default=None, help="um vídeo por corte de cerca de N segundos, ex.: 30")
     parser.add_argument("--export", action="store_true", help="também gera uma cópia pronta para postar em para-postar/")

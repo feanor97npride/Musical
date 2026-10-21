@@ -35,11 +35,12 @@ def test_opcoes_de_radio_batem_com_o_que_o_servidor_aceita():
     assert set(values("style")) == STYLES
     assert set(values("background")) == BACKGROUNDS
     assert set(values("cuts")) == set(CUTS)
+    assert set(values("format")) == {"vertical", "horizontal"}
 
 
 def test_cada_grupo_de_radio_comeca_com_uma_opcao_marcada():
     checked = re.findall(r'<input type="radio" id="[^"]+" name="(\w+)" value="([^"]*)" checked>', HTML)
-    assert sorted(checked) == [("background", "gradient"), ("cuts", ""), ("style", "karaoke")]
+    assert sorted(checked) == [("background", "gradient"), ("cuts", ""), ("format", "vertical"), ("style", "karaoke")]
 
 
 def test_pagina_tem_favicon_fontes_e_esquema_de_cores():

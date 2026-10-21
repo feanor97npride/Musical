@@ -45,6 +45,7 @@ class Job:
     total: int = 0
     progress: float = 0.0  # de 0 a 1; nunca diminui (os cortes renderizam um depois do outro)
     background_image: Path | None = None  # imagem enviada pelo usuário; só vale com fundo "image"
+    format: str = "vertical"  # "horizontal" = 16:9 para o YouTube
 
     @property
     def lyrics(self) -> Path:
@@ -56,7 +57,7 @@ class Job:
         if not self.cuts:
             return [self.video]
         song = json.loads((self.video.parent / "song.json").read_text(encoding="utf-8"))
-        return [self.video.parent / f"video-{variant_name(self.style, self.background, clip)}.mp4"
+        return [self.video.parent / f"video-{variant_name(self.style, self.background, clip, self.format)}.mp4"
                 for clip in plan_cuts(song, self.cuts)]
 
     def read_line(self, line: str) -> None:
@@ -87,7 +88,8 @@ class Job:
 
 def run_pipeline(job: Job) -> int:
     command = [sys.executable, "-m", "engine.pipeline", "--audio", str(job.audio),
-               "--lyrics", str(job.lyrics), "--style", job.style, "--background", job.background]
+               "--lyrics", str(job.lyrics), "--style", job.style, "--background", job.background,
+               "--format", job.format]
     if job.clip:
         command += ["--clip", f"{job.clip[0]}:{job.clip[1]}"]
     if job.cuts:
@@ -111,12 +113,12 @@ class JobQueue:
 
     def create(self, filename: str, audio: bytes, lyrics: str, style: str, background: str,
                clip: tuple[float, float] | None, cuts: int | None = None,
-               image: tuple[bytes, str] | None = None) -> Job:
+               image: tuple[bytes, str] | None = None, fmt: str = "vertical") -> Job:
         job_id = uuid.uuid4().hex
         folder = UPLOADS / job_id
         folder.mkdir(parents=True)
         job = Job(job_id, folder, folder / f"{clean_name(Path(filename).stem)}.mp3", style, background, clip,
-                  cuts=cuts)
+                  cuts=cuts, format=fmt)
         job.audio.write_bytes(audio)
         if image:  # a imagem fica na pasta do job, com a extensão que o usuário enviou
             job.background_image = folder / f"fundo{image[1]}"
@@ -124,7 +126,7 @@ class JobQueue:
         job.lyrics.write_text(lyrics, encoding="utf-8", newline="")  # no Windows, sem isso cada \n vira \r\n
         # lê o arquivo de volta: o navegador manda \r\n e o pipeline normaliza, o nome da pasta tem que bater
         slug = make_slug(job.audio, job.lyrics.read_text(encoding="utf-8"))
-        job.video = OUTPUT / slug / f"video-{variant_name(style, background, clip)}.mp4"
+        job.video = OUTPUT / slug / f"video-{variant_name(style, background, clip, fmt)}.mp4"
         self.jobs[job_id] = job
         self._pending.put(job)
         return job

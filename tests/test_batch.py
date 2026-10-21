@@ -28,7 +28,7 @@ def test_erro_numa_musica_nao_para_as_outras(tmp_path, monkeypatch):
         return 0
 
     monkeypatch.setattr(pipeline, "run", fake_run)
-    options = argparse.Namespace(style="karaoke", background="gradient", clip=None, cuts=None)
+    options = argparse.Namespace(style="karaoke", background="gradient", clip=None, cuts=None, format="vertical")
     results = batch.run_batch(folder, options)
     assert [(name, code) for name, code, _ in results] == [("a.mp3", 1), ("c.mp3", 0)]
 
@@ -69,7 +69,7 @@ def test_cada_variante_roda_uma_vez_por_musica(tmp_path, monkeypatch):
     recebidos = []
     monkeypatch.setattr(pipeline, "run", lambda args: recebidos.append(args) or 0)
     variants = batch.parse_variants("background=gradient,aurora;style=karaoke,oneword")
-    options = argparse.Namespace(style="karaoke", background="gradient", clip=(0.0, 10.0), cuts=None)
+    options = argparse.Namespace(style="karaoke", background="gradient", clip=(0.0, 10.0), cuts=None, format="vertical")
     results = batch.run_batch(folder, options, variants)
     assert len(recebidos) == 8  # 2 músicas x 4 combinações
     assert [(args.audio.name, args.background, args.style) for args in recebidos[:4]] == [

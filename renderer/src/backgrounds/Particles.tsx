@@ -1,8 +1,6 @@
 // Partículas que sobem devagar e tremulam. As posições vêm de uma semente fixa, então o render é sempre igual.
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
 
-const WIDTH = 1080;
-const HEIGHT = 1920;
 const BASE = 40; // partículas sempre visíveis; as outras 40 aparecem no refrão
 const MAX = 80;
 
@@ -15,9 +13,10 @@ const seeded = (seed: number) => () => {
 };
 
 const random = seeded(42);
+// posição em fração (0 a 1): a mesma partícula serve ao 9:16 e ao 16:9
 const PARTICLES = Array.from({ length: MAX }, () => ({
-  x: random() * WIDTH,
-  y: random() * HEIGHT,
+  fx: random(),
+  fy: random(),
   size: 4 + random() * 8,
   speed: 40 + random() * 60,
   phase: random() * Math.PI * 2, // cada partícula pisca em seu próprio tempo
@@ -25,12 +24,12 @@ const PARTICLES = Array.from({ length: MAX }, () => ({
 
 export const Particles: React.FC<{ intensity: number }> = ({ intensity }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, width, height } = useVideoConfig();
   const seconds = frame / fps;
   return (
     <AbsoluteFill>
       {PARTICLES.map((p, i) => {
-        const y = (((p.y - seconds * p.speed) % HEIGHT) + HEIGHT) % HEIGHT;
+        const y = (((p.fy * height - seconds * p.speed) % height) + height) % height;
         // no refrão, as partículas extras entram por opacidade, sem aparecer de repente
         const base = i < BASE ? 0.35 + 0.35 * intensity : 0.7 * intensity;
         const twinkle = 0.6 + 0.4 * Math.sin(seconds * 2 + p.phase);
@@ -39,7 +38,7 @@ export const Particles: React.FC<{ intensity: number }> = ({ intensity }) => {
             key={i}
             style={{
               position: "absolute",
-              left: p.x,
+              left: p.fx * width,
               top: y,
               width: p.size,
               height: p.size,

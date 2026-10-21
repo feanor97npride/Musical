@@ -63,7 +63,7 @@ def test_run_com_cortes_renderiza_um_corte_por_vez(tmp_path, monkeypatch, export
     monkeypatch.setattr(pipeline, "_render", lambda job: rendered.append(job.video.name))
     exportados = []
     monkeypatch.setattr(pipeline, "export_all", lambda args, videos: exportados.append(videos))
-    args = argparse.Namespace(audio=audio, lyrics=lyrics, style="karaoke", background="gradient", clip=None,
+    args = argparse.Namespace(audio=audio, lyrics=lyrics, style="karaoke", background="gradient", clip=None, format="vertical",
                               cuts=30.0, no_separate=False, skip_theme=False, force=False, model="small", language="pt",
                               export=exportar)
     assert pipeline.run(args) == 0

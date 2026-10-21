@@ -52,3 +52,29 @@ def test_fundo_imagem_passa_o_caminho_para_a_pipeline(tmp_path, monkeypatch):
     job = jobs.Job("abc", folder, folder / "m.mp3", "karaoke", "image", None, background_image=folder / "fundo.png")
     jobs.run_pipeline(job)
     assert captured[captured.index("--background-image") + 1] == str(folder / "fundo.png")
+
+
+def test_formato_desconhecido_e_recusado(client, monkeypatch):
+    monkeypatch.setattr(jobs, "run_pipeline", lambda job: 0)
+    data = {"lyrics": "um dois", "confirm": "true", "format": "quadrado"}
+    assert client.post("/jobs", files={"audio": MP3}, data=data).status_code == 400
+
+
+def test_formato_horizontal_chega_ao_comando(tmp_path, monkeypatch):
+    captured = []
+
+    class FakeProcess:
+        stdout: list = []
+
+        def __init__(self, command, **kwargs):
+            captured.extend(command)
+
+        def wait(self):
+            return 0
+
+    monkeypatch.setattr(jobs.subprocess, "Popen", FakeProcess)
+    folder = tmp_path / "job"
+    folder.mkdir()
+    job = jobs.Job("abc", folder, folder / "m.mp3", "karaoke", "gradient", None, format="horizontal")
+    jobs.run_pipeline(job)
+    assert captured[captured.index("--format") + 1] == "horizontal"

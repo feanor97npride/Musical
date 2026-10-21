@@ -114,3 +114,18 @@ def test_fundo_imagem_sem_arquivo_e_recusado(files, tmp_path):
 def test_fundo_que_nao_e_imagem_nao_grava_caminho(files):
     song, audio, public = files
     assert "backgroundFile" not in build_props(song, audio, "highlight", "solid", None, public_audio=public)
+
+
+def test_formato_horizontal_grava_a_chave_e_o_nome_16x9(files, tmp_path):
+    from engine.names import variant_name
+    song, audio, public = files
+    props = build_props(song, audio, "karaoke", "solid", None, public_audio=public, fmt="horizontal")
+    assert props["format"] == "horizontal"
+    assert "backgroundFile" not in props
+    assert variant_name("karaoke", "solid", None, "horizontal") == "karaoke-solid-16x9"
+
+
+def test_formato_vertical_nao_muda_o_props(files):
+    song, audio, public = files
+    props = build_props(song, audio, "karaoke", "solid", None, public_audio=public)
+    assert "format" not in props
