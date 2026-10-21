@@ -113,3 +113,16 @@ def test_trechos_quase_iguais_tem_arquivos_diferentes(tmp_path):
     first = job.video
     job.args.clip = (30.00001, 75.0)
     assert job.video != first
+
+
+def test_fundo_imagem_gera_a_partir_do_caminho_do_song(tmp_path, monkeypatch):
+    # regressão: a pipeline passa o caminho do song.json, não o dicionário
+    job = make_job(tmp_path, background="image", image_description="")
+    job.song.write_text(json.dumps({"theme": None}), encoding="utf-8")
+    monkeypatch.setenv("GEMINI_API_KEY", "chave")
+    monkeypatch.setattr(pipeline.image, "generate_image", lambda prompt, key: b"raw")
+    monkeypatch.setattr(pipeline.image, "save_background", lambda raw, out: out.write_bytes(raw))
+    seen = {}
+    monkeypatch.setattr(pipeline, "build_props", lambda *args, **kwargs: seen.update(kwargs) or {"ok": True})
+    pipeline._props(job)
+    assert seen["background_image"] == job.out / "background.jpg"

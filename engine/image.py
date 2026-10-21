@@ -1,5 +1,6 @@
 # Fundo com imagem gerada por IA (Gemini): o tema da letra vira um prompt e a imagem sai em 1080x1920 para o vídeo.
 import base64
+import json
 import os
 import shutil
 import subprocess
@@ -56,11 +57,11 @@ def save_background(raw: bytes, out: Path) -> None:
         source.unlink(missing_ok=True)
 
 
-def ensure_background(out: Path, song: dict, description: str, force: bool) -> Path:
+def ensure_background(out: Path, song_path: Path, description: str, force: bool) -> Path:
     """Gera a imagem da música (uma por pasta) e devolve o caminho; reaproveita a que já existe com o mesmo prompt."""
     target = out / "background.jpg"
     prompt_file = out / "background.prompt.txt"
-    prompt = build_prompt(song.get("theme"), description)
+    prompt = build_prompt(json.loads(song_path.read_text(encoding="utf-8")).get("theme"), description)
     if target.exists() and prompt_file.exists() and prompt_file.read_text(encoding="utf-8") == prompt and not force:
         return target
     api_key = os.getenv("GEMINI_API_KEY", "").strip()

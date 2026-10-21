@@ -78,7 +78,8 @@ def test_reaproveita_a_imagem_com_o_mesmo_prompt(tmp_path, monkeypatch):
     monkeypatch.setenv("GEMINI_API_KEY", "chave")
     monkeypatch.setattr(image, "generate_image", lambda prompt, key: calls.append(prompt) or b"raw")
     monkeypatch.setattr(image, "save_background", lambda raw, out: out.write_bytes(raw))
-    song = {"theme": None, "lines": []}
+    song = tmp_path / "song.json"
+    song.write_text(json.dumps({"theme": None, "lines": []}), encoding="utf-8")
     first = image.ensure_background(tmp_path, song, "", False)
     second = image.ensure_background(tmp_path, song, "", False)
     assert first == second and len(calls) == 1
@@ -89,5 +90,7 @@ def test_reaproveita_a_imagem_com_o_mesmo_prompt(tmp_path, monkeypatch):
 def test_sem_chave_avisa_sem_chamar_a_api(tmp_path, monkeypatch):
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.setattr(image, "generate_image", lambda prompt, key: pytest.fail("não devia chamar a API"))
+    song = tmp_path / "song.json"
+    song.write_text(json.dumps({"theme": None, "lines": []}), encoding="utf-8")
     with pytest.raises(RuntimeError, match="GEMINI_API_KEY"):
-        image.ensure_background(tmp_path, {"theme": None}, "", False)
+        image.ensure_background(tmp_path, song, "", False)
