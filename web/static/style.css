@@ -122,7 +122,7 @@ progress { inline-size: 100%; margin-block-start: 12px; accent-color: var(--acce
 .detail { color: var(--muted); font-size: 0.95rem; min-block-size: 1.5em; margin-block-start: 4px; }
 video { display: block; aspect-ratio: 9 / 16; block-size: min(56dvh, 560px); inline-size: auto; max-inline-size: 100%;
   margin: 16px auto 0; border-radius: 12px; background: #000; }
-a.download { display: inline-flex; align-items: center; min-block-size: 44px; margin-block-start: 12px; font-weight: 600; color: var(--fg);
+a.download { display: flex; align-items: center; min-block-size: 44px; margin-block-start: 12px; font-weight: 600; color: var(--fg);
   text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
 
 /* aviso único de copiar e erros de cópia: aparece por poucos segundos e some */

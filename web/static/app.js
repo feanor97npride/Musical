@@ -87,30 +87,33 @@ function showCuts(id, names) {
   show(names.length + " cortes prontos");
   detail.textContent = "";
   output.innerHTML = "";
-  output.append(...names.map((name, index) => {
+  const all = document.createElement("button");
+  all.type = "button";
+  all.className = "primary";
+  all.textContent = "Baixar todos os cortes (ZIP)";
+  all.addEventListener("click", () => download(`/jobs/${id}/cortes.zip`, "cortes.zip"));
+  output.append(all, ...names.map((name, index) => {
     const link = document.createElement("a");
     link.className = "download";
     link.href = "#";
     link.textContent = `Baixar corte ${index + 1} de ${names.length}`;
     link.addEventListener("click", (event) => {
       event.preventDefault();
-      downloadCut(id, index, name);
+      download(`/jobs/${id}/video?n=${index}`, name);
     });
     return link;
   }));
 }
 
 // o download passa pelo fetch para levar a senha no cabeçalho; um link comum não levaria
-async function downloadCut(id, index, name) {
+async function download(path, name) {
   try {
-    const response = await api(`/jobs/${id}/video?n=${index}`);
+    const response = await api(path);
     if (!response.ok) return failure(response);
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(await response.blob());
-    link.download = name;
+    const link = Object.assign(document.createElement("a"), { href: URL.createObjectURL(await response.blob()), download: name });
     link.click();
   } catch (error) {
-    show("Não consegui baixar o corte. Confira a conexão com o servidor.", true);
+    show("Não consegui baixar. Confira a conexão com o servidor.", true);
   }
 }
 

@@ -1,6 +1,8 @@
 # Testes da opção de cortes na web: recusas do envio, comando da pipeline e download de cada corte.
+import io
 import json
 import time
+import zipfile
 
 import pytest
 from fastapi.testclient import TestClient
@@ -102,3 +104,19 @@ def test_lista_de_cortes_fica_mesmo_sem_song_json(client, monkeypatch):
     (web_app.queue.jobs[job_id].video.parent / "song.json").unlink()
     assert wait_for(client, job_id, "done")["videos"] == names
     assert client.get(f"/jobs/{job_id}/video", params={"n": 0}).status_code == 200
+
+
+def test_zip_com_todos_os_cortes(client, monkeypatch):
+    monkeypatch.setattr(jobs, "run_pipeline", gerar_cortes)
+    job_id = send(client, cuts="30").json()["id"]
+    wait_for(client, job_id, "done")
+    job = web_app.queue.jobs[job_id]
+    job.status = "running"  # o job já terminou: forço o estado para checar a recusa
+    assert client.get(f"/jobs/{job_id}/cortes.zip").status_code == 409
+    job.status = "done"
+    response = client.get(f"/jobs/{job_id}/cortes.zip")
+    assert response.status_code == 200 and "musica-cortes.zip" in response.headers["content-disposition"]
+    with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+        assert archive.namelist() == [path.name for path in job.ready_videos]
+        assert archive.read(job.ready_videos[1].name) == job.ready_videos[1].read_bytes()
+    assert (job.folder / "cortes.zip").exists()  # a próxima chamada reaproveita este arquivo

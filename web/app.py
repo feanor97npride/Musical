@@ -1,6 +1,7 @@
 # Web mínima com FastAPI: envio de MP3 + letra, progresso por job e download do MP4.
 import os
 import secrets
+import zipfile
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -123,6 +124,21 @@ def job_video(job_id: str, n: int | None = None) -> FileResponse:
     if not 0 <= n < len(job.ready_videos):  # só os arquivos da lista do job; o cliente não escolhe caminho
         raise HTTPException(404, "corte não encontrado")
     return FileResponse(job.ready_videos[n], media_type="video/mp4")
+
+
+@app.get("/jobs/{job_id}/cortes.zip", dependencies=[Depends(_check_token)])
+def job_cuts_zip(job_id: str) -> FileResponse:
+    job = _find(job_id)
+    if job.status != "done" or not job.ready_videos:
+        raise HTTPException(409, "o vídeo ainda não está pronto")
+    zip_path = job.folder / "cortes.zip"
+    if not zip_path.exists():  # MP4 já é comprimido: ZIP sem compactar é mais rápido
+        tmp = job.folder / "cortes.zip.tmp"
+        with zipfile.ZipFile(tmp, "w", zipfile.ZIP_STORED) as archive:
+            for path in job.ready_videos:
+                archive.write(path, arcname=path.name)
+        os.replace(tmp, zip_path)
+    return FileResponse(zip_path, media_type="application/zip", filename=f"{job.audio.stem}-cortes.zip")
 
 
 @app.post("/lyrics", dependencies=[Depends(_check_token)])
