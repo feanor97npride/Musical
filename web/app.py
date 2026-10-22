@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from engine.pipeline import ROOT
 from engine.props import BACKGROUNDS, SUBTITLE_STYLES as STYLES
 from engine.write_lyrics import write_lyrics
+from web import history
 from web.jobs import Job, JobQueue
 
 load_dotenv(ROOT / ".env")
@@ -145,11 +146,31 @@ def job_cuts_zip(job_id: str) -> FileResponse:
 def create_lyrics(context: str = Form("")) -> dict:
     # def, não async: a chamada à API leva segundos e o FastAPI roda a rota fora do laço do servidor
     try:
-        return write_lyrics(context)
+        draft = write_lyrics(context)
     except ValueError as error:
         raise HTTPException(400, str(error))
     except RuntimeError as error:
         raise HTTPException(503, str(error))
+    return history.add(context, draft)  # a letra gerada fica no histórico, para não se perder
+
+
+@app.get("/historico", dependencies=[Depends(_check_token)])
+def history_list() -> list[dict]:
+    return history.list_items()
+
+
+@app.get("/historico/{item_id}", dependencies=[Depends(_check_token)])
+def history_get(item_id: str) -> dict:
+    item = history.get(item_id)
+    if item is None:
+        raise HTTPException(404, "item não encontrado no histórico")
+    return item
+
+
+@app.delete("/historico/{item_id}", dependencies=[Depends(_check_token)], status_code=204)
+def history_delete(item_id: str) -> None:
+    if not history.remove(item_id):
+        raise HTTPException(404, "item não encontrado no histórico")
 
 
 app.mount("/", StaticFiles(directory=STATIC, html=True), name="static")

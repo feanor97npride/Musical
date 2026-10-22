@@ -3,6 +3,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from web import app as web_app
+from web import history
 
 DRAFT = {
     "title": "Manhã",
@@ -13,6 +14,11 @@ DRAFT = {
     "tiktok_caption": "Depois da noite vem o sol",
     "hashtags": ["#gospel", "#louvor", "#esperanca"],
 }
+
+
+@pytest.fixture(autouse=True)
+def historico_isolado(tmp_path, monkeypatch):
+    monkeypatch.setattr(history, "HISTORY_FILE", tmp_path / "letras.json")  # os testes não gravam no histórico real
 
 
 @pytest.fixture
@@ -26,7 +32,8 @@ def test_contexto_vira_letra(client, monkeypatch):
     monkeypatch.setattr(web_app, "write_lyrics", lambda context: seen.append(context) or DRAFT)
     response = client.post("/lyrics", data={"context": "uma música sobre a manhã"})
     assert response.status_code == 200
-    assert response.json() == DRAFT
+    body = response.json()
+    assert all(body[key] == value for key, value in DRAFT.items())  # a resposta traz a letra e também o id do histórico
     assert seen == ["uma música sobre a manhã"]
 
 

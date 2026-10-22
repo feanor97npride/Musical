@@ -65,7 +65,7 @@ input:user-invalid + .error-msg, textarea:user-invalid + .error-msg,
 
 /* opções visíveis como cartões de rádio: com até 5 opções, ver tudo é mais rápido que abrir uma lista */
 .choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
-.choices.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.choices.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .image-field { display: none; margin-block: 8px 24px; } /* a descrição só aparece com "Imagem por IA" marcada */
 form:has(input[name="background"][value="image"]:checked) .image-field { display: block; }
 .choice { display: flex; align-items: flex-start; gap: 10px; margin: 0; padding: 12px; font-weight: 400; cursor: pointer;
@@ -166,3 +166,10 @@ a.download { display: flex; align-items: center; min-block-size: 44px; margin-bl
   form > section { grid-column: 2; }
   .actions { grid-column: 1 / -1; }
 }
+
+/* histórico de letras: uma linha por item, com data e título e dois botões pequenos */
+.history { margin-block-start: 32px; }
+.history ul { list-style: none; margin: 12px 0 0; padding: 0; }
+.history li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-block: 8px; border-block-end: 1px solid var(--line); }
+.history li span { flex: 1; min-inline-size: 0; overflow-wrap: anywhere; }
+.history li button { min-block-size: 36px; padding: 6px 12px; }

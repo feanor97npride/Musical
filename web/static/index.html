@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700&family=Figtree:wght@400;600&display=swap">
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 <main>
@@ -168,6 +168,12 @@
     <input type="password" id="token" placeholder="a senha definida no seu computador" autocomplete="current-password" aria-describedby="token-hint">
     <p class="hint" id="token-hint">Se o servidor não tiver senha, deixe vazio.</p>
   </details>
+
+  <section class="history" aria-labelledby="history-title">
+    <h2 id="history-title">Histórico de letras com IA</h2>
+    <p class="hint" id="history-status" aria-live="polite"></p>
+    <ul id="history-list"></ul>
+  </section>
 </main>
 
 <footer class="footer">
@@ -179,6 +185,6 @@
 
 <script src="app.js?v=3"></script>
 <script src="forms.js?v=1"></script>
-<script src="lyrics.js?v=1"></script>
+<script src="lyrics.js?v=2"></script>
 </body>
 </html>
