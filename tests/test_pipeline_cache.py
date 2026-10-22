@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from engine import pipeline
+from engine import pipeline, render
 
 
 def make_job(tmp_path: Path, **flags: bool) -> pipeline.Job:
@@ -48,13 +48,25 @@ def test_alinhamento_pulado_quando_song_existe(tmp_path, monkeypatch):
     assert pipeline._align(job) == "pulado (cache)"
 
 
+def node_falso(conteudo: bytes, falha: bool = False):
+    """Faz o que o render-batch.mjs faz: grava o vídeo temporário e troca os arquivos finais (ou morre no meio)."""
+    def run(cmd, cwd, check):
+        for entry in json.loads(Path(cmd[-1]).read_text(encoding="utf-8")):
+            Path(entry["video"]).write_bytes(conteudo)
+            if falha:
+                raise subprocess.CalledProcessError(1, cmd)
+            Path(entry["video"]).replace(entry["finalVideo"])
+            Path(entry["props"]).replace(entry["finalProps"])
+    return run
+
+
 def test_render_pulado_quando_props_nao_mudou(tmp_path, monkeypatch):
     job = make_job(tmp_path)
     job.props.write_text("igual", encoding="utf-8")
     job.video.write_bytes(b"mp4")
     job.new_props = "igual"
-    monkeypatch.setattr(pipeline.subprocess, "run", boom)
-    assert pipeline._render(job) == "pulado (cache)"
+    monkeypatch.setattr(render.subprocess, "run", boom)
+    assert render.render_all([job]) == "pulado (cache)"
 
 
 def test_render_refeito_quando_estilo_muda(tmp_path, monkeypatch):
@@ -62,12 +74,8 @@ def test_render_refeito_quando_estilo_muda(tmp_path, monkeypatch):
     job.props.write_text("antigo", encoding="utf-8")
     job.video.write_bytes(b"antigo")
     job.new_props = "novo"
-
-    def fake_run(cmd, cwd, check):
-        Path(cmd[-1]).write_bytes(b"novo")  # o último argumento é o caminho do vídeo temporário
-
-    monkeypatch.setattr(pipeline.subprocess, "run", fake_run)
-    assert pipeline._render(job) is None
+    monkeypatch.setattr(render.subprocess, "run", node_falso(b"novo"))
+    assert render.render_all([job]) is None
     assert job.props.read_text(encoding="utf-8") == "novo"
     assert job.video.read_bytes() == b"novo"
 
@@ -77,17 +85,12 @@ def test_render_que_falha_mantem_os_arquivos_anteriores(tmp_path, monkeypatch):
     job.props.write_text("antigo", encoding="utf-8")
     job.video.write_bytes(b"antigo")
     job.new_props = "novo"
-
-    def failing_run(cmd, cwd, check):
-        Path(cmd[-1]).write_bytes(b"parcial")  # render morreu no meio
-        raise subprocess.CalledProcessError(1, cmd)
-
-    monkeypatch.setattr(pipeline.subprocess, "run", failing_run)
+    monkeypatch.setattr(render.subprocess, "run", node_falso(b"parcial", falha=True))  # render morreu no meio
     with pytest.raises(subprocess.CalledProcessError):
-        pipeline._render(job)
+        render.render_all([job])
     assert job.props.read_text(encoding="utf-8") == "antigo"
     assert job.video.read_bytes() == b"antigo"
-    assert not (job.out / "video.tmp.mp4").exists()
+    assert not job.video.with_suffix(".tmp.mp4").exists()
 
 
 def test_props_usa_o_fundo_escolhido(tmp_path, monkeypatch):

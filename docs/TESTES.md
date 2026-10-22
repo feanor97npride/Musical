@@ -94,3 +94,11 @@ Desenho em Canvas 2D; o sol sobe com o progresso do vídeo (quadro / duração).
 - `sunrise`: 25, 25 e 24 s (média 25 s). Nesta janela, **34% mais rápido** que o degradê.
 - Determinismo: as 3 repetições de `sunrise` deram quadros idênticos (`framemd5`, quadros 0, 150 e 270).
 - Visual: quadros em 0 s, 5 s e 9 s, conferidos a olho: o sol sobe do horizonte até o alto. A linha do horizonte é reta e dura; pode ser suavizada depois.
+
+## Lote de cortes (Plano 24 e 26)
+O render dos cortes de uma música passou a ser uma execução só (`renderer/scripts/render-batch.mjs`): um bundle para todos os cortes, e cada render abre o seu navegador, como o CLI. Antes, cada corte chamava `npm run render` (um bundle e um processo por corte).
+- Quadros: idênticos ao caminho antigo nos três trechos (clips 0-10, 10-20 e 20-30 de "O Deserto Vai Florir", `framemd5` igual, 300 quadros cada, mesmo codec, tamanho e bitrate).
+- Tempo, três trechos de 10 s, 3 repetições: antigo **104,0 s** (média), lote **114,5 s**. O lote ficou cerca de **10% mais lento**. Aceito pelo usuário: fica um comando só.
+- Versão anterior, com um navegador compartilhado entre os renders: antigo 105,5 s, lote 112,9 s. Num trecho só: antigo 35 s, lote 48 s, e a versão com navegador por render 34 s. Por isso o navegador compartilhado saiu.
+- O bundle não era o gargalo: o CLI já reaproveita o bundle em cache (`bundle-cache` liga por padrão).
+- Não medido no Windows.

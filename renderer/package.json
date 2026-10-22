@@ -7,8 +7,10 @@
   "private": true,
   "dependencies": {
     "@react-three/fiber": "9.8.2",
+    "@remotion/bundler": "4.0.535",
     "@remotion/cli": "4.0.535",
     "@remotion/google-fonts": "4.0.535",
+    "@remotion/renderer": "4.0.535",
     "@remotion/three": "4.0.535",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -28,6 +30,7 @@
     "dev": "remotion studio",
     "studio": "remotion studio src/index.ts",
     "render": "node scripts/render.mjs",
+    "render-batch": "node scripts/render-batch.mjs",
     "test": "node --experimental-strip-types test/timing.test.ts && node --experimental-strip-types test/motion.test.ts && node --experimental-strip-types test/sun.test.ts && node --experimental-strip-types test/image.test.ts && node --experimental-strip-types test/size.test.ts",
     "build": "remotion bundle",
     "upgrade": "remotion upgrade",

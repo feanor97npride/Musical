@@ -44,7 +44,7 @@ def test_verso_maior_que_o_alvo_vira_corte_proprio():
 
 
 @pytest.mark.parametrize("exportar", [False, True])
-def test_run_com_cortes_renderiza_um_corte_por_vez(tmp_path, monkeypatch, exportar):
+def test_run_com_cortes_renderiza_todos_numa_chamada(tmp_path, monkeypatch, exportar):
     lines = [(i * 5.0, i * 5.0 + 4.0) for i in range(18)]
     data = song(100.0, lines)
     audio = tmp_path / "musica.mp3"
@@ -60,7 +60,7 @@ def test_run_com_cortes_renderiza_um_corte_por_vez(tmp_path, monkeypatch, export
     monkeypatch.setattr(pipeline, "_theme", lambda job: None)
     monkeypatch.setattr(pipeline, "_props", lambda job: None)
     rendered = []
-    monkeypatch.setattr(pipeline, "_render", lambda job: rendered.append(job.video.name))
+    monkeypatch.setattr(pipeline, "render_all", lambda jobs: rendered.append([job.video.name for job in jobs]))
     exportados = []
     monkeypatch.setattr(pipeline, "export_all", lambda args, videos: exportados.append(videos))
     args = argparse.Namespace(audio=audio, lyrics=lyrics, style="karaoke", background="gradient", clip=None, format="vertical",
@@ -69,7 +69,7 @@ def test_run_com_cortes_renderiza_um_corte_por_vez(tmp_path, monkeypatch, export
     assert pipeline.run(args) == 0
     esperados = [f"video-{pipeline.variant_name('karaoke', 'gradient', clip)}.mp4" for clip in plan_cuts(data, 30.0)]
     assert len(esperados) == 3
-    assert rendered == esperados
+    assert rendered == [esperados]  # um lote com os três cortes
     variantes = [pipeline.variant_name("karaoke", "gradient", clip) for clip in plan_cuts(data, 30.0)]
     assert [variant for _, variant in exportados[0]] == variantes  # a exportação recebe um vídeo por corte
 

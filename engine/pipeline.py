@@ -3,7 +3,6 @@ import argparse
 import json
 import os
 import shutil
-import subprocess
 import sys
 import time
 from dataclasses import dataclass
@@ -18,12 +17,12 @@ from engine.export import export_all
 from engine.lyrics import flat_text
 from engine.names import make_slug, variant_name
 from engine.props import build_props, parse_clip
+from engine.render import render_all
 from engine.schema import write_song
 from engine.steps import StepError, run_step
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "output"
-RENDERER = ROOT / "renderer"
 
 
 @dataclass
@@ -109,24 +108,6 @@ def _props_all(jobs: list[Job]) -> str | None:
     return None
 
 
-def _render(job: Job) -> str | None:
-    unchanged = job.props.exists() and job.props.read_text(encoding="utf-8") == job.new_props
-    if unchanged and job.video.exists() and not job.args.force:
-        return "pulado (cache)"
-    tmp_props = job.out / "props.tmp.json"
-    tmp_video = job.out / "video.tmp.mp4"
-    tmp_props.write_text(job.new_props, encoding="utf-8")
-    try:
-        npm = shutil.which("npm")  # no Windows é npm.CMD; sem o caminho completo o Windows não acha
-        if npm is None:
-            raise RuntimeError("npm não encontrado: instale o Node.js 18 ou superior")
-        subprocess.run([npm, "run", "render", "--", str(tmp_props), str(tmp_video)], cwd=RENDERER, check=True)
-        os.replace(tmp_video, job.video)  # vídeo antes do props: se cair no meio, a próxima rodada refaz
-        os.replace(tmp_props, job.props)
-    finally:
-        tmp_video.unlink(missing_ok=True)
-        tmp_props.unlink(missing_ok=True)
-    return None
 
 
 def run(args: argparse.Namespace) -> int:
@@ -142,9 +123,8 @@ def run(args: argparse.Namespace) -> int:
         run_step(4, "Gerando tema", lambda: _theme(job))
         jobs = _cut_jobs(job) if args.cuts else [job]  # o song.json já existe aqui: o alinhamento acabou
         run_step(5, "Preparando imagem e montando props" if args.background == "image" else "Montando props", lambda: _props_all(jobs))
-        for number, item in enumerate(jobs, 1):
-            label = "Renderizando vídeo" if len(jobs) == 1 else f"Renderizando corte {number} de {len(jobs)}"
-            run_step(6, label, lambda item=item: _render(item))
+        label = "Renderizando vídeo" if len(jobs) == 1 else f"Renderizando {len(jobs)} cortes"
+        run_step(6, label, lambda: render_all(jobs))
         for item in jobs:
             print(f"vídeo: {item.video}")  # antes da exportação: um erro nela não esconde onde está o vídeo
         run_step(7, "Exportando para postar", lambda: export_all(args, [(item.video, item.variant) for item in jobs]))

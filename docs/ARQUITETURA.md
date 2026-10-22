@@ -39,6 +39,7 @@ Cada etapa lê e escreve arquivos em `output/<slug>/`. Se o arquivo de saída da
 │   ├── theme.py       # análise de tema (Claude API)
 │   ├── props.py       # build_props()
 │   ├── pipeline.py    # CLI de ponta a ponta
+│   ├── render.py      # render dos cortes numa só execução do renderer
 │   ├── batch.py       # lote: cada par MP3 + letra de uma pasta
 │   ├── cuts.py        # divide a música em cortes
 │   ├── export.py      # cópia pronta para postar (ffmpeg)
@@ -169,6 +170,7 @@ Regras que `validate_song()` verifica:
 - `python -m engine.write_lyrics --context "texto" | --context-file C --out samples/nome.txt [--force]` (gera a letra com `[Verse]`/`[Chorus]`; grava o prompt de estilo do Suno em `samples/nome.estilo.txt` e as informações para postar em `samples/nome.postar.txt`)
 - `python -m engine.pipeline --audio A --lyrics L [--style karaoke] [--background gradient] [--clip 30:75] [--no-separate] [--skip-theme] [--background-image ARQUIVO.jpg] [--format vertical|horizontal] [--force]` (com `--background image`, o arquivo é obrigatório; `--format horizontal` gera 16:9)
 - `cd renderer && npm run render -- <props.json> <saida.mp4>`
+- `cd renderer && npm run render-batch -- <manifesto.json>` (uso interno da pipeline: todos os cortes de uma música numa execução, com um bundle; cada render abre o seu navegador, como o CLI; o manifesto é uma lista de `{props, video, finalProps, finalVideo}`)
 
 ## Variáveis de ambiente (`.env`)
 - `THEME_API_KEY` — chave da Claude API para o tema (opcional; aceita `ANTHROPIC_API_KEY` como reserva; sem nenhuma usa tema padrão)
@@ -180,8 +182,8 @@ Regras que `validate_song()` verifica:
 - `SITE_URL` — endereço fixo do site no Cloudflare Pages, usado pelo iniciador para abrir o site (sem barra no final)
 - `PORT` — porta do servidor local usada pelo iniciador (padrão `8000`)
 - `CLOUDFLARED_BIN` — caminho do `cloudflared` quando ele não está no PATH (opcional)
-- `RENDER_CONCURRENCY` — número de processos do render (opcional; vazio = padrão do Remotion). Lido por `renderer/scripts/render.mjs`
-- `BROWSER_EXECUTABLE` — caminho de um Chrome ou headless shell já instalado, para o render (opcional). Lido por `renderer/scripts/render.mjs`
+- `RENDER_CONCURRENCY` — número de processos do render (opcional; vazio = padrão do Remotion). Lido por `renderer/scripts/render.mjs` e `render-batch.mjs`
+- `BROWSER_EXECUTABLE` — caminho de um Chrome ou headless shell já instalado, para o render (opcional). Lido por `renderer/scripts/render.mjs` e `render-batch.mjs`
 - `TUNNEL_TOKEN` — token do túnel fixo da Cloudflare. É uma senha: nunca versionar. Vazio = túnel aleatório
 - `TUNNEL_HOSTNAME` — endereço fixo do túnel, ex.: `meu-servidor.seudominio.com`. Obrigatório junto com `TUNNEL_TOKEN`
 
