@@ -17,6 +17,19 @@ def export_name(audio: Path, variant: str) -> str:
     return f"{clean_name(audio.stem)}-{variant}.mp4"
 
 
+def part_name(audio: Path, index: int, total: int) -> str:
+    """Nome legível no pacote: 01-musica-parte-1-de-10.mp4; vídeo único fica só com o título."""
+    title = clean_name(audio.stem)
+    if total == 1:
+        return f"{title}.mp4"
+    return f"{index:02d}-{title}-parte-{index}-de-{total}.mp4"
+
+
+def exported_path(video: Path, audio: Path) -> Path:
+    """Cópia para postar de um vídeo, com o mesmo nome que export_video grava."""
+    return video.parent / "para-postar" / export_name(audio, video.stem.removeprefix("video-"))
+
+
 def export(src: Path, dst: Path) -> None:
     ffmpeg = shutil.which("ffmpeg")
     if ffmpeg is None:

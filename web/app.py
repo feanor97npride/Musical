@@ -1,7 +1,6 @@
 # Web mínima com FastAPI: envio de MP3 + letra, progresso por job e download do MP4.
 import os
 import secrets
-import zipfile
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -16,6 +15,7 @@ from engine.props import BACKGROUNDS, SUBTITLE_STYLES as STYLES
 from engine.write_lyrics import write_lyrics
 from web import history
 from web.jobs import Job, JobQueue
+from web.pacote import build_pack, parse_draft
 
 load_dotenv(ROOT / ".env")
 MAX_BYTES = 25 * 1024 * 1024
@@ -79,9 +79,14 @@ def _find(job_id: str) -> Job:
 async def create_job(audio: UploadFile = File(...), lyrics: str = Form(""), style: str = Form("karaoke"),
                      background: str = Form("gradient"), clip_start: str = Form(""), clip_end: str = Form(""),
                      cuts: str = Form(""), background_image: UploadFile | None = File(None),
-                     video_format: str = Form("vertical", alias="format"), confirm: bool = Form(False)) -> dict:
+                     video_format: str = Form("vertical", alias="format"), confirm: bool = Form(False),
+                     draft: str = Form("")) -> dict:
     if not confirm:
         raise HTTPException(400, "confirme que a música é sua ou que você tem autorização para usá-la")
+    try:
+        texts = parse_draft(draft)  # textos da letra, para o pacote; vazio = sem eles
+    except ValueError as error:
+        raise HTTPException(400, f"textos para postar: {error}")
     if not (audio.filename or "").lower().endswith(".mp3"):
         raise HTTPException(400, "envie um arquivo .mp3")
     if not lyrics.strip():
@@ -104,7 +109,7 @@ async def create_job(audio: UploadFile = File(...), lyrics: str = Form(""), styl
     if CUTS[cuts] and clip:
         raise HTTPException(400, "use trecho ou cortes, não os dois")
     job = queue.create(audio.filename or "musica.mp3", await _read_limited(audio), lyrics, style, background, clip,
-                       CUTS[cuts], image, video_format)
+                       CUTS[cuts], image, video_format, texts)
     return {"id": job.id}
 
 
@@ -127,19 +132,12 @@ def job_video(job_id: str, n: int | None = None) -> FileResponse:
     return FileResponse(job.ready_videos[n], media_type="video/mp4")
 
 
-@app.get("/jobs/{job_id}/cortes.zip", dependencies=[Depends(_check_token)])
-def job_cuts_zip(job_id: str) -> FileResponse:
+@app.get("/jobs/{job_id}/pacote.zip", dependencies=[Depends(_check_token)])
+def job_pack(job_id: str) -> FileResponse:
     job = _find(job_id)
     if job.status != "done" or not job.ready_videos:
         raise HTTPException(409, "o vídeo ainda não está pronto")
-    zip_path = job.folder / "cortes.zip"
-    if not zip_path.exists():  # MP4 já é comprimido: ZIP sem compactar é mais rápido
-        tmp = job.folder / "cortes.zip.tmp"
-        with zipfile.ZipFile(tmp, "w", zipfile.ZIP_STORED) as archive:
-            for path in job.ready_videos:
-                archive.write(path, arcname=path.name)
-        os.replace(tmp, zip_path)
-    return FileResponse(zip_path, media_type="application/zip", filename=f"{job.audio.stem}-cortes.zip")
+    return FileResponse(build_pack(job), media_type="application/zip", filename=f"{job.audio.stem}-pacote.zip")
 
 
 @app.post("/lyrics", dependencies=[Depends(_check_token)])

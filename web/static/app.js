@@ -62,61 +62,6 @@ async function failure(response) {
   show(body.detail || "O servidor respondeu com erro " + response.status, true);
 }
 
-async function showVideo(id, videos) {
-  if (videos.length > 1) return showCuts(id, videos);
-  const response = await api(`/jobs/${id}/video`);
-  if (!response.ok) return failure(response);
-  const url = URL.createObjectURL(await response.blob());
-  finish();
-  show("Vídeo pronto");
-  detail.textContent = "";
-  output.innerHTML = "";
-  const video = document.createElement("video");
-  video.controls = true;
-  video.src = url;
-  const link = document.createElement("a");
-  link.className = "download";
-  link.href = url;
-  link.download = "lyric-video.mp4";
-  link.textContent = "Baixar MP4";
-  output.append(video, link);
-}
-
-function showCuts(id, names) {
-  finish();
-  show(names.length + " cortes prontos");
-  detail.textContent = "";
-  output.innerHTML = "";
-  const all = document.createElement("button");
-  all.type = "button";
-  all.className = "primary";
-  all.textContent = "Baixar todos os cortes (ZIP)";
-  all.addEventListener("click", () => download(`/jobs/${id}/cortes.zip`, "cortes.zip"));
-  output.append(all, ...names.map((name, index) => {
-    const link = document.createElement("a");
-    link.className = "download";
-    link.href = "#";
-    link.textContent = `Baixar corte ${index + 1} de ${names.length}`;
-    link.addEventListener("click", (event) => {
-      event.preventDefault();
-      download(`/jobs/${id}/video?n=${index}`, name);
-    });
-    return link;
-  }));
-}
-
-// o download passa pelo fetch para levar a senha no cabeçalho; um link comum não levaria
-async function download(path, name) {
-  try {
-    const response = await api(path);
-    if (!response.ok) return failure(response);
-    const link = Object.assign(document.createElement("a"), { href: URL.createObjectURL(await response.blob()), download: name });
-    link.click();
-  } catch (error) {
-    show("Não consegui baixar. Confira a conexão com o servidor.", true);
-  }
-}
-
 async function poll(id) {
   try {
     const response = await api(`/jobs/${id}`);

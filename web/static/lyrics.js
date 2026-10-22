@@ -18,6 +18,9 @@
     for (const [key, id] of Object.entries(FILLED)) document.getElementById(id).value = data[key] || "";
     document.getElementById("hashtags").value = (data.hashtags || []).join(" ");
     document.getElementById("posting").hidden = false;
+    // o pacote para postar leva esses textos; o servidor recusa textos pela metade, então só vai se estiverem completos
+    const posting = { youtube_title: data.youtube_title, youtube_description: data.youtube_description, tiktok_caption: data.tiktok_caption, hashtags: data.hashtags };
+    document.getElementById("draft").value = Object.values(posting).every(Boolean) ? JSON.stringify(posting) : "";
   }
 
   writeButton.addEventListener("click", async () => {

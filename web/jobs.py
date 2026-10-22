@@ -46,6 +46,7 @@ class Job:
     progress: float = 0.0  # de 0 a 1; nunca diminui (os cortes renderizam um depois do outro)
     background_image: Path | None = None  # imagem enviada pelo usuário; só vale com fundo "image"
     format: str = "vertical"  # "horizontal" = 16:9 para o YouTube
+    draft: dict | None = None  # textos para postar da letra (título, legenda, hashtags...); None = sem eles
 
     @property
     def lyrics(self) -> Path:
@@ -89,7 +90,7 @@ class Job:
 def run_pipeline(job: Job) -> int:
     command = [sys.executable, "-m", "engine.pipeline", "--audio", str(job.audio),
                "--lyrics", str(job.lyrics), "--style", job.style, "--background", job.background,
-               "--format", job.format]
+               "--format", job.format, "--export"]  # o pacote para postar usa a cópia exportada
     if job.clip:
         command += ["--clip", f"{job.clip[0]}:{job.clip[1]}"]
     if job.cuts:
@@ -113,12 +114,12 @@ class JobQueue:
 
     def create(self, filename: str, audio: bytes, lyrics: str, style: str, background: str,
                clip: tuple[float, float] | None, cuts: int | None = None,
-               image: tuple[bytes, str] | None = None, fmt: str = "vertical") -> Job:
+               image: tuple[bytes, str] | None = None, fmt: str = "vertical", draft: dict | None = None) -> Job:
         job_id = uuid.uuid4().hex
         folder = UPLOADS / job_id
         folder.mkdir(parents=True)
         job = Job(job_id, folder, folder / f"{clean_name(Path(filename).stem)}.mp3", style, background, clip,
-                  cuts=cuts, format=fmt)
+                  cuts=cuts, format=fmt, draft=draft)
         job.audio.write_bytes(audio)
         if image:  # a imagem fica na pasta do job, com a extensão que o usuário enviou
             job.background_image = folder / f"fundo{image[1]}"

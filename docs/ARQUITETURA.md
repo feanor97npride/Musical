@@ -61,8 +61,9 @@ Cada etapa lê e escreve arquivos em `output/<slug>/`. Se o arquivo de saída da
 ├── web/
 │   ├── app.py         # FastAPI
 │   ├── jobs.py        # fila de jobs (um por vez)
+│   ├── pacote.py      # pacote para postar (ZIP com as cópias e o postar.txt)
 │   ├── launcher/      # iniciador do Windows (python -m web.launcher)
-│   └── static/        # index.html, style.css, app.js, forms.js, lyrics.js, _headers, termos.html, privacidade.html
+│   └── static/        # index.html, style.css, app.js, entrega.js, forms.js, lyrics.js, _headers, termos.html, privacidade.html
 ├── tests/
 ├── samples/           # áudio e letras de teste (áudio fora do Git)
 └── output/<slug>/     # artefatos de cada job
@@ -186,14 +187,16 @@ Regras que `validate_song()` verifica:
 
 ## Publicação em duas partes (opção B1)
 - A página `web/static/` vai para o Cloudflare Pages (projeto Pages com build output directory `web/static`, sem build command).
-- Contra cache antigo: `web/static/_headers` manda o navegador revalidar (`Cache-Control: no-cache`), e o `index.html` chama `style.css?v=N`, `app.js?v=N`, `forms.js?v=N` e `lyrics.js?v=N`. Ao mudar um desses arquivos, suba o número `N` no `index.html`.
+- Contra cache antigo: `web/static/_headers` manda o navegador revalidar (`Cache-Control: no-cache`), e o `index.html` chama `style.css?v=N`, `app.js?v=N`, `entrega.js?v=N`, `forms.js?v=N` e `lyrics.js?v=N`. Ao mudar um desses arquivos, suba o número `N` no `index.html`.
 - A API roda no seu computador (`uvicorn web.app:app --port 8000`) e fica acessível por um túnel (ex.: Cloudflare Tunnel).
 - No seu computador, o `.env` precisa de `ACCESS_TOKEN` (uma senha longa) e `ALLOWED_ORIGINS=https://SEU-SITE` (o endereço do site, sem barra no fim).
 - Na página, o campo "Endereço do servidor" recebe a URL do túnel, e o campo "Senha de acesso" recebe a senha.
 - `POST /lyrics` (campo `context`, até 4000 caracteres, com a mesma senha) devolve `{title, lyrics, style, youtube_title, youtube_description, tiktok_caption, hashtags}` (hashtags é uma lista de 3 a 6). Contexto vazio ou longo dá 400; sem chave da API ou resposta inválida dá 503. A página preenche a letra, o estilo do Suno, o título e a descrição do YouTube, a legenda do TikTok e as hashtags.
 - `GET /jobs/{id}` devolve, além de `status`, `stage` e `message`, os campos `step` e `total` (etapa atual e número de etapas, lidos da linha `[n/total] Nome...` da pipeline; `0` até a primeira etapa) e `progress` (de 0 a 1, nunca diminui; durante o render conta os quadros `Rendered a/b`; vale 1 quando termina). A página usa `progress` na barra e `step`/`total` no texto "Etapa X de Y".
 - `GET /historico` (lista: id, data, título), `GET /historico/{id}` (letra completa) e `DELETE /historico/{id}` (204) ficam com a senha. Cada `POST /lyrics` com sucesso grava a letra em `output/historico/letras.json` (fora do Git); arquivo corrompido vai para `letras.corrompido.json`.
-- `GET /jobs/{id}/cortes.zip` devolve todos os cortes de um job pronto num ZIP sem compactar (os MP4 já são comprimidos). O ZIP fica na pasta do job (`cortes.zip`) e é reaproveitado; sem job pronto dá 409.
+- Todo job roda a pipeline com `--export`: cada vídeo ganha a cópia para postar em `output/<slug>/para-postar/` (H.264 yuv420p, moov no começo).
+- `POST /jobs` aceita o campo opcional `draft` (JSON com `youtube_title`, `youtube_description`, `tiktok_caption` e `hashtags`, os textos que a letra gerou). A página só envia quando os quatro estão completos. Textos fora das regras de postagem dão 400; sem `draft`, o pacote traz só os nomes e os capítulos.
+- `GET /jobs/{id}/pacote.zip` devolve o pacote de um job pronto, sem compactar (os MP4 já são comprimidos): as cópias com nomes legíveis (`01-musica-parte-1-de-N.mp4`, ou `musica.mp4` no vídeo único) e um `postar.txt` (UTF-8 com BOM). O `postar.txt` tem um bloco por arquivo (com "Parte X/N · " no título e na legenda, legenda cortada em 150 caracteres) e, no fim, a descrição do YouTube com os capítulos de `song.json` (um por troca de seção, `00:00` no início). O ZIP fica na pasta do job (`pacote.zip`) e é reaproveitado; sem job pronto dá 409.
 
 ## Iniciador (Windows)
 - `iniciar.bat` (duplo clique) ou `python -m web.launcher` faz, nesta ordem:

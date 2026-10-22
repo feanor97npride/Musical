@@ -135,3 +135,16 @@ def test_cada_corte_tem_sua_copia(tmp_path, monkeypatch):
     assert len(calls) == 2
     finais = sorted(p.name for p in (tmp_path / "para-postar").iterdir())
     assert finais == ["minha-musica-karaoke-gradient-0-30.mp4", "minha-musica-karaoke-gradient-30-60.mp4"]
+
+
+def test_nome_do_pacote_com_partes_e_video_unico():
+    audio = Path("O Deserto Vai Florir.mp3")
+    assert export.part_name(audio, 1, 1) == "o-deserto-vai-florir.mp4"
+    assert export.part_name(audio, 1, 10) == "01-o-deserto-vai-florir-parte-1-de-10.mp4"
+    assert export.part_name(audio, 10, 10) == "10-o-deserto-vai-florir-parte-10-de-10.mp4"
+
+
+def test_copia_para_postar_fica_na_pasta_para_postar_do_video():
+    video = Path("output/o-deserto/video-karaoke-gradient-0-10.mp4")
+    assert export.exported_path(video, Path("O Deserto.mp3")) == Path(
+        "output/o-deserto/para-postar/o-deserto-karaoke-gradient-0-10.mp4")
