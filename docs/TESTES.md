@@ -102,3 +102,8 @@ O render dos cortes de uma música passou a ser uma execução só (`renderer/sc
 - Versão anterior, com um navegador compartilhado entre os renders: antigo 105,5 s, lote 112,9 s. Num trecho só: antigo 35 s, lote 48 s, e a versão com navegador por render 34 s. Por isso o navegador compartilhado saiu.
 - O bundle não era o gargalo: o CLI já reaproveita o bundle em cache (`bundle-cache` liga por padrão).
 - Não medido no Windows.
+
+## Cópia para postar sem recodificar (Plano 27)
+- Trecho de 10 s pelo `render-batch` com `pixelFormat yuv420p`, `colorSpace bt709`, crf 23, maxrate 8M: saída yuv420p, faixa tv, bt709, 300 quadros.
+- Cópia para postar: 0,1 s (só remux, `-c copy`), contra 11 s do caminho antigo (recodificar com libx264). Em música de 4 min, a estimativa é de alguns segundos contra alguns minutos; não medido na música inteira.
+- A faixa de cor muda de completa (`yuvj420p`) para limitada (`tv`). Conferido a olho num quadro do fundo.

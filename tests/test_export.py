@@ -12,6 +12,7 @@ from engine import export, pipeline
 
 def fake_ffmpeg(monkeypatch, calls: list, fail: bool = False) -> None:
     monkeypatch.setattr(export.shutil, "which", lambda name: "/usr/bin/ffmpeg")
+    monkeypatch.setattr(export, "is_final", lambda src: False)  # estes testes cobrem a recodificação
 
     def run(cmd, check):
         calls.append(cmd)
@@ -148,3 +149,25 @@ def test_copia_para_postar_fica_na_pasta_para_postar_do_video():
     video = Path("output/o-deserto/video-karaoke-gradient-0-10.mp4")
     assert export.exported_path(video, Path("O Deserto.mp3")) == Path(
         "output/o-deserto/para-postar/o-deserto-karaoke-gradient-0-10.mp4")
+
+
+def test_formato_final_so_copia_sem_recodificar(tmp_path, monkeypatch):
+    calls = []
+    monkeypatch.setattr(export.shutil, "which", lambda name: f"/usr/bin/{name}")
+    monkeypatch.setattr(export, "is_final", lambda src: True)
+
+    def run(cmd, check):
+        calls.append(cmd)
+        Path(cmd[-1]).write_bytes(b"saida")
+
+    monkeypatch.setattr(export.subprocess, "run", run)
+    export.export(tmp_path / "fonte.mp4", tmp_path / "copia.mp4")
+    assert "copy" in calls[0] and "libx264" not in calls[0]
+    assert (tmp_path / "copia.mp4").read_bytes() == b"saida"
+
+
+def test_is_final_le_formato_e_cor_do_ffprobe(tmp_path, monkeypatch):
+    monkeypatch.setattr(export.shutil, "which", lambda name: f"/usr/bin/{name}")
+    for saida, esperado in [("yuv420p,bt709\n", True), ("yuvj420p,bt709\n", False), ("yuv420p,bt470bg\n", False)]:
+        monkeypatch.setattr(export.subprocess, "run", lambda cmd, **kwargs: subprocess.CompletedProcess(cmd, 0, stdout=saida))
+        assert export.is_final(tmp_path / "video.mp4") is esperado

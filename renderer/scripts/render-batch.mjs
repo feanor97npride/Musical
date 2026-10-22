@@ -31,6 +31,13 @@ for (const job of plan) {
     serveUrl,
     inputProps: job.inputProps,
     codec: "h264",
+    // formato final já no render: a cópia para postar só remuxa, sem recodificar (engine/export.py)
+    pixelFormat: "yuv420p",
+    colorSpace: "bt709",
+    crf: 23,
+    encodingMaxRate: "8M",
+    encodingBufferSize: "16M",
+    audioBitrate: "128k",
     outputLocation: job.video,
     overwrite: true,
     browserExecutable,

@@ -30,16 +30,29 @@ def exported_path(video: Path, audio: Path) -> Path:
     return video.parent / "para-postar" / export_name(audio, video.stem.removeprefix("video-"))
 
 
+def is_final(src: Path) -> bool:
+    """Vídeo já em yuv420p com cores bt709 (o render final): dá para só copiar, sem recodificar."""
+    ffprobe = shutil.which("ffprobe")
+    if ffprobe is None:  # sem ffprobe, recodifica como antes
+        return False
+    out = subprocess.run([ffprobe, "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=pix_fmt,color_space",
+                          "-of", "csv=p=0", str(src)], capture_output=True, text=True, check=True).stdout
+    return out.strip().split(",") == ["yuv420p", "bt709"]
+
+
 def export(src: Path, dst: Path) -> None:
     ffmpeg = shutil.which("ffmpeg")
     if ffmpeg is None:
         raise RuntimeError("ffmpeg não encontrado: instale o FFmpeg e confira o PATH")
     tmp = dst.with_suffix(".tmp.mp4")  # um nome por cópia: exportações de variantes diferentes não se misturam
+    if is_final(src):
+        codec = ["-c", "copy"]
+    else:  # vídeos antigos (yuvj420p, faixa completa) são recodificados
+        codec = ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "23", "-maxrate", MAX_RATE, "-bufsize", BUF_SIZE,
+                 "-c:a", "aac", "-b:a", "128k"]
     try:
-        subprocess.run([ffmpeg, "-y", "-hide_banner", "-loglevel", "error", "-i", str(src),
-                        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "23",
-                        "-maxrate", MAX_RATE, "-bufsize", BUF_SIZE,
-                        "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(tmp)], check=True)
+        subprocess.run([ffmpeg, "-y", "-hide_banner", "-loglevel", "error", "-i", str(src), *codec,
+                        "-movflags", "+faststart", str(tmp)], check=True)
         os.replace(tmp, dst)  # só troca o arquivo antigo quando o ffmpeg terminou sem erro
     finally:
         tmp.unlink(missing_ok=True)
