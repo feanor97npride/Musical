@@ -67,7 +67,8 @@
     remove.textContent = "Apagar";
     remove.addEventListener("click", async () => {
       if (!confirm("Apagar esta letra do histórico?")) return;
-      await api(`/historico/${item.id}`, { method: "DELETE" });
+      const response = await api(`/historico/${item.id}`, { method: "DELETE" });
+      if (!response.ok) return (historyStatus.textContent = "Não consegui apagar esta letra do histórico.");
       loadHistory();
     });
     li.append(label, open, remove);
@@ -114,6 +115,10 @@
       },
     );
   }
+
+  // a senha ou o endereço podem mudar depois do primeiro carregamento: o histórico tenta de novo
+  document.getElementById("token").addEventListener("change", loadHistory);
+  document.getElementById("server").addEventListener("change", loadHistory);
 
   document.querySelectorAll("[data-copy]").forEach((button) => {
     button.addEventListener("click", () => copyFrom(button, document.getElementById(button.dataset.copy), button.dataset.done));

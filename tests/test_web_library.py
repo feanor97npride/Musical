@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 from engine.names import clean_name
 from web import app as web_app
+from web import limites
 from web import jobs
 
 
@@ -69,6 +70,11 @@ def test_recusa_cortes_desconhecidos(biblioteca):
 
 def test_musica_que_nao_existe_da_404(biblioteca):
     assert gerar(biblioteca, name="Nao%20existe").status_code == 404
+
+
+def test_mp3_grande_demais_da_400_sem_carregar_a_musica(biblioteca, monkeypatch):
+    monkeypatch.setattr(limites, "MAX_BYTES", 1)
+    assert gerar(biblioteca).status_code == 400
 
 
 def test_fundo_com_imagem_sem_arquivo_na_pasta_da_400(biblioteca):

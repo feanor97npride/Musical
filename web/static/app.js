@@ -11,6 +11,7 @@ const serverInput = document.getElementById("server");
 const tokenInput = document.getElementById("token");
 const SERVER_KEY = "lyricVideo.server";
 const JOB_KEY = "lyricVideo.job";
+const NEXT_KEY = "lyricVideo.next"; // o formato que falta no preset full, para voltar depois de recarregar
 const FIXED_SERVER = "https://whimsical.musicas.space"; // único endereço que o link do iniciador pode preencher
 let timer = null;
 let failures = 0; // falhas de rede seguidas: a página só desiste depois de algumas
@@ -46,6 +47,7 @@ function show(message, isError) {
   result.classList.add("visible");
   if (stage.textContent !== message) stage.textContent = message; // mesmo texto não é relido pelo leitor de tela
   stage.className = isError ? "stage error" : "stage";
+  stage.setAttribute("aria-live", isError ? "assertive" : "polite"); // erro é anunciado logo
 }
 
 function finish() {
@@ -56,13 +58,16 @@ function finish() {
 
 // o id do envio fica no navegador para a página retomar após recarregar; o estado continua no servidor
 function rememberJob(id) { try { localStorage.setItem(JOB_KEY, id); } catch (error) { /* sem armazenamento: não retoma */ } }
-function forgetJob() { try { localStorage.removeItem(JOB_KEY); } catch (error) { /* nada a fazer */ } }
+function forgetJob() { try { localStorage.removeItem(JOB_KEY); localStorage.removeItem(NEXT_KEY); } catch (error) { /* nada a fazer */ } }
+function rememberNext(next) { try { localStorage.setItem(NEXT_KEY, JSON.stringify(next)); } catch (error) { /* sem armazenamento: não volta o segundo formato */ } }
+function recallNext() { try { return JSON.parse(localStorage.getItem(NEXT_KEY)); } catch (error) { return null; } }
 function recallJob() { try { return localStorage.getItem(JOB_KEY); } catch (error) { return null; } }
 
 async function failure(response) {
   const body = await response.json().catch(() => ({}));
   finish();
-  show(body.detail || "O servidor respondeu com erro " + response.status, true);
+  const text = typeof body.detail === "string" ? body.detail : "Confira os campos do formulário e tente de novo.";
+  show(body.detail ? text : "O servidor respondeu com erro " + response.status, true);
 }
 
 async function poll(id, box = output) {
@@ -110,6 +115,7 @@ async function startNext(id) {
   const response = await api(`/jobs/${id}/variante`, { method: "POST", body: new URLSearchParams(variant) });
   if (!response.ok) return failure(response);
   const body = await response.json();
+  rememberJob(body.id); // se a página recarregar durante o segundo formato, ele volta no acompanhamento
   submit.disabled = preview.disabled = true;
   output2.innerHTML = "";
   timer = setInterval(() => poll(body.id, output2), 2000);
@@ -136,6 +142,7 @@ form.addEventListener("submit", async (event) => {
   const body = await response.json();
   rememberJob(body.id);
   chainNext = chained;
+  rememberNext(chained);
   failures = 0;
   clearInterval(timer);
   timer = setInterval(() => poll(body.id), 2000);
@@ -176,6 +183,8 @@ cancelButton.addEventListener("click", async () => {
 // envio feito antes de recarregar a página: retoma o acompanhamento
 const pending = recallJob();
 if (pending) {
+  chainNext = recallNext(); // o segundo formato do preset full também volta
+  submit.disabled = preview.disabled = true; // enquanto o envio anterior roda, não dá para mandar outro
   timer = setInterval(() => poll(pending), 2000);
   poll(pending);
 }

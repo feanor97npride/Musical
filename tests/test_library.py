@@ -1,6 +1,7 @@
 # Testes da pasta do Drive: quais músicas aparecem e o que é lido de cada uma.
 from pathlib import Path
 
+from web import limites
 from web.library import list_songs, load_song
 
 
@@ -31,6 +32,23 @@ def test_imagem_opcional_e_lida_com_a_extensao_em_minusculas(tmp_path):
     audio, lyrics, picture = load_song(tmp_path, "Com fundo")
     assert audio == b"x" and lyrics == "x"
     assert picture == (b"x", ".jpg")
+
+
+def test_txt_salvo_em_ansi_e_lido_sem_erro(tmp_path):
+    make_song(tmp_path, "Musica A", ["musica.mp3"])
+    (tmp_path / "Musica A" / "letra.txt").write_bytes("ação\n".encode("cp1252"))
+    assert load_song(tmp_path, "Musica A")[1] == "ação\n"
+
+
+def test_mp3_grande_demais_levanta_erro(tmp_path, monkeypatch):
+    monkeypatch.setattr(limites, "MAX_BYTES", 0)  # qualquer arquivo passa do limite
+    make_song(tmp_path, "Musica A", ["musica.mp3", "letra.txt"])
+    try:
+        load_song(tmp_path, "Musica A")
+    except ValueError as error:
+        assert "limite" in str(error)
+    else:
+        raise AssertionError("o MP3 acima do limite devia ser recusado")
 
 
 def test_nome_que_sai_da_pasta_e_recusado(tmp_path):

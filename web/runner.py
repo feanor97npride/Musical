@@ -4,6 +4,7 @@ import re
 import subprocess
 import sys
 import threading
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from engine.pipeline import ROOT
@@ -13,10 +14,13 @@ if TYPE_CHECKING:
     from web.jobs import Job
 
 JOB_TIMEOUT = 60 * 60  # segundos; shortcut: 60 min por job, subir se um render real passar disso
-PATH_IN_TEXT = re.compile(r"(?<![\w.])(?:[A-Za-z]:)?[\\/]\S*")  # caminho do PC: não vai para o navegador
+# caminho do PC (absoluto com \ ou /, ou relativo com \): não vai para o navegador; "1/2" não é caminho
+PATH_IN_TEXT = re.compile(r"(?<![\w.])(?:[A-Za-z]:)?(?:[\\/]\S*|[\w.-]+(?:\\[\w.-]+)+\S*)")
 
 
 def hide_paths(text: str) -> str:
+    for root in (str(ROOT), str(Path.home())):  # a pasta do projeto e a casa do usuário saem inteiras, com espaços
+        text = text.replace(root, "<caminho>")
     return PATH_IN_TEXT.sub("<caminho>", text)
 
 

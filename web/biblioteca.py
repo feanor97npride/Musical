@@ -35,7 +35,10 @@ def build_router(queue: JobQueue, check_token: Callable, check_options: Callable
         if not confirm:
             raise HTTPException(400, "confirme que a música é sua ou que você tem autorização para usá-la")
         check_options(style, background, cuts_value, video_format)
-        song = load_song(library_root(), name)
+        try:
+            song = load_song(library_root(), name)
+        except ValueError as error:  # arquivo grande demais: recusa antes de carregar a música na memória
+            raise HTTPException(400, str(error))
         if song is None:
             raise HTTPException(404, "música não encontrada: a pasta precisa de exatamente um MP3 e um TXT")
         audio, lyrics, image = song

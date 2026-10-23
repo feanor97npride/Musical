@@ -55,3 +55,6 @@ button.addEventListener("click", async () => {
 });
 
 loadSongs();
+// a senha e o endereço podem mudar depois do primeiro carregamento: a lista tenta de novo
+document.getElementById("token").addEventListener("change", loadSongs);
+document.getElementById("server").addEventListener("change", loadSongs);

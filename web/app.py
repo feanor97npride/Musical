@@ -18,11 +18,10 @@ from web.biblioteca import build_router
 from web.delivery import deliver_ready
 from web.jobs import Job, JobQueue, QueueFull
 from web.letra import build_router as letra_router
+from web.limites import MAX_IMAGE_BYTES, check_request_size, read_limited
 from web.pacote import build_pack, parse_draft
 
 load_dotenv(ROOT / ".env")
-MAX_BYTES = 25 * 1024 * 1024
-MAX_IMAGE_BYTES = 10 * 1024 * 1024
 CUTS = {"": None, "15": 15, "30": 30, "60": 60, "90": 90}  # segundos por corte; vazio = um vídeo só
 STATIC = Path(__file__).resolve().parent / "static"
 # senha opcional: sem ela, qualquer um que acessa o servidor usa (uso local)
@@ -41,8 +40,10 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(title="Lyric Video Generator", lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)  # sem /docs pelo túnel
 app.add_exception_handler(QueueFull, lambda request, error: JSONResponse({"detail": str(error)}, status_code=429))
+app.middleware("http")(check_request_size)
+CORS_METHODS = ["GET", "POST", "DELETE"]  # DELETE é o apagar do histórico, usado pelo site no Cloudflare Pages
 if ALLOWED_ORIGINS:
-    app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_methods=["GET", "POST"],
+    app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_methods=CORS_METHODS,
                        allow_headers=["X-Access-Token"])
 
 
@@ -64,13 +65,6 @@ def _clip(start: str, end: str) -> tuple[float, float] | None:
     return begin, finish
 
 
-async def _read_limited(upload: UploadFile, limit: int = MAX_BYTES) -> bytes:
-    data = bytearray()
-    while chunk := await upload.read(1024 * 1024):
-        data.extend(chunk)
-        if len(data) > limit:
-            raise HTTPException(413, f"o arquivo passa do limite de {limit // (1024 * 1024)} MB")
-    return bytes(data)
 
 
 def _find(job_id: str) -> Job:
@@ -92,7 +86,7 @@ def _check_options(style: str, background: str, cuts: str, video_format: str) ->
 
 
 app.include_router(build_router(queue, _check_token, _check_options, CUTS))
-app.include_router(letra_router(queue, _check_token, _find, _read_limited))
+app.include_router(letra_router(queue, _check_token, _find, read_limited))
 
 
 @app.post("/jobs", dependencies=[Depends(_check_token)])
@@ -117,11 +111,11 @@ async def create_job(audio: UploadFile = File(...), lyrics: str = Form(""), styl
         suffix = Path(background_image.filename or "").suffix.lower() if background_image else ""
         if suffix not in (".jpg", ".jpeg", ".png"):
             raise HTTPException(400, "envie a imagem de fundo em JPG ou PNG")
-        image = (await _read_limited(background_image, MAX_IMAGE_BYTES), suffix)
+        image = (await read_limited(background_image, MAX_IMAGE_BYTES), suffix)
     clip = _clip(clip_start, clip_end)
     if CUTS[cuts] and clip:
         raise HTTPException(400, "use trecho ou cortes, não os dois")
-    job = queue.create(audio.filename or "musica.mp3", await _read_limited(audio), lyrics, style, background, clip,
+    job = queue.create(audio.filename or "musica.mp3", await read_limited(audio), lyrics, style, background, clip,
                        CUTS[cuts], image, video_format, texts)
     return {"id": job.id}
 

@@ -18,6 +18,7 @@ async function showVideo(id, videos, box = output) {
   link.download = "lyric-video.mp4";
   link.textContent = "Baixar MP4";
   box.append(video, packButton(id), link);
+  box.querySelector("button").focus(); // o foco vai para o pacote: o leitor de tela anuncia o resultado
 }
 
 function showCuts(id, names, box = output) {
@@ -26,16 +27,14 @@ function showCuts(id, names, box = output) {
   detail.textContent = "";
   box.innerHTML = "";
   box.append(packButton(id), ...names.map((name, index) => {
-    const link = document.createElement("a");
+    const link = document.createElement("button");
+    link.type = "button";
     link.className = "download";
-    link.href = "#";
     link.textContent = `Baixar corte ${index + 1} de ${names.length}`;
-    link.addEventListener("click", (event) => {
-      event.preventDefault();
-      download(`/jobs/${id}/video?n=${index}`, name);
-    });
+    link.addEventListener("click", () => download(`/jobs/${id}/video?n=${index}`, name));
     return link;
   }));
+  box.querySelector("button").focus(); // o foco vai para o primeiro download: o leitor de tela anuncia o resultado
 }
 
 // o pacote traz as cópias prontas para subir e o postar.txt com os textos de cada parte

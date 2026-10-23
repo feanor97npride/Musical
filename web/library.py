@@ -1,6 +1,8 @@
 # Músicas de uma pasta sincronizada (Google Drive para computador): uma subpasta por música, com um MP3, um TXT e uma imagem opcional.
 from pathlib import Path
 
+from web import limites
+
 IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png")
 
 
@@ -21,8 +23,17 @@ def list_songs(root: Path) -> list[str]:
     return sorted(folder.name for folder in root.iterdir() if folder.is_dir() and song_files(folder) is not None)
 
 
+def read_lyrics(path: Path) -> str:
+    raw = path.read_bytes()
+    try:
+        return raw.decode("utf-8-sig")  # o BOM some; o Bloco de Notas salva em UTF-8 com BOM às vezes
+    except UnicodeDecodeError:  # arquivo salvo em ANSI (cp1252), comum em versões antigas do Bloco de Notas
+        return raw.decode("cp1252", errors="replace")
+
+
 def load_song(root: Path, name: str) -> tuple[bytes, str, tuple[bytes, str] | None] | None:
-    """MP3, letra e (imagem, extensão) de uma música da pasta. None = não encontrada ou nome que sai da pasta."""
+    """MP3, letra e (imagem, extensão) de uma música da pasta. None = não encontrada ou nome que sai da pasta.
+    Levanta ValueError se o MP3 ou a imagem passarem do limite (checado antes de ler o arquivo)."""
     folder = root / name
     if folder.resolve().parent != root.resolve() or not folder.is_dir():  # "..", barras e vazio ficam de fora
         return None
@@ -30,5 +41,9 @@ def load_song(root: Path, name: str) -> tuple[bytes, str, tuple[bytes, str] | No
     if files is None:
         return None
     mp3, text, image = files
+    if mp3.stat().st_size > limites.MAX_BYTES:
+        raise ValueError(f"o MP3 passa do limite de {limites.MAX_BYTES // (1024 * 1024)} MB")
+    if image and image.stat().st_size > limites.MAX_IMAGE_BYTES:
+        raise ValueError(f"a imagem passa do limite de {limites.MAX_IMAGE_BYTES // (1024 * 1024)} MB")
     picture = (image.read_bytes(), image.suffix.lower()) if image else None
-    return mp3.read_bytes(), text.read_text(encoding="utf-8"), picture
+    return mp3.read_bytes(), read_lyrics(text), picture
