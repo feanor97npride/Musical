@@ -3,7 +3,9 @@ import json
 import logging
 import queue
 import re
+import shutil
 import threading
+import time
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -12,18 +14,19 @@ from pathlib import Path
 from engine.cuts import plan_cuts
 from engine.names import clean_name, make_slug, variant_name
 from engine.pipeline import OUTPUT, ROOT
-from web.runner import run_pipeline
+from web.runner import hide_paths, run_pipeline
 
 UPLOADS = ROOT / "output" / "web"
 STAGE_LINE = re.compile(r"^\[(\d+)/(\d+)\] (.+?)\.\.\.")
 ERROR_LINE = re.compile(r"^erro: (.+)")
 FRAME_LINE = re.compile(r"Rendered (\d+)/(\d+)")
-PATH_IN_TEXT = re.compile(r"(?<![\w.])(?:[A-Za-z]:)?[\\/]\S*")  # caminho do PC: não vai para o navegador
 logger = logging.getLogger(__name__)
+MAX_AGE = 24 * 60 * 60  # segundos; shortcut: 24 h guardado no PC, subir se alguém precisar baixar depois
+MAX_PENDING = 5  # shortcut: 5 envios esperando; subir se a fila recusar sem motivo
 
 
-def hide_paths(text: str) -> str:
-    return PATH_IN_TEXT.sub("<caminho>", text)
+class QueueFull(Exception):
+    """Fila cheia: a rota responde 429 e o usuário espera um envio terminar."""
 
 
 @dataclass
@@ -48,6 +51,7 @@ class Job:
     draft: dict | None = None  # textos para postar da letra (título, legenda, hashtags...); None = sem eles
     library_name: str | None = None  # pasta da música no Drive; None = envio pelo formulário (não vai para o Drive)
     kind: str = "video"  # "letra" = só transcreve a letra pelo áudio, sem vídeo
+    finished: float = 0.0  # quando terminou (time.time); a limpeza apaga jobs antigos
 
     @property
     def lyrics(self) -> Path:
@@ -103,6 +107,7 @@ class JobQueue:
                clip: tuple[float, float] | None, cuts: int | None = None,
                image: tuple[bytes, str] | None = None, fmt: str = "vertical", draft: dict | None = None,
                library_name: str | None = None) -> Job:
+        self._admit()
         job_id = uuid.uuid4().hex
         folder = UPLOADS / job_id
         folder.mkdir(parents=True)
@@ -128,6 +133,7 @@ class JobQueue:
 
     def create_letra(self, filename: str, audio: bytes) -> Job:
         """Job só de transcrição: guarda o MP3 e gera a letra; não há vídeo nem opções de render."""
+        self._admit()
         job_id = uuid.uuid4().hex
         folder = UPLOADS / job_id
         folder.mkdir(parents=True)
@@ -137,6 +143,16 @@ class JobQueue:
         self.jobs[job_id] = job
         self._pending.put(job)
         return job
+
+    def _admit(self) -> None:
+        """Apaga da memória e do disco os jobs terminados há mais de MAX_AGE; recusa envio com a fila cheia."""
+        limite = time.time() - MAX_AGE
+        for job_id, job in list(self.jobs.items()):
+            if job.finished and job.finished < limite:
+                del self.jobs[job_id]
+                shutil.rmtree(job.folder, ignore_errors=True)  # a saída em output/ fica: é o cache das próximas gerações
+        if self._pending.qsize() >= MAX_PENDING:
+            raise QueueFull("muitos envios na fila: espere um terminar e tente de novo")
 
     def start(self) -> None:
         if self._worker is None:  # uma thread só: um job de cada vez
@@ -150,7 +166,7 @@ class JobQueue:
                 self._execute(job)
             except Exception:  # um erro fora da pipeline não pode parar a fila inteira
                 logger.exception("erro inesperado no job %s", job.id)
-                job.status, job.message = "error", "erro inesperado no servidor; veja a janela do iniciador"
+                job.status, job.message, job.finished = "error", "erro inesperado no servidor; veja a janela do iniciador", time.time()
 
     def _deliver(self, job: Job) -> None:
         try:
@@ -178,3 +194,4 @@ class JobQueue:
         else:
             job.message = job.message or f"a pipeline terminou com código {code}"  # antes do status: o polling para em error
             job.status = "error"
+        job.finished = time.time()

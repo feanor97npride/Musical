@@ -60,6 +60,11 @@ def test_letra_antes_de_pronta_da_409(client, monkeypatch):
     assert client.get(f"/jobs/{job_id}/letra").status_code == 409
 
 
+def test_fila_cheia_responde_429(client, monkeypatch):
+    monkeypatch.setattr(jobs, "MAX_PENDING", 0)  # sem vaga: o envio é recusado com 429
+    assert enviar(client).status_code == 429
+
+
 def test_letra_exige_senha_quando_configurada(client, monkeypatch):
     monkeypatch.setattr(web_app, "ACCESS_TOKEN", "segredo")
     assert enviar(client).status_code == 401

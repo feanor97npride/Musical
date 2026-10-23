@@ -7,7 +7,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from engine.pipeline import ROOT
@@ -16,7 +16,7 @@ from engine.write_lyrics import write_lyrics
 from web import history
 from web.biblioteca import build_router
 from web.delivery import deliver_ready
-from web.jobs import Job, JobQueue
+from web.jobs import Job, JobQueue, QueueFull
 from web.letra import build_router as letra_router
 from web.pacote import build_pack, parse_draft
 
@@ -40,6 +40,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="Lyric Video Generator", lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)  # sem /docs pelo túnel
+app.add_exception_handler(QueueFull, lambda request, error: JSONResponse({"detail": str(error)}, status_code=429))
 if ALLOWED_ORIGINS:
     app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_methods=["GET", "POST"],
                        allow_headers=["X-Access-Token"])
