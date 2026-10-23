@@ -17,6 +17,7 @@ from web import history
 from web.biblioteca import build_router
 from web.delivery import deliver_ready
 from web.jobs import Job, JobQueue
+from web.letra import build_router as letra_router
 from web.pacote import build_pack, parse_draft
 
 load_dotenv(ROOT / ".env")
@@ -90,6 +91,7 @@ def _check_options(style: str, background: str, cuts: str, video_format: str) ->
 
 
 app.include_router(build_router(queue, _check_token, _check_options, CUTS))
+app.include_router(letra_router(queue, _check_token, _find, _read_limited))
 
 
 @app.post("/jobs", dependencies=[Depends(_check_token)])
@@ -137,7 +139,6 @@ def job_variant(job_id: str, video_format: str = Form("vertical", alias="format"
     if cuts not in CUTS:
         raise HTTPException(400, "duração de corte desconhecida")
     return {"id": queue.clone(job, video_format, CUTS[cuts]).id}
-
 
 @app.get("/jobs/{job_id}/video", dependencies=[Depends(_check_token)])
 def job_video(job_id: str, n: int | None = None) -> FileResponse:

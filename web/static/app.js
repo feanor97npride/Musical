@@ -85,6 +85,7 @@ async function poll(id, box = output) {
     } else if (job.status === "done") {
       forgetJob();
       clearInterval(timer);
+      if (job.kind === "letra") return loadLetra(id); // letra pelo áudio: vai para o campo de letra (letra-auto.js)
       await showVideo(id, job.videos, box);
       if (chainNext) return startNext(id);
     } else {

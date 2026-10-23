@@ -49,10 +49,15 @@ class Job:
     format: str = "vertical"  # "horizontal" = 16:9 para o YouTube
     draft: dict | None = None  # textos para postar da letra (título, legenda, hashtags...); None = sem eles
     library_name: str | None = None  # pasta da música no Drive; None = envio pelo formulário (não vai para o Drive)
+    kind: str = "video"  # "letra" = só transcreve a letra pelo áudio, sem vídeo
 
     @property
     def lyrics(self) -> Path:
         return self.folder / "lyrics.txt"
+
+    @property
+    def transcript(self) -> Path:
+        return self.folder / "letra.txt"  # letra gerada pelo áudio (job kind "letra")
 
     @property
     def videos(self) -> list[Path]:
@@ -82,7 +87,7 @@ class Job:
             self.progress = max(self.progress, min(steps_done / self.total, 1.0))
 
     def to_dict(self) -> dict:
-        data = {"status": self.status, "stage": self.stage, "message": self.message,
+        data = {"status": self.status, "stage": self.stage, "message": self.message, "kind": self.kind,
                 "step": self.step, "total": self.total, "progress": round(self.progress, 3)}
         if self.status == "done":
             data["videos"] = [path.name for path in self.ready_videos]
@@ -99,6 +104,8 @@ def run_pipeline(job: Job) -> int:
         command += ["--cuts", str(job.cuts)]
     if job.background == "image":
         command += ["--background-image", str(job.background_image)]
+    if job.kind == "letra":  # transcrição: troca o comando; as opções de vídeo acima não se aplicam
+        command = [sys.executable, "-m", "engine.transcribe", "--audio", str(job.audio), "--out", str(job.transcript), "--force"]
     # no Windows o filho escreve em cp1252 por padrão; forçamos UTF-8 para o texto com acento não quebrar a leitura
     process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                                encoding="utf-8", errors="replace",
@@ -142,6 +149,18 @@ class JobQueue:
         return self.create(job.audio.name, job.audio.read_bytes(), job.lyrics.read_text(encoding="utf-8"),
                            job.style, job.background, None, cuts, image, fmt, job.draft)
 
+    def create_letra(self, filename: str, audio: bytes) -> Job:
+        """Job só de transcrição: guarda o MP3 e gera a letra; não há vídeo nem opções de render."""
+        job_id = uuid.uuid4().hex
+        folder = UPLOADS / job_id
+        folder.mkdir(parents=True)
+        job = Job(job_id, folder, folder / f"{clean_name(Path(filename).stem)}.mp3", "karaoke", "gradient", None,
+                  kind="letra")
+        job.audio.write_bytes(audio)
+        self.jobs[job_id] = job
+        self._pending.put(job)
+        return job
+
     def start(self) -> None:
         if self._worker is None:  # uma thread só: um job de cada vez
             self._worker = threading.Thread(target=self._work, daemon=True)
@@ -161,9 +180,12 @@ class JobQueue:
         job.status = "running"
         try:
             code = run_pipeline(job)
-            ready = code == 0 and all(path.exists() for path in job.videos)  # lê o song.json dos cortes
-            if ready:
-                job.ready_videos = job.videos  # guarda a lista: depois o song.json pode não estar mais lá
+            if job.kind == "letra":
+                ready = code == 0 and job.transcript.exists()
+            else:
+                ready = code == 0 and all(path.exists() for path in job.videos)  # lê o song.json dos cortes
+                if ready:
+                    job.ready_videos = job.videos  # guarda a lista: depois o song.json pode não estar mais lá
         except Exception:  # a pipeline nem chegou a rodar, ou o song.json não está lá
             logger.exception("erro inesperado no job %s", job.id)  # o detalhe com caminhos fica no terminal
             code, ready, job.message = 1, False, "erro inesperado no servidor; veja a janela do iniciador"
