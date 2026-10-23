@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from web import app as web_app
 from web import jobs
+from web import letra as letra_module
 
 
 def fake_transcricao(job):
@@ -58,6 +59,31 @@ def test_letra_antes_de_pronta_da_409(client, monkeypatch):
     job_id = enviar(client).json()["id"]
     esperar(client, job_id, status="error")
     assert client.get(f"/jobs/{job_id}/letra").status_code == 409
+
+
+def test_cancelar_mata_o_processo_em_andamento(client, monkeypatch):
+    mortos = []
+
+    def render_travado(job):  # só termina quando o cancelamento chega
+        job.process = object()
+        while not job.cancelled:
+            time.sleep(0.01)
+        return 1
+
+    monkeypatch.setattr(jobs, "run_pipeline", render_travado)
+    monkeypatch.setattr(letra_module, "kill_tree", mortos.append)
+    job_id = enviar(client).json()["id"]
+    while client.get(f"/jobs/{job_id}").json()["status"] != "running":
+        time.sleep(0.01)
+    assert client.post(f"/jobs/{job_id}/cancelar").status_code == 200
+    assert esperar(client, job_id, status="error")["message"] == "cancelado pelo usuário"
+    assert len(mortos) == 1
+
+
+def test_cancelar_job_terminado_da_409(client):
+    job_id = enviar(client).json()["id"]
+    esperar(client, job_id)  # a letra fingida termina como "done"
+    assert client.post(f"/jobs/{job_id}/cancelar").status_code == 409
 
 
 def test_fila_cheia_responde_429(client, monkeypatch):

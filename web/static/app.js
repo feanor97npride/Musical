@@ -87,6 +87,7 @@ async function poll(id, box = output) {
       clearInterval(timer);
       if (job.kind === "letra") return loadLetra(id); // letra pelo áudio: vai para o campo de letra (letra-auto.js)
       await showVideo(id, job.videos, box);
+      if (job.message) detail.textContent = job.message; // aviso da cópia para o Drive, se houve
       if (chainNext) return startNext(id);
     } else {
       show(job.total ? `Etapa ${job.step} de ${job.total}: ${job.stage}` : job.stage + "...");
@@ -158,6 +159,18 @@ preview.addEventListener("click", () => {
   form.requestSubmit();
   presetNext = chosen;
   set(saved); // devolve o que o usuário tinha digitado
+});
+
+// cancelar: aparece enquanto um envio roda (o submit fica desabilitado); cancela o job guardado no navegador
+const cancelButton = Object.assign(document.createElement("button"), { type: "button", className: "secondary", textContent: "Cancelar envio", hidden: true });
+result.append(cancelButton);
+new MutationObserver(() => { cancelButton.hidden = !submit.disabled; }).observe(submit, { attributes: true, attributeFilter: ["disabled"] });
+cancelButton.addEventListener("click", async () => {
+  const id = recallJob();
+  if (!id) return;
+  const response = await api(`/jobs/${id}/cancelar`, { method: "POST" });
+  if (!response.ok) return failure(response);
+  show("Cancelando...");
 });
 
 // envio feito antes de recarregar a página: retoma o acompanhamento

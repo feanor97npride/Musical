@@ -21,6 +21,8 @@ def hide_paths(text: str) -> str:
 
 
 def run_pipeline(job: "Job") -> int:
+    if job.cancelled:  # cancelado antes de começar (ainda na fila)
+        return 1
     command = [sys.executable, "-m", "engine.pipeline", "--audio", str(job.audio),
                "--lyrics", str(job.lyrics), "--style", job.style, "--background", job.background,
                "--format", job.format, "--export"]  # o pacote para postar usa a cópia exportada
@@ -38,6 +40,9 @@ def run_pipeline(job: "Job") -> int:
     process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                                encoding="utf-8", errors="replace", **group,
                                env={**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONIOENCODING": "utf-8"})
+    job.process = process
+    if job.cancelled:  # o cancelamento chegou enquanto o processo estava subindo
+        kill_tree(process)
     timer = threading.Timer(JOB_TIMEOUT, kill_tree, [process])  # render travado não pode prender a fila para sempre
     timer.start()
     try:

@@ -52,6 +52,8 @@ class Job:
     library_name: str | None = None  # pasta da música no Drive; None = envio pelo formulário (não vai para o Drive)
     kind: str = "video"  # "letra" = só transcreve a letra pelo áudio, sem vídeo
     finished: float = 0.0  # quando terminou (time.time); a limpeza apaga jobs antigos
+    process: object | None = None  # subprocess em andamento: o cancelamento mata este processo
+    cancelled: bool = False  # pedido de cancelamento: a pipeline não começa, ou é morta
 
     @property
     def lyrics(self) -> Path:
@@ -106,13 +108,13 @@ class JobQueue:
     def create(self, filename: str, audio: bytes, lyrics: str, style: str, background: str,
                clip: tuple[float, float] | None, cuts: int | None = None,
                image: tuple[bytes, str] | None = None, fmt: str = "vertical", draft: dict | None = None,
-               library_name: str | None = None) -> Job:
+               library_name: str | None = None, kind: str = "video") -> Job:
         self._admit()
         job_id = uuid.uuid4().hex
         folder = UPLOADS / job_id
         folder.mkdir(parents=True)
         job = Job(job_id, folder, folder / f"{clean_name(Path(filename).stem)}.mp3", style, background, clip,
-                  cuts=cuts, format=fmt, draft=draft, library_name=library_name)
+                  cuts=cuts, format=fmt, draft=draft, library_name=library_name, kind=kind)
         job.audio.write_bytes(audio)
         if image:  # a imagem fica na pasta do job, com a extensão que o usuário enviou
             job.background_image = folder / f"fundo{image[1]}"
@@ -133,16 +135,7 @@ class JobQueue:
 
     def create_letra(self, filename: str, audio: bytes) -> Job:
         """Job só de transcrição: guarda o MP3 e gera a letra; não há vídeo nem opções de render."""
-        self._admit()
-        job_id = uuid.uuid4().hex
-        folder = UPLOADS / job_id
-        folder.mkdir(parents=True)
-        job = Job(job_id, folder, folder / f"{clean_name(Path(filename).stem)}.mp3", "karaoke", "gradient", None,
-                  kind="letra")
-        job.audio.write_bytes(audio)
-        self.jobs[job_id] = job
-        self._pending.put(job)
-        return job
+        return self.create(filename, audio, "", "karaoke", "gradient", None, kind="letra")
 
     def _admit(self) -> None:
         """Apaga da memória e do disco os jobs terminados há mais de MAX_AGE; recusa envio com a fila cheia."""
@@ -155,6 +148,9 @@ class JobQueue:
             raise QueueFull("muitos envios na fila: espere um terminar e tente de novo")
 
     def start(self) -> None:
+        for folder in UPLOADS.glob("*"):  # reinício: a memória começou vazia, então pasta antiga não tem dono
+            if folder.is_dir() and time.time() - folder.stat().st_mtime > MAX_AGE:
+                shutil.rmtree(folder, ignore_errors=True)
         if self._worker is None:  # uma thread só: um job de cada vez
             self._worker = threading.Thread(target=self._work, daemon=True)
             self._worker.start()
@@ -173,6 +169,7 @@ class JobQueue:
             self.on_ready(job)
         except Exception:  # a cópia para o Drive não pode derrubar um job que já está pronto no PC
             logger.exception("não consegui copiar o job %s para a pasta do Drive", job.id)
+            job.message = "aviso: não consegui copiar para a pasta do Drive; confira a sincronização no PC"
 
     def _execute(self, job: Job) -> None:
         job.status = "running"
@@ -188,9 +185,9 @@ class JobQueue:
             logger.exception("erro inesperado no job %s", job.id)  # o detalhe com caminhos fica no terminal
             code, ready, job.message = 1, False, "erro inesperado no servidor; veja a janela do iniciador"
         if ready:
-            if self.on_ready:
-                self._deliver(job)
             job.status, job.stage, job.message, job.progress = "done", "Concluído", "", 1.0
+            if self.on_ready:  # depois do status: um aviso da cópia para o Drive fica na mensagem do job pronto
+                self._deliver(job)
         else:
             job.message = job.message or f"a pipeline terminou com código {code}"  # antes do status: o polling para em error
             job.status = "error"

@@ -5,11 +5,23 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
 from web.jobs import Job, JobQueue
+from web.launcher.windows import kill_tree
 
 
 def build_router(queue: JobQueue, check_token: Callable, find: Callable[[str], Job],
                  read_limited: Callable) -> APIRouter:
     router = APIRouter()
+
+    @router.post("/jobs/{job_id}/cancelar", dependencies=[Depends(check_token)])
+    def cancel_job(job_id: str) -> dict:
+        """Cancela um envio na fila ou em andamento: o processo morre e o job termina com erro."""
+        job = find(job_id)
+        if job.status in ("done", "error"):
+            raise HTTPException(409, "este envio já terminou")
+        job.cancelled, job.message = True, "cancelado pelo usuário"
+        if job.process is not None:
+            kill_tree(job.process)
+        return {"ok": True}
 
     @router.post("/letra", dependencies=[Depends(check_token)])
     async def transcribe_job(audio: UploadFile = File(...)) -> dict:
