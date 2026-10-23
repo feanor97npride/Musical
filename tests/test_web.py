@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from engine import pipeline
 from web import app as web_app
-from web import jobs
+from web import jobs, runner
 
 MP3 = ("musica.mp3", b"ID3fake", "audio/mpeg")
 
@@ -120,7 +120,7 @@ def test_pipeline_recebe_o_fundo_na_linha_de_comando(tmp_path, monkeypatch):
         def wait(self):
             return 0
 
-    monkeypatch.setattr(jobs.subprocess, "Popen", FakeProcess)
+    monkeypatch.setattr(runner.subprocess, "Popen", FakeProcess)
     jobs.run_pipeline(jobs.Job("id", tmp_path, tmp_path / "a.mp3", "karaoke", "solid", None))
     command = comandos[0]
     assert command[command.index("--background") + 1] == "solid"

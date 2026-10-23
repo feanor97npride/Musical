@@ -1,12 +1,15 @@
 # Pacote para postar: as cópias exportadas com nomes legíveis e um postar.txt com os textos de cada parte.
 import json
 import os
+import threading
 import zipfile
 from pathlib import Path
 
 from engine.export import exported_path, part_name
 from engine.posting import LIMITS, parts_text, posting_problems
 from web.jobs import Job
+
+_PACK_LOCK = threading.Lock()  # dois cliques no mesmo pacote não podem gravar o mesmo .tmp ao mesmo tempo
 
 
 def parse_draft(text: str) -> dict | None:
@@ -37,14 +40,15 @@ def song_of(job: Job) -> dict:
 def build_pack(job: Job) -> Path:
     """pacote.zip na pasta do job. Reaproveita o arquivo se já existe (o job não muda depois de pronto)."""
     zip_path = job.folder / "pacote.zip"
-    if zip_path.exists():
-        return zip_path
-    names = part_names(job)
-    tmp = job.folder / "pacote.zip.tmp"
-    with zipfile.ZipFile(tmp, "w", zipfile.ZIP_STORED) as archive:  # MP4 já é comprimido: sem compactar é mais rápido
-        for video, name in zip(job.ready_videos, names):
-            archive.write(exported_path(video, job.audio), arcname=name)
-        # BOM: o Bloco de Notas do Windows lê os acentos corretamente
-        archive.writestr("postar.txt", parts_text(names, song_of(job), job.draft).encode("utf-8-sig"))
-    os.replace(tmp, zip_path)
+    with _PACK_LOCK:
+        if zip_path.exists():
+            return zip_path
+        names = part_names(job)
+        tmp = job.folder / "pacote.zip.tmp"
+        with zipfile.ZipFile(tmp, "w", zipfile.ZIP_STORED) as archive:  # MP4 já é comprimido: sem compactar é mais rápido
+            for video, name in zip(job.ready_videos, names):
+                archive.write(exported_path(video, job.audio), arcname=name)
+            # BOM: o Bloco de Notas do Windows lê os acentos corretamente
+            archive.writestr("postar.txt", parts_text(names, song_of(job), job.draft).encode("utf-8-sig"))
+        os.replace(tmp, zip_path)
     return zip_path

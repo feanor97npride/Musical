@@ -11,7 +11,7 @@ from engine.cuts import plan_cuts
 from engine.export import exported_path, part_name
 from engine.names import variant_name
 from web import app as web_app
-from web import jobs
+from web import jobs, runner
 
 MP3 = ("musica.mp3", b"ID3fake", "audio/mpeg")
 # versos de 5 s; seção muda no 7º e no 13º verso, para os capítulos terem tempos diferentes de zero
@@ -101,7 +101,7 @@ def test_cortes_chegam_ao_comando(tmp_path, monkeypatch):
         def wait(self):
             return 0
 
-    monkeypatch.setattr(jobs.subprocess, "Popen", FakeProcess)
+    monkeypatch.setattr(runner.subprocess, "Popen", FakeProcess)
     jobs.run_pipeline(jobs.Job("id", tmp_path, tmp_path / "a.mp3", "karaoke", "solid", None, cuts=30))
     assert comandos[0][-2:] == ["--cuts", "30"]
     assert "--export" in comandos[0]  # o pacote para postar usa a cópia exportada

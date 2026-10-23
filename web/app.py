@@ -138,6 +138,8 @@ def job_variant(job_id: str, video_format: str = Form("vertical", alias="format"
         raise HTTPException(400, "formato desconhecido")
     if cuts not in CUTS:
         raise HTTPException(400, "duração de corte desconhecida")
+    if job.status != "done" or job.kind != "video":  # só copia música já processada (letra e jobs com erro não têm o MP3 pronto)
+        raise HTTPException(409, "só dá para criar outro formato de um vídeo já pronto")
     return {"id": queue.clone(job, video_format, CUTS[cuts]).id}
 
 @app.get("/jobs/{job_id}/video", dependencies=[Depends(_check_token)])

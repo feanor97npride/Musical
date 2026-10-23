@@ -1,5 +1,6 @@
 # Testes do segundo formato do preset full: a rota /jobs/{id}/variante copia a música e cria outro job.
 import re
+import time
 from pathlib import Path
 
 import pytest
@@ -11,21 +12,32 @@ from web import jobs
 STATIC = Path(__file__).resolve().parents[1] / "web" / "static"
 
 
+def video_pronto(job):  # a pipeline fingida grava o vídeo, para o job terminar como "done"
+    job.video.parent.mkdir(parents=True, exist_ok=True)
+    job.video.write_bytes(b"mp4")
+    return 0
+
+
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setattr(jobs, "UPLOADS", tmp_path / "uploads")
     monkeypatch.setattr(jobs, "OUTPUT", tmp_path / "output")
-    monkeypatch.setattr(jobs, "run_pipeline", lambda job: 0)  # o job termina sem vídeo; aqui só importa a criação
+    monkeypatch.setattr(jobs, "run_pipeline", video_pronto)
     monkeypatch.setattr(web_app, "ACCESS_TOKEN", "")
     with TestClient(web_app.app) as test_client:
         yield test_client
 
 
-def criar_job(client, lyrics="uma letra"):
+def criar_job(client, lyrics="uma letra", status="done"):
     response = client.post("/jobs", files={"audio": ("musica.mp3", b"ID3fake", "audio/mpeg")},
                            data={"lyrics": lyrics, "confirm": "true", "format": "horizontal"})
     assert response.status_code == 200
-    return response.json()["id"]
+    job_id = response.json()["id"]
+    deadline = time.monotonic() + 5
+    while time.monotonic() < deadline and client.get(f"/jobs/{job_id}").json()["status"] not in ("done", "error"):
+        time.sleep(0.05)
+    assert client.get(f"/jobs/{job_id}").json()["status"] == status
+    return job_id
 
 
 def test_variante_cria_outro_job_com_a_mesma_letra_e_formato_pedido(client):
@@ -45,6 +57,12 @@ def test_variante_recusa_formato_e_corte_desconhecidos(client):
     original = criar_job(client)
     assert client.post(f"/jobs/{original}/variante", data={"format": "quadrado"}).status_code == 400
     assert client.post(f"/jobs/{original}/variante", data={"format": "vertical", "cuts": "7"}).status_code == 400
+
+
+def test_variante_so_de_video_ja_pronto(client, monkeypatch):
+    monkeypatch.setattr(jobs, "run_pipeline", lambda job: 1)  # este job termina com erro
+    original = criar_job(client, status="error")
+    assert client.post(f"/jobs/{original}/variante", data={"format": "vertical"}).status_code == 409
 
 
 def test_variante_de_job_inexistente_da_404(client):

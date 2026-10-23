@@ -3,7 +3,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from web import app as web_app
-from web import jobs
+from web import jobs, runner
 
 MP3 = ("musica.mp3", b"ID3fake", "audio/mpeg")
 
@@ -46,7 +46,7 @@ def test_fundo_imagem_passa_o_caminho_para_a_pipeline(tmp_path, monkeypatch):
         def wait(self):
             return 0
 
-    monkeypatch.setattr(jobs.subprocess, "Popen", FakeProcess)
+    monkeypatch.setattr(runner.subprocess, "Popen", FakeProcess)
     folder = tmp_path / "job"
     folder.mkdir()
     job = jobs.Job("abc", folder, folder / "m.mp3", "karaoke", "image", None, background_image=folder / "fundo.png")
@@ -72,7 +72,7 @@ def test_formato_horizontal_chega_ao_comando(tmp_path, monkeypatch):
         def wait(self):
             return 0
 
-    monkeypatch.setattr(jobs.subprocess, "Popen", FakeProcess)
+    monkeypatch.setattr(runner.subprocess, "Popen", FakeProcess)
     folder = tmp_path / "job"
     folder.mkdir()
     job = jobs.Job("abc", folder, folder / "m.mp3", "karaoke", "gradient", None, format="horizontal")

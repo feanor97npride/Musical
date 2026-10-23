@@ -36,9 +36,17 @@ def test_sem_pasta_de_saida_nao_cria_nada(tmp_path, monkeypatch):
 
 
 def test_com_pasta_de_saida_entrega_a_musica_da_biblioteca(tmp_path, monkeypatch):
+    (tmp_path / "saida").mkdir()  # a pasta de saída do Drive tem que existir (sincronizada)
     monkeypatch.setenv("DRIVE_OUTPUT_DIR", str(tmp_path / "saida"))
     delivery.deliver_ready(job_pronto(tmp_path))
     assert (tmp_path / "saida" / "Musica A" / "postar.txt").exists()
+
+
+def test_pasta_de_saida_ausente_levanta_erro_e_nao_cria_pastas(tmp_path, monkeypatch):
+    monkeypatch.setenv("DRIVE_OUTPUT_DIR", str(tmp_path / "sumiu"))
+    with pytest.raises(OSError):
+        delivery.deliver_ready(job_pronto(tmp_path))
+    assert not (tmp_path / "sumiu").exists()
 
 
 def test_falha_na_copia_nao_derruba_a_fila(tmp_path, caplog):

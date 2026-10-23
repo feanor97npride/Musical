@@ -23,4 +23,6 @@ def deliver_ready(job: Job) -> None:
     """Chamado pela fila quando um job termina bem. Só músicas da pasta do Drive, e só com DRIVE_OUTPUT_DIR preenchido."""
     root = os.environ.get("DRIVE_OUTPUT_DIR", "").strip()
     if job.library_name and root:
+        if not Path(root).is_dir():  # sem a checagem, mkdir criaria a árvore dentro de um Drive desligado
+            raise OSError(f"pasta de saída do Drive não encontrada: {root}")
         deliver(job, Path(root))
