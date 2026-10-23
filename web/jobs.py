@@ -8,6 +8,7 @@ import subprocess
 import sys
 import threading
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -47,6 +48,7 @@ class Job:
     background_image: Path | None = None  # imagem enviada pelo usuário; só vale com fundo "image"
     format: str = "vertical"  # "horizontal" = 16:9 para o YouTube
     draft: dict | None = None  # textos para postar da letra (título, legenda, hashtags...); None = sem eles
+    library_name: str | None = None  # pasta da música no Drive; None = envio pelo formulário (não vai para o Drive)
 
     @property
     def lyrics(self) -> Path:
@@ -111,15 +113,17 @@ class JobQueue:
         self.jobs: dict[str, Job] = {}
         self._pending: queue.Queue[Job] = queue.Queue()
         self._worker: threading.Thread | None = None
+        self.on_ready: Callable[[Job], None] | None = None  # gancho: chamado quando um job termina bem (entrega no Drive)
 
     def create(self, filename: str, audio: bytes, lyrics: str, style: str, background: str,
                clip: tuple[float, float] | None, cuts: int | None = None,
-               image: tuple[bytes, str] | None = None, fmt: str = "vertical", draft: dict | None = None) -> Job:
+               image: tuple[bytes, str] | None = None, fmt: str = "vertical", draft: dict | None = None,
+               library_name: str | None = None) -> Job:
         job_id = uuid.uuid4().hex
         folder = UPLOADS / job_id
         folder.mkdir(parents=True)
         job = Job(job_id, folder, folder / f"{clean_name(Path(filename).stem)}.mp3", style, background, clip,
-                  cuts=cuts, format=fmt, draft=draft)
+                  cuts=cuts, format=fmt, draft=draft, library_name=library_name)
         job.audio.write_bytes(audio)
         if image:  # a imagem fica na pasta do job, com a extensão que o usuário enviou
             job.background_image = folder / f"fundo{image[1]}"
@@ -147,6 +151,12 @@ class JobQueue:
         while True:
             self._execute(self._pending.get())
 
+    def _deliver(self, job: Job) -> None:
+        try:
+            self.on_ready(job)
+        except OSError:  # pasta do Drive fora do ar: o job continua pronto no PC, só a cópia falha
+            logger.exception("não consegui copiar o job %s para a pasta do Drive", job.id)
+
     def _execute(self, job: Job) -> None:
         job.status = "running"
         try:
@@ -158,6 +168,8 @@ class JobQueue:
             logger.exception("erro inesperado no job %s", job.id)  # o detalhe com caminhos fica no terminal
             code, ready, job.message = 1, False, "erro inesperado no servidor; veja a janela do iniciador"
         if ready:
+            if self.on_ready:
+                self._deliver(job)
             job.status, job.stage, job.message, job.progress = "done", "Concluído", "", 1.0
         else:
             job.message = job.message or f"a pipeline terminou com código {code}"  # antes do status: o polling para em error

@@ -10,7 +10,7 @@ HTML = (STATIC / "index.html").read_text(encoding="utf-8")
 
 def test_ids_usados_pelo_script_existem_no_html():
     scripts = "".join((STATIC / name).read_text(encoding="utf-8")
-                      for name in ("app.js", "entrega.js", "forms.js", "lyrics.js", "presets.js"))
+                      for name in ("app.js", "entrega.js", "forms.js", "lyrics.js", "presets.js", "library.js"))
     used = set(re.findall(r'getElementById\("([^"]+)"\)', scripts)) | set(re.findall(r'data-copy="([^"]+)"', HTML))
     assert used, "nenhum ID encontrado: o padrão da busca mudou"
     assert [name for name in used if f'id="{name}"' not in HTML] == []
@@ -52,7 +52,7 @@ def test_pagina_tem_favicon_fontes_e_esquema_de_cores():
 
 def test_arquivos_locais_tem_versao_para_nao_ficar_em_cache():
     refs = re.findall(r'(?:href|src)="([^":/]+\.(?:css|js))(\?v=\d+)?"', HTML)
-    assert len(refs) == 6, refs  # style.css, app.js, entrega.js, presets.js, forms.js, lyrics.js
+    assert len(refs) == 7, refs  # style.css, app.js, entrega.js, presets.js, library.js, forms.js, lyrics.js
     assert [name for name, version in refs if not version] == []
     assert [name for name, _ in refs if not (STATIC / name).exists()] == []
 

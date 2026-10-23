@@ -14,6 +14,8 @@ from engine.pipeline import ROOT
 from engine.props import BACKGROUNDS, SUBTITLE_STYLES as STYLES
 from engine.write_lyrics import write_lyrics
 from web import history
+from web.biblioteca import build_router
+from web.delivery import deliver_ready
 from web.jobs import Job, JobQueue
 from web.pacote import build_pack, parse_draft
 
@@ -27,6 +29,7 @@ ACCESS_TOKEN = os.getenv("ACCESS_TOKEN", "").strip()
 # sites que podem chamar o servidor de outra origem, ex.: a página no Cloudflare Pages
 ALLOWED_ORIGINS = [origin.strip() for origin in os.getenv("ALLOWED_ORIGINS", "").split(",") if origin.strip()]
 queue = JobQueue()
+queue.on_ready = deliver_ready  # músicas da pasta do Drive são copiadas para a pasta de saída ao terminar
 
 
 @asynccontextmanager
@@ -75,6 +78,20 @@ def _find(job_id: str) -> Job:
     return job
 
 
+def _check_options(style: str, background: str, cuts: str, video_format: str) -> None:
+    if style not in STYLES:
+        raise HTTPException(400, "estilo de legenda desconhecido")
+    if background not in BACKGROUNDS:
+        raise HTTPException(400, "fundo desconhecido")
+    if cuts not in CUTS:
+        raise HTTPException(400, "duração de corte desconhecida")
+    if video_format not in ("vertical", "horizontal"):
+        raise HTTPException(400, "formato desconhecido")
+
+
+app.include_router(build_router(queue, _check_token, _check_options, CUTS))
+
+
 @app.post("/jobs", dependencies=[Depends(_check_token)])
 async def create_job(audio: UploadFile = File(...), lyrics: str = Form(""), style: str = Form("karaoke"),
                      background: str = Form("gradient"), clip_start: str = Form(""), clip_end: str = Form(""),
@@ -91,14 +108,7 @@ async def create_job(audio: UploadFile = File(...), lyrics: str = Form(""), styl
         raise HTTPException(400, "envie um arquivo .mp3")
     if not lyrics.strip():
         raise HTTPException(400, "a letra não pode estar vazia")
-    if style not in STYLES:
-        raise HTTPException(400, "estilo de legenda desconhecido")
-    if background not in BACKGROUNDS:
-        raise HTTPException(400, "fundo desconhecido")
-    if cuts not in CUTS:
-        raise HTTPException(400, "duração de corte desconhecida")
-    if video_format not in ("vertical", "horizontal"):
-        raise HTTPException(400, "formato desconhecido")
+    _check_options(style, background, cuts, video_format)
     image = None
     if background == "image":
         suffix = Path(background_image.filename or "").suffix.lower() if background_image else ""
