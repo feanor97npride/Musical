@@ -132,6 +132,12 @@ class JobQueue:
         self._pending.put(job)
         return job
 
+    def clone(self, job: Job, fmt: str, cuts: int | None) -> Job:
+        """Outro formato da mesma música (preset full): copia MP3, letra e textos; o cache da pipeline é reaproveitado."""
+        image = (job.background_image.read_bytes(), job.background_image.suffix) if job.background_image else None
+        return self.create(job.audio.name, job.audio.read_bytes(), job.lyrics.read_text(encoding="utf-8"),
+                           job.style, job.background, None, cuts, image, fmt, job.draft)
+
     def start(self) -> None:
         if self._worker is None:  # uma thread só: um job de cada vez
             self._worker = threading.Thread(target=self._work, daemon=True)

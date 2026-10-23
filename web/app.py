@@ -118,6 +118,17 @@ def job_status(job_id: str) -> dict:
     return _find(job_id).to_dict()
 
 
+@app.post("/jobs/{job_id}/variante", dependencies=[Depends(_check_token)])
+def job_variant(job_id: str, video_format: str = Form("vertical", alias="format"), cuts: str = Form("")) -> dict:
+    """Outro formato da mesma música, com a letra e o MP3 já enviados (preset full da página)."""
+    job = _find(job_id)
+    if video_format not in ("vertical", "horizontal"):
+        raise HTTPException(400, "formato desconhecido")
+    if cuts not in CUTS:
+        raise HTTPException(400, "duração de corte desconhecida")
+    return {"id": queue.clone(job, video_format, CUTS[cuts]).id}
+
+
 @app.get("/jobs/{job_id}/video", dependencies=[Depends(_check_token)])
 def job_video(job_id: str, n: int | None = None) -> FileResponse:
     job = _find(job_id)

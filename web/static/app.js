@@ -5,6 +5,7 @@ const result = document.getElementById("result");
 const stage = document.getElementById("stage");
 const detail = document.getElementById("detail");
 const output = document.getElementById("output");
+const output2 = document.getElementById("output-2"); // segundo formato do preset full
 const jobProgress = document.getElementById("job-progress");
 const serverInput = document.getElementById("server");
 const tokenInput = document.getElementById("token");
@@ -13,6 +14,8 @@ const JOB_KEY = "lyricVideo.job";
 const FIXED_SERVER = "https://whimsical.musicas.space"; // único endereço que o link do iniciador pode preencher
 let timer = null;
 let failures = 0; // falhas de rede seguidas: a página só desiste depois de algumas
+let presetNext = null; // formato extra do preset escolhido (presets.js); null = nenhum
+let chainNext = null; // formato extra do envio em andamento: criado depois que o primeiro job termina
 
 try { serverInput.value = localStorage.getItem(SERVER_KEY) || ""; } catch (error) { /* navegador sem armazenamento */ }
 serverInput.addEventListener("change", () => {
@@ -62,7 +65,7 @@ async function failure(response) {
   show(body.detail || "O servidor respondeu com erro " + response.status, true);
 }
 
-async function poll(id) {
+async function poll(id, box = output) {
   try {
     const response = await api(`/jobs/${id}`);
     failures = 0;
@@ -82,7 +85,8 @@ async function poll(id) {
     } else if (job.status === "done") {
       forgetJob();
       clearInterval(timer);
-      await showVideo(id, job.videos);
+      await showVideo(id, job.videos, box);
+      if (chainNext) return startNext(id);
     } else {
       show(job.total ? `Etapa ${job.step} de ${job.total}: ${job.stage}` : job.stage + "...");
       detail.textContent = job.message;
@@ -97,10 +101,25 @@ async function poll(id) {
   }
 }
 
+// preset full: depois do primeiro vídeo, o servidor cria o segundo formato com a mesma letra e o mesmo MP3
+async function startNext(id) {
+  const variant = chainNext;
+  chainNext = null;
+  const response = await api(`/jobs/${id}/variante`, { method: "POST", body: new URLSearchParams(variant) });
+  if (!response.ok) return failure(response);
+  const body = await response.json();
+  submit.disabled = preview.disabled = true;
+  output2.innerHTML = "";
+  timer = setInterval(() => poll(body.id, output2), 2000);
+  poll(body.id, output2);
+}
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
+  const chained = presetNext; // lido antes do primeiro await: a prévia zera presetNext antes de enviar
   submit.disabled = preview.disabled = true;
   output.innerHTML = "";
+  output2.innerHTML = "";
   show("Enviando...");
   detail.textContent = "";
   let response;
@@ -114,6 +133,7 @@ form.addEventListener("submit", async (event) => {
   if (!response.ok) return failure(response);
   const body = await response.json();
   rememberJob(body.id);
+  chainNext = chained;
   failures = 0;
   clearInterval(timer);
   timer = setInterval(() => poll(body.id), 2000);
@@ -132,7 +152,10 @@ preview.addEventListener("click", () => {
     for (const name of ["clip_start", "clip_end"]) form.elements[name].dispatchEvent(new Event("input", { bubbles: true }));
   };
   set(["", "0", "30"]); // prévia é um trecho só: não junta com cortes
+  const chosen = presetNext; // a prévia não cria o segundo formato do preset
+  presetNext = null;
   form.requestSubmit();
+  presetNext = chosen;
   set(saved); // devolve o que o usuário tinha digitado
 });
 

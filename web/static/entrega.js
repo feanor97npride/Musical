@@ -1,13 +1,14 @@
 // entrega do job pronto: pacote para postar (ZIP) e os vídeos brutos (usa api, show, finish e failure do app.js)
-async function showVideo(id, videos) {
-  if (videos.length > 1) return showCuts(id, videos);
+// box é onde a entrega aparece: o resultado principal (output) ou o segundo formato do preset full (output-2)
+async function showVideo(id, videos, box = output) {
+  if (videos.length > 1) return showCuts(id, videos, box);
   const response = await api(`/jobs/${id}/video`);
   if (!response.ok) return failure(response);
   const url = URL.createObjectURL(await response.blob());
   finish();
   show("Vídeo pronto");
   detail.textContent = "";
-  output.innerHTML = "";
+  box.innerHTML = "";
   const video = document.createElement("video");
   video.controls = true;
   video.src = url;
@@ -16,15 +17,15 @@ async function showVideo(id, videos) {
   link.href = url;
   link.download = "lyric-video.mp4";
   link.textContent = "Baixar MP4";
-  output.append(video, packButton(id), link);
+  box.append(video, packButton(id), link);
 }
 
-function showCuts(id, names) {
+function showCuts(id, names, box = output) {
   finish();
   show(names.length + " cortes prontos");
   detail.textContent = "";
-  output.innerHTML = "";
-  output.append(packButton(id), ...names.map((name, index) => {
+  box.innerHTML = "";
+  box.append(packButton(id), ...names.map((name, index) => {
     const link = document.createElement("a");
     link.className = "download";
     link.href = "#";
