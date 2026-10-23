@@ -27,6 +27,10 @@ export const LyricVideo: React.FC<LyricProps> = ({ song, audioFile, style, backg
   return (
     <AbsoluteFill>
       <Background kind={style.background} palette={palette} intensity={intensity} pulse={pulse} progress={progress} file={backgroundFile} />
+      {style.background === "sunrise" && (
+        // o céu do sol clareia perto do horizonte: escurece a base para a legenda branca continuar legível
+        <AbsoluteFill style={{ background: "linear-gradient(to bottom, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.55) 75%)" }} />
+      )}
       {audioFile && (
         <Audio
           src={staticFile(audioFile)}

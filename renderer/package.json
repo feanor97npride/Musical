@@ -31,7 +31,7 @@
     "studio": "remotion studio src/index.ts",
     "render": "node scripts/render.mjs",
     "render-batch": "node scripts/render-batch.mjs",
-    "test": "node --experimental-strip-types test/timing.test.ts && node --experimental-strip-types test/motion.test.ts && node --experimental-strip-types test/sun.test.ts && node --experimental-strip-types test/image.test.ts && node --experimental-strip-types test/size.test.ts",
+    "test": "node --experimental-strip-types test/timing.test.ts && node --experimental-strip-types test/motion.test.ts && node --experimental-strip-types test/sun.test.ts && node --experimental-strip-types test/image.test.ts && node --experimental-strip-types test/size.test.ts && node --experimental-strip-types test/fit.test.ts",
     "build": "remotion bundle",
     "upgrade": "remotion upgrade",
     "lint": "eslint src && tsc"

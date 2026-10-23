@@ -29,6 +29,7 @@ export const Particles: React.FC<{ intensity: number }> = ({ intensity }) => {
   return (
     <AbsoluteFill>
       {PARTICLES.map((p, i) => {
+        if (i >= BASE && intensity === 0) return null; // fora do refrão as extras têm opacidade zero: não montar
         const y = (((p.fy * height - seconds * p.speed) % height) + height) % height;
         // no refrão, as partículas extras entram por opacidade, sem aparecer de repente
         const base = i < BASE ? 0.35 + 0.35 * intensity : 0.7 * intensity;
