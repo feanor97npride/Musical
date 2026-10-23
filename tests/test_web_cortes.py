@@ -32,7 +32,7 @@ def copiar_para_postar(path, audio):
 def gerar_cortes(job):
     job.video.parent.mkdir(parents=True)
     (job.video.parent / "song.json").write_text(json.dumps(CORTES_SONG), encoding="utf-8")
-    for clip in plan_cuts(CORTES_SONG, 30.0):  # nomes calculados aqui, sem depender de Job.videos
+    for clip in plan_cuts(CORTES_SONG, job.cuts):  # nomes calculados aqui, sem depender de Job.videos
         path = job.video.parent / f"video-{variant_name('karaoke', 'gradient', clip)}.mp4"
         path.write_bytes(b"mp4 " + path.name.encode())
         copiar_para_postar(path, job.audio)
@@ -76,6 +76,13 @@ def test_recusa_duracao_de_corte_desconhecida(client):
     response = send(client, cuts="7")
     assert response.status_code == 400
     assert "corte" in response.json()["detail"]
+
+
+def test_aceita_cortes_de_noventa_segundos(client, monkeypatch):
+    monkeypatch.setattr(jobs, "run_pipeline", gerar_cortes)
+    response = send(client, cuts="90")
+    assert response.status_code == 200
+    wait_for(client, response.json()["id"], "done")
 
 
 def test_recusa_cortes_junto_com_trecho(client):

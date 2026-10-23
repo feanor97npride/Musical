@@ -43,6 +43,16 @@ def test_verso_maior_que_o_alvo_vira_corte_proprio():
     assert plan_cuts(song(60.0, [(0.0, 40.0)]), 30.0) == [(0.0, 40.5)]
 
 
+def test_corte_de_noventa_segundos_mantem_versos_inteiros():
+    lines = [(i * 5.0, i * 5.0 + 4.0) for i in range(60)]  # 300 s de versos
+    cuts = plan_cuts(song(300.0, lines), 90.0)
+    assert len(cuts) >= 3
+    for start, end in lines:
+        assert sum(c0 <= start and end <= c1 for c0, c1 in cuts) == 1
+    for c0, c1 in cuts:
+        assert c1 - c0 <= 136.0  # o último corte curto junta com o anterior: até 1,5 × alvo
+
+
 @pytest.mark.parametrize("exportar", [False, True])
 def test_run_com_cortes_renderiza_todos_numa_chamada(tmp_path, monkeypatch, exportar):
     lines = [(i * 5.0, i * 5.0 + 4.0) for i in range(18)]

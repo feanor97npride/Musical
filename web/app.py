@@ -20,7 +20,7 @@ from web.pacote import build_pack, parse_draft
 load_dotenv(ROOT / ".env")
 MAX_BYTES = 25 * 1024 * 1024
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
-CUTS = {"": None, "15": 15, "30": 30, "60": 60}  # segundos por corte; vazio = um vídeo só
+CUTS = {"": None, "15": 15, "30": 30, "60": 60, "90": 90}  # segundos por corte; vazio = um vídeo só
 STATIC = Path(__file__).resolve().parent / "static"
 # senha opcional: sem ela, qualquer um que acessa o servidor usa (uso local)
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN", "").strip()

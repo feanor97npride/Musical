@@ -66,6 +66,7 @@ input:user-invalid + .error-msg, textarea:user-invalid + .error-msg,
 /* opções visíveis como cartões de rádio: com até 5 opções, ver tudo é mais rápido que abrir uma lista */
 .choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
 .choices.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.choices.cols-5 { grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); } /* 5 cortes numa linha; quebra só em tela estreita */
 .image-field { display: none; margin-block: 8px 24px; } /* a descrição só aparece com "Imagem por IA" marcada */
 form:has(input[name="background"][value="image"]:checked) .image-field { display: block; }
 .choice { display: flex; align-items: flex-start; gap: 10px; margin: 0; padding: 12px; font-weight: 400; cursor: pointer;
