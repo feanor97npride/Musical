@@ -7,7 +7,7 @@ from pathlib import Path
 import stable_whisper
 from dotenv import load_dotenv
 
-from engine.separate import separate_vocals
+from engine.separate import separate_vocals, voice_dir
 
 
 def words(vocals: Path, language: str = "pt", model_name: str = "small") -> list[tuple[str, float, float]]:
@@ -46,9 +46,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.out.exists() and not args.force:
         print(f"{args.out} já existe: use --force para sobrescrever", file=sys.stderr)
         return 1
-    work = args.out.parent / f"{args.out.stem}-voz"  # a voz separada fica numa pasta ao lado, para não sujar a pasta da música
-    vocals = separate_vocals(args.audio, work)
+    vocals = separate_vocals(args.audio, voice_dir(args.audio), force=args.force)  # voz no cache por áudio, como o alinhamento
     lines = group_lines(words(vocals, args.language, args.model))
+    if not lines:  # áudio sem fala reconhecível: não grava um arquivo vazio que pareceria uma letra
+        print("nenhuma palavra reconhecida: a letra não foi gravada", file=sys.stderr)
+        return 1
     args.out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"letra gerada: {len(lines)} versos em {args.out}. Revise antes de gerar o vídeo.")
     return 0

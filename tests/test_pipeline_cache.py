@@ -34,18 +34,59 @@ def test_slug_tem_nome_limpo_e_muda_com_a_letra(tmp_path):
     assert pipeline.make_slug(audio, "dois") != slug
 
 
-def test_separacao_pulada_quando_vocals_existe(tmp_path, monkeypatch):
+class Chamado(Exception):
+    """Marca que a etapa rodou (quando ela não devia)."""
+
+
+def chamado(*_args, **_kwargs):
+    raise Chamado()
+
+
+def cancao_valida() -> dict:
+    """Um song.json mínimo que passa na validação: o cache só aceita arquivo válido."""
+    return {"version": 1, "language": "pt", "audio": {"file": "musica.mp3", "duration": 10.0, "bpm": 96.0},
+            "lines": [{"id": 0, "text": "um", "section": "verse", "start": 1.0, "end": 2.0,
+                       "words": [{"text": "um", "start": 1.0, "end": 2.0}]}],
+            "theme": None}
+
+
+def alinhamento_feito(job: pipeline.Job) -> None:
+    job.song.write_text(json.dumps(cancao_valida()), encoding="utf-8")
+    (job.out / "align.json").write_text(json.dumps({"model": "small", "language": "pt", "separate": True}), encoding="utf-8")
+
+
+def test_separacao_pulada_quando_a_voz_da_musica_existe(tmp_path, monkeypatch):
     job = make_job(tmp_path)
-    (job.out / "vocals.wav").write_bytes(b"wav")
+    monkeypatch.setattr(pipeline.separate, "VOICE_CACHE", tmp_path / "voz")  # o cache de voz fica em output/: isola no teste
+    voice = pipeline.separate.voice_dir(job.args.audio)
+    voice.mkdir(parents=True)
+    (voice / "vocals.wav").write_bytes(b"wav")
     monkeypatch.setattr(pipeline.separate, "separate_vocals", boom)
     assert pipeline._separate(job) == "pulado (cache)"
 
 
-def test_alinhamento_pulado_quando_song_existe(tmp_path, monkeypatch):
+def test_alinhamento_pulado_quando_song_e_parametros_batem(tmp_path, monkeypatch):
     job = make_job(tmp_path)
-    job.song.write_text("{}", encoding="utf-8")
+    alinhamento_feito(job)
     monkeypatch.setattr(pipeline.align, "align", boom)
     assert pipeline._align(job) == "pulado (cache)"
+
+
+def test_alinhamento_refeito_quando_o_song_esta_truncado(tmp_path, monkeypatch):
+    job = make_job(tmp_path)
+    alinhamento_feito(job)
+    job.song.write_text('{"version": 1, "lin', encoding="utf-8")  # arquivo cortado no meio da escrita
+    monkeypatch.setattr(pipeline.align, "align", chamado)
+    with pytest.raises(Chamado):
+        pipeline._align(job)
+
+
+def test_alinhamento_refeito_quando_o_modelo_muda(tmp_path, monkeypatch):
+    job = make_job(tmp_path, model="medium")  # o cache foi feito com "small"
+    alinhamento_feito(job)
+    monkeypatch.setattr(pipeline.align, "align", chamado)
+    with pytest.raises(Chamado):
+        pipeline._align(job)
 
 
 def node_falso(conteudo: bytes, falha: bool = False):

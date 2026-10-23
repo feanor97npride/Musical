@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -113,7 +114,17 @@ def write_song(path: Path, song: dict) -> None:
     errors = validate_song(song)
     if errors:
         raise ValueError("song.json inválido: " + "; ".join(errors))
-    path.write_text(json.dumps(song, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp = path.with_suffix(".tmp.json")  # troca só no fim: um corte no meio não deixa JSON truncado no cache
+    tmp.write_text(json.dumps(song, ensure_ascii=False, indent=2), encoding="utf-8")
+    os.replace(tmp, path)
+
+
+def valid_song_file(path: Path) -> bool:
+    """Um song.json truncado ou inválido não serve de cache."""
+    try:
+        return not validate_song(json.loads(path.read_text(encoding="utf-8")))
+    except (OSError, ValueError):
+        return False
 
 
 def validate_song(data: dict) -> list[str]:

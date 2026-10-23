@@ -11,19 +11,28 @@ from dotenv import load_dotenv
 from engine.audio import bpm, duration
 from engine.lyrics import flat_text, parse_lyrics
 from engine.postprocess import build_lines, split_by_counts
-from engine.schema import Audio, Song, validate_song
-from engine.separate import separate_vocals
+from engine.schema import Audio, Song, valid_song_file, validate_song
+from engine.separate import separate_vocals, voice_dir
 
 
-def align(audio: Path, lyrics_text: str, out_dir: Path, language: str = "pt",
+def align(audio: Path, lyrics_text: str, language: str = "pt",
           model_name: str = "small", separate: bool = True) -> Song:
     lyrics = parse_lyrics(lyrics_text)
-    source = separate_vocals(audio, out_dir) if separate else audio
+    source = separate_vocals(audio, voice_dir(audio)) if separate else audio
     model = stable_whisper.load_model(model_name)  # GPU se houver; sem GPU, CPU
     result = model.align(str(source), flat_text(lyrics), language=language, original_split=True)
     total = duration(audio)
     audio_info = Audio(file=audio.name, duration=total, bpm=bpm(audio))
     return Song(language=language, audio=audio_info, lines=build_lines(lyrics, _groups(result, lyrics), total))
+
+
+def is_cached(out_dir: Path, params: dict) -> bool:
+    """O alinhamento de uma pasta só vale como cache com os mesmos modelo, idioma e separação de quando foi feito."""
+    try:
+        saved = json.loads((out_dir / "align.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    return saved == params and valid_song_file(out_dir / "song.json")
 
 
 def _timed(words) -> list[tuple[str, float, float]]:
@@ -55,7 +64,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--language", default="pt")
     parser.add_argument("--no-separate", action="store_true", help="não separar vocais com Demucs")
     args = parser.parse_args(argv)
-    song = align(args.audio, args.lyrics.read_text(encoding="utf-8"), args.out.parent,
+    song = align(args.audio, args.lyrics.read_text(encoding="utf-8"),
                  args.language, args.model, not args.no_separate)
     errors = validate_song(song.to_dict())
     if errors:

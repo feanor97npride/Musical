@@ -2,12 +2,11 @@
 import argparse
 import hashlib
 import json
-import re
 import shutil
 import sys
-import unicodedata
 from pathlib import Path
 
+from engine.names import clean_name
 from engine.schema import validate_song
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -54,8 +53,7 @@ def build_props(song_path: Path, audio_path: Path, subtitle: str = "highlight", 
 
 
 def _audio_name(audio_path: Path, song: dict) -> str:
-    stem = unicodedata.normalize("NFKD", audio_path.stem).encode("ascii", "ignore").decode()
-    stem = re.sub(r"[^a-z0-9]+", "-", stem.lower()).strip("-") or "musica"
+    stem = clean_name(audio_path.stem)
     lyrics = "\n".join(line["text"] for line in song["lines"])
     digest = hashlib.sha1(audio_path.read_bytes() + lyrics.encode("utf-8")).hexdigest()[:8]
     return f"{stem}-{digest}{audio_path.suffix.lower()}"

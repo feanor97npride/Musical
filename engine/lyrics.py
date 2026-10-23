@@ -1,19 +1,32 @@
 # Parser da letra: versos e marcadores de seção.
 import re
+import unicodedata
+from pathlib import Path
 
+# chaves sem acento e em minúsculas: "Refrão", "REFRAO" e "refrao" são o mesmo marcador
 SECTION_BY_MARKER = {
     "verso": "verse",
     "verse": "verse",
-    "refrão": "chorus",
+    "estrofe": "verse",
+    "refrao": "chorus",
     "chorus": "chorus",
+    "coro": "chorus",
     "ponte": "bridge",
     "bridge": "bridge",
     "intro": "intro",
+    "instrumental": "intro",
     "outro": "outro",
     "pre-chorus": "verse",
+    "pre-refrao": "verse",
     "final chorus": "chorus",
 }
 MARKER = re.compile(r"\[(.*)\]")
+
+
+def marker_name(text: str) -> str:
+    """Nome do marcador sem acento, em minúsculas e sem o número ("Verse 1" vira "verse")."""
+    plain = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
+    return re.sub(r"\s*\d+$", "", plain.strip().lower())
 
 
 def parse_lyrics(text: str) -> list[dict]:
@@ -26,11 +39,27 @@ def parse_lyrics(text: str) -> list[dict]:
             continue
         marker = MARKER.fullmatch(line)
         if marker:
-            name = re.sub(r"\s*\d+$", "", marker.group(1).strip().lower())  # "Verse 1" é "Verse"
-            section = SECTION_BY_MARKER.get(name, "other")
+            section = SECTION_BY_MARKER.get(marker_name(marker.group(1)), "other")
             continue
         lines.append({"text": line, "section": section})
     return lines
+
+
+def unknown_markers(text: str) -> list[str]:
+    """Marcadores em linha própria que o parser não conhece (eles viram seção 'other')."""
+    names = (MARKER.fullmatch(raw.strip()) for raw in text.lstrip("﻿").splitlines())
+    return [m.group(1) for m in names if m and marker_name(m.group(1)) not in SECTION_BY_MARKER]
+
+
+def read_lyrics_file(path: Path) -> str:
+    """Letra do arquivo, já validada: UTF-8 e com ao menos um verso. Levanta ValueError com a razão."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as error:
+        raise ValueError(f"não consegui ler a letra: {error}") from error
+    if not parse_lyrics(text):
+        raise ValueError("a letra não tem versos (só linhas vazias ou marcadores)")
+    return text
 
 
 def flat_text(lines: list[dict]) -> str:

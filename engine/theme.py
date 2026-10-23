@@ -36,13 +36,16 @@ def default_theme() -> Theme:
     )
 
 
+def has_api_key() -> bool:
+    return bool(os.getenv("THEME_API_KEY") or os.getenv("ANTHROPIC_API_KEY"))
+
+
 def analyze_theme(lines_text: str, client: anthropic.Anthropic | None = None) -> Theme:
     load_dotenv(ROOT / ".env")
     if client is None:
-        api_key = os.getenv("THEME_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
+        if not has_api_key():
             return default_theme()
-        client = anthropic.Anthropic(api_key=api_key)
+        client = anthropic.Anthropic(api_key=os.getenv("THEME_API_KEY") or os.getenv("ANTHROPIC_API_KEY"))
     reason = "sem resposta"
     for _ in range(2):  # uma tentativa e mais uma
         try:

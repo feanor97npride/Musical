@@ -9,10 +9,14 @@ def duration(audio: Path) -> float:
     return float(librosa.get_duration(path=str(audio)))
 
 
+FALLBACK_BPM = 120.0  # shortcut: música sem batida detectada (silêncio, só voz) usa 120; subir se o ritmo do vídeo ficar estranho
+
+
 def bpm(audio: Path) -> float:
     y, sr = librosa.load(str(audio))
     tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
-    return float(np.atleast_1d(tempo)[0])  # versões novas do librosa devolvem array
+    value = float(np.atleast_1d(tempo)[0])  # versões novas do librosa devolvem array
+    return value if value > 0 else FALLBACK_BPM  # 0 = sem batida: o song.json exige um bpm positivo
 
 
 def beats(audio: Path) -> list[float]:
