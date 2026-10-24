@@ -24,6 +24,7 @@ for (const [key, preset] of Object.entries(PRESETS)) {
 function choose(key) {
   const preset = PRESETS[key];
   presetNext = preset.next || null;
+  document.getElementById("preset-hint").textContent = preset.hint;
   if (!preset.format) return;
   form.elements["style"].value = "karaoke";
   form.elements["format"].value = preset.format;
@@ -37,4 +38,5 @@ form.addEventListener("change", (event) => {
   if (!["style", "format", "background", "cuts"].includes(event.target.name)) return; // letra e MP3 não mudam o preset
   presetNext = null;
   form.elements["preset"].value = "personalizado";
+  document.getElementById("preset-hint").textContent = PRESETS.personalizado.hint;
 });

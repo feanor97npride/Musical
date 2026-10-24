@@ -1,0 +1,117 @@
+/* V3: mesa de trabalho que usa a largura toda. Carregue DEPOIS de style.css (ver PLANO-V3.md).
+   Para desfazer tudo: tire o <link> deste arquivo do index.html. */
+
+/* ---------- 1. Tokens: cartão de "dupla borda" (casca translúcida + núcleo) ---------- */
+:root {
+  --shell: rgb(0 0 0 / 0.04); --shell-line: rgb(0 0 0 / 0.08); --hl: rgb(255 255 255 / 0.6);
+  --ring: 0 0 0 6px var(--shell), 0 0 0 7px var(--shell-line); /* a "casca": anel de 6 px + fio de 1 px, sem HTML extra */
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --shell: rgb(255 255 255 / 0.035); --shell-line: rgb(255 255 255 / 0.07); --hl: rgb(255 255 255 / 0.07); }
+}
+
+/* ---------- 2. Cada seção vira um cartão; o formulário deixa de ser um cartão só ---------- */
+form { background: none; border: 0; border-radius: 0; padding: 0; display: grid; gap: 28px; }
+form .col-left { display: flex; flex-direction: column; gap: 28px; }
+form section, form section + section, form .col-left section + section,
+#library, .side-empty, .result, .posting, .history {
+  background: var(--surface); border: 0; border-radius: 22px; padding: 24px; margin: 0;
+  box-shadow: inset 0 1px 0 var(--hl), var(--ring);
+}
+form h2 { display: flex; align-items: center; gap: 10px; }
+form h2::before { margin-inline-end: 0; }
+/* seção pronta: o número vira um check amarelo (sem JS) */
+form section:has(#audio:valid) h2::before, form section:has(#lyrics:valid) h2::before {
+  content: "✓"; display: grid; place-items: center; inline-size: 24px; block-size: 24px; border-radius: 50%;
+  background: var(--accent); color: var(--accent-ink); font: 700 0.8rem/1 var(--text);
+}
+/* a margem de cima do legend é ignorada em fieldset com grid: o espaço entre os grupos vai no fieldset */
+form fieldset.choices, form fieldset.pair { margin-block-start: 24px; }
+#presets { margin-block-start: 0; }
+.choices legend { margin-block: 0 10px; }
+.label-row { margin-block-start: 0; }
+.legend-note { font-weight: 400; color: var(--muted); }
+/* trecho: Início e Fim lado a lado, os dois botões "Marcar" logo abaixo */
+.pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* ---------- 3. Barra de ações: uma ilha fixa, com a autorização à esquerda e os botões à direita ---------- */
+.actions {
+  position: sticky; inset-block-end: 16px; z-index: 5; margin: 0; padding: 14px 18px; background: var(--surface); border: 0; border-radius: 22px;
+  box-shadow: inset 0 1px 0 var(--hl), var(--ring), 0 12px 32px -12px rgb(0 0 0 / 0.35);
+  display: flex; align-items: center; flex-wrap: wrap; gap: 12px 20px;
+}
+.actions .check { flex: 1 1 280px; }
+.actions .error-msg { flex-basis: 100%; order: 3; }
+.actions .buttons { flex: 0 1 460px; margin: 0; }
+.buttons button { min-block-size: 56px; }
+.buttons .primary { display: flex; align-items: center; justify-content: space-between; padding: 8px 8px 8px 24px; border-radius: 999px; }
+.buttons .primary::after { content: "→"; display: grid; place-items: center; inline-size: 38px; block-size: 38px; border-radius: 50%;
+  background: rgb(21 19 10 / 0.14); font-weight: 600; }
+#preview { border-radius: 999px; }
+
+/* ---------- 4. Atalhos: controle segmentado de uma linha ---------- */
+#presets { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); }
+#presets .choice { flex-direction: column; align-items: center; justify-content: center; text-align: center; min-block-size: 44px; padding: 8px 6px;
+  border: 0; box-shadow: none; background: transparent; }
+#presets small { display: none; }
+#presets .choice:has(input:checked) { background: var(--fg); color: var(--bg); }
+#preset-hint { margin-block: 8px 0; }
+@media (max-width: 519px) { #presets { grid-template-columns: repeat(2, minmax(0, 1fr)); } } /* "Personalizado" não cabe em 4 colunas */
+
+/* ---------- 5. Cartões de opção: selo de marcado, "Animado" repetido some ---------- */
+.choices:not(.cols-5):not(#presets) .choice:has(input:checked)::after {
+  content: ""; position: absolute; inset-block-start: 6px; inset-inline-end: 6px; inline-size: 20px; block-size: 20px; border-radius: 50%;
+  background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2315130a' stroke-width='3.4'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E") center / 12px no-repeat;
+}
+.choice:has(input[name="background"]) small { display: none; }
+
+/* ---------- 6. Prévia: moldura de celular e legenda que pulsa ---------- */
+.mock { border-radius: 28px; margin-block: 8px; box-shadow: 0 0 0 6px #09080c, 0 0 0 7px rgb(255 255 255 / 0.16); }
+.mock-text .on { animation: lv-pulse 2.4s var(--ease) infinite alternate; }
+@keyframes lv-pulse { from { opacity: 0.5; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .mock-text .on { animation: none; } }
+
+/* ---------- 7. Resultado: botões de download com cara de botão ---------- */
+.result button.download, .result a.download {
+  display: flex; justify-content: center; padding: 0 16px; border: 1px solid var(--field-line); border-radius: 12px; text-decoration: none; background: transparent;
+}
+
+/* ---------- 8. Movimento: curva própria, nada de transição seca ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .choice, button, #audio {
+    transition: background-color 0.3s var(--ease), border-color 0.3s var(--ease), box-shadow 0.3s var(--ease), transform 0.3s var(--ease);
+  }
+  button:not(:disabled):active, .choice:active { transform: scale(0.98); }
+}
+
+/* ---------- 9. Telas largas: usa a largura, sem o limite de 1280 px ---------- */
+@media (min-width: 960px) {
+  main { max-inline-size: 2400px; padding-inline: clamp(32px, 3vw, 56px); }
+}
+@media (min-width: 1440px) {
+  /* cabeçalho de uma linha: o grande título continua no HTML, só fica invisível (leitor de tela e SEO) */
+  header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .brand { margin: 0; }
+  header h1 { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; margin: 0; }
+  .lead { font-size: 1rem; padding-inline-start: 16px; border-inline-start: 1px solid var(--line); }
+  .steps { display: none; } /* com tudo à vista, o check de cada seção já mostra o progresso */
+  details.server { align-self: center; }
+  /* cartões de opção maiores quando há espaço */
+  .choice:has(input[name="format"]), .choice:has(input[name="style"]) { min-block-size: 124px; justify-content: center; }
+  .choice:has(input[name="background"])::before { block-size: 96px; }
+}
+@media (min-width: 2100px) {
+  /* 3 colunas: formulário | prévia | resultado. O .side vira "transparente" e cada filho ocupa a sua célula */
+  main { grid-template-columns: minmax(0, 2.2fr) 380px minmax(0, 1fr); grid-template-rows: auto auto auto auto 1fr; grid-template-areas: none; }
+  header { grid-area: 1 / 1 / 2 / 3; }
+  details.server { grid-area: 1 / 3 / 2 / 4; }
+  form { grid-area: 2 / 1 / 6 / 2; }
+  .side { display: contents; }
+  .side-empty { grid-area: 2 / 2 / 6 / 3; position: sticky; inset-block-start: 24px; }
+  .side:has(.visible, .posting:not([hidden])) .side-empty { display: block; } /* a prévia fica, o resultado aparece ao lado */
+  .result { grid-area: 2 / 3 / 3 / 4; }
+  .posting { grid-area: 3 / 3 / 4 / 4; }
+  .history { grid-area: 4 / 3 / 5 / 4; }
+  .choice:has(input[name="background"])::before { block-size: 120px; }
+}

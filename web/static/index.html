@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="style.css?v=13">
+  <link rel="stylesheet" href="v3.css?v=1">
 </head>
 <body>
 <main>
@@ -78,7 +79,8 @@
 
     <section>
       <h2>Visual</h2>
-      <fieldset class="choices cols-4" id="presets"><legend>Atalhos</legend></fieldset>
+      <fieldset class="choices cols-4" id="presets"><legend class="visually-hidden">Atalhos</legend></fieldset>
+      <p class="hint" id="preset-hint" aria-live="polite">Você escolhe cada opção abaixo.</p>
       <fieldset class="choices">
         <legend>Formato</legend>
         <label class="choice" for="format-vertical"><input type="radio" id="format-vertical" name="format" value="vertical" checked><span><strong>Vertical 9:16</strong><small>Shorts e TikTok</small></span></label>
@@ -93,7 +95,7 @@
       </fieldset>
 
       <fieldset class="choices">
-        <legend>Fundo</legend>
+        <legend>Fundo <span class="legend-note">· todos animados</span></legend>
         <label class="choice" for="bg-gradient"><input type="radio" id="bg-gradient" name="background" value="gradient" checked><span><strong>Degradê</strong><small>Animado</small></span></label>
         <label class="choice" for="bg-aurora"><input type="radio" id="bg-aurora" name="background" value="aurora"><span><strong>Aurora</strong><small>Animado</small></span></label>
         <label class="choice" for="bg-aurora-gl"><input type="radio" id="bg-aurora-gl" name="background" value="aurora-gl"><span><strong>Aurora 3D</strong><small>Animado</small></span></label>
@@ -196,9 +198,9 @@
 
 <div id="announcer" class="toast" role="status"></div>
 
-<script src="app.js?v=7"></script>
+<script src="app.js?v=8"></script>
 <script src="entrega.js?v=3"></script>
-<script src="presets.js?v=1"></script>
+<script src="presets.js?v=2"></script>
 <script src="library.js?v=2"></script>
 <script src="letra-auto.js?v=1"></script>
 <script src="forms.js?v=1"></script>

@@ -169,7 +169,7 @@ preview.addEventListener("click", () => {
 });
 
 // cancelar: aparece enquanto um envio roda (o submit fica desabilitado); cancela o job guardado no navegador
-const cancelButton = Object.assign(document.createElement("button"), { type: "button", className: "secondary", textContent: "Cancelar envio", hidden: true });
+const cancelButton = Object.assign(document.createElement("button"), { type: "button", className: "secondary", textContent: "Cancelar geração", hidden: true });
 result.append(cancelButton);
 new MutationObserver(() => { cancelButton.hidden = !submit.disabled; }).observe(submit, { attributes: true, attributeFilter: ["disabled"] });
 cancelButton.addEventListener("click", async () => {
