@@ -8,15 +8,33 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23FFD60A'/%3E%3Ctext x='16' y='21' font-family='Arial' font-weight='700' font-size='13' text-anchor='middle' fill='%2315130A'%3ELV%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700&family=Figtree:wght@400;600&display=swap">
-  <link rel="stylesheet" href="style.css?v=12">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
 <main>
   <header>
-    <h1>Gerador de lyric video</h1>
-    <p class="lead">Envie a música e a letra. Você recebe o vídeo vertical com legenda e os textos para postar.</p>
+    <div class="brand"><span class="logo" aria-hidden="true">LV</span><span>Lyric Video</span></div>
+    <h1>Sua música vira vídeo com legenda.</h1>
+    <p class="lead">Envie o MP3 e a letra. Você recebe o vídeo pronto e os textos para postar.</p>
+    <ol class="steps" aria-label="Etapas">
+      <li data-step="audio">Música</li>
+      <li data-step="lyrics">Letra</li>
+      <li data-step="visual">Visual</li>
+    </ol>
   </header>
+
+  <details class="server">
+    <summary>Servidor e senha</summary>
+    <label for="server">Endereço do servidor</label>
+    <input type="text" id="server" placeholder="ex.: https://algo.trycloudflare.com" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-describedby="server-hint">
+    <p class="hint" id="server-hint">Normalmente já vem preenchido. Mude só se alguém indicar outro endereço. Fica salvo neste navegador.</p>
+    <p class="hint warning" id="hash-notice" hidden></p>
+
+    <label for="token">Senha de acesso</label>
+    <input type="password" id="token" placeholder="a senha definida no seu computador" autocomplete="current-password" aria-describedby="token-hint">
+    <p class="hint" id="token-hint">Se o servidor não tiver senha, deixe vazio.</p>
+  </details>
 
   <form id="form">
     <div class="col-left">
@@ -25,7 +43,17 @@
       <label for="audio">Arquivo MP3 (até 25 MB) <span class="req">(obrigatório)</span></label>
       <input type="file" id="audio" name="audio" accept=".mp3,audio/mpeg" required aria-describedby="audio-note" aria-errormessage="audio-error">
       <p class="error-msg" id="audio-error">Escolha o arquivo MP3 da música.</p>
-      <div class="warning" id="audio-note">Envie apenas músicas próprias ou com autorização.</div>
+      <audio id="player" controls hidden></audio>
+      <p class="hint" id="audio-note">Envie apenas músicas próprias ou com autorização.</p>
+
+      <fieldset class="pair">
+        <legend>Só um trecho (opcional, em segundos)</legend>
+        <label>Início <input type="number" id="clip_start" name="clip_start" min="0" step="0.1" placeholder="ex.: 30"></label>
+        <label>Fim <input type="number" id="clip_end" name="clip_end" min="0" step="0.1" placeholder="ex.: 75"></label>
+        <button type="button" data-mark="clip_start">Marcar início aqui</button>
+        <button type="button" data-mark="clip_end">Marcar fim aqui</button>
+        <p class="error-msg" id="clip-error">O fim precisa ser depois do início.</p>
+      </fieldset>
     </section>
 
     <section>
@@ -68,7 +96,7 @@
         <legend>Fundo</legend>
         <label class="choice" for="bg-gradient"><input type="radio" id="bg-gradient" name="background" value="gradient" checked><span><strong>Degradê</strong><small>Animado</small></span></label>
         <label class="choice" for="bg-aurora"><input type="radio" id="bg-aurora" name="background" value="aurora"><span><strong>Aurora</strong><small>Animado</small></span></label>
-        <label class="choice" for="bg-aurora-gl"><input type="radio" id="bg-aurora-gl" name="background" value="aurora-gl"><span><strong>Aurora WebGL</strong><small>Animado</small></span></label>
+        <label class="choice" for="bg-aurora-gl"><input type="radio" id="bg-aurora-gl" name="background" value="aurora-gl"><span><strong>Aurora 3D</strong><small>Animado</small></span></label>
         <label class="choice" for="bg-sunrise"><input type="radio" id="bg-sunrise" name="background" value="sunrise"><span><strong>Sol nascendo</strong><small>Animado</small></span></label>
         <label class="choice" for="bg-solid"><input type="radio" id="bg-solid" name="background" value="solid"><span><strong>Sólido</strong><small>Cor única</small></span></label>
         <label class="choice" for="bg-image"><input type="radio" id="bg-image" name="background" value="image"><span><strong>Minha imagem</strong><small>Animada no vídeo</small></span></label>
@@ -89,12 +117,6 @@
         <label class="choice" for="cuts-90"><input type="radio" id="cuts-90" name="cuts" value="90"><span><strong>90 s</strong><small>Por corte</small></span></label>
       </fieldset>
 
-      <fieldset class="pair">
-        <legend>Só um trecho (opcional, em segundos)</legend>
-        <label>Início <input type="number" id="clip_start" name="clip_start" min="0" step="0.1" placeholder="ex.: 30"></label>
-        <label>Fim <input type="number" id="clip_end" name="clip_end" min="0" step="0.1" placeholder="ex.: 75"></label>
-        <p class="error-msg" id="clip-error">O fim precisa ser depois do início.</p>
-      </fieldset>
     </section>
 
     <div id="library" hidden></div>
@@ -106,7 +128,7 @@
       <p class="error-msg" id="confirm-error">Marque que você tem autorização para usar a música.</p>
       <div class="buttons">
         <button type="submit" id="submit" class="primary">Gerar vídeo</button>
-        <button type="button" id="preview">Ver prévia de 30 s</button>
+        <button type="button" id="preview">Prévia 30 s</button>
       </div>
     </div>
     <input type="hidden" id="draft" name="draft" value="">
@@ -114,12 +136,10 @@
 
   <aside class="side" aria-label="Resultado e textos para postar">
     <div class="side-empty">
-      <p>O vídeo e os textos para postar aparecem aqui. Para gerar:</p>
-      <ol>
-        <li>Envie o MP3 da música.</li>
-        <li>Cole a letra.</li>
-        <li>Escolha as opções e clique em Gerar vídeo.</li>
-      </ol>
+      <div class="mock" aria-hidden="true">
+        <p class="mock-text"><span class="on">sua letra</span> <span>aparece aqui</span></p>
+      </div>
+      <p class="mock-caption">Prévia do estilo. Depois de gerar, o vídeo e os textos para postar aparecem aqui.</p>
     </div>
 
     <section class="result" id="result">
@@ -162,18 +182,6 @@
     </section>
   </aside>
 
-  <details class="server">
-    <summary>Servidor e senha</summary>
-    <label for="server">Endereço do servidor</label>
-    <input type="text" id="server" placeholder="ex.: https://algo.trycloudflare.com" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-describedby="server-hint">
-    <p class="hint" id="server-hint">Normalmente já vem preenchido. Mude só se alguém indicar outro endereço. Fica salvo neste navegador.</p>
-    <p class="hint warning" id="hash-notice" hidden></p>
-
-    <label for="token">Senha de acesso</label>
-    <input type="password" id="token" placeholder="a senha definida no seu computador" autocomplete="current-password" aria-describedby="token-hint">
-    <p class="hint" id="token-hint">Se o servidor não tiver senha, deixe vazio.</p>
-  </details>
-
   <section class="history" aria-labelledby="history-title">
     <h2 id="history-title">Histórico de letras com IA</h2>
     <p class="hint" id="history-status" aria-live="polite"></p>
@@ -195,5 +203,6 @@
 <script src="letra-auto.js?v=1"></script>
 <script src="forms.js?v=1"></script>
 <script src="lyrics.js?v=4"></script>
+<script src="trecho.js?v=1"></script>
 </body>
 </html>

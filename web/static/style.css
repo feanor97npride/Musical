@@ -6,11 +6,18 @@
   --error: #b3261e; --warn-bg: #fff4d6; --warn-fg: #4a3800;
   --display: "Bricolage Grotesque", system-ui, sans-serif;
   --text: "Figtree", system-ui, sans-serif;
+  --thumb-gradient: linear-gradient(135deg, #ff5f6d, #ffc371);
+  --thumb-aurora: radial-gradient(circle at 25% 30%, #2de2a6 0, transparent 55%), radial-gradient(circle at 75% 60%, #7b5cff 0, transparent 60%), #0b1026;
+  --thumb-aurora-gl: radial-gradient(ellipse at 50% 120%, #00e0ff 0, transparent 60%), radial-gradient(ellipse at 20% 0%, #ff3cac 0, transparent 55%), #070712;
+  --thumb-sunrise: radial-gradient(circle at 50% 100%, #ffd60a 0, #ff7a00 30%, #5b2a86 75%);
+  --thumb-solid: #23202b;
+  --selected: var(--fg);
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0f0e12; --surface: #1a1820; --fg: #f4f2f7; --muted: #9c98a8; --line: #36323f; --field-line: #77718a;
     --accent-edge: transparent; --focus: #ffd60a; --error: #ff8a80; --warn-bg: #2a2412; --warn-fg: #ffe38a;
+    --selected: var(--accent);
   }
 }
 
@@ -65,7 +72,7 @@ input:user-invalid + .error-msg, textarea:user-invalid + .error-msg,
 
 /* opções visíveis como cartões de rádio: com até 5 opções, ver tudo é mais rápido que abrir uma lista */
 .choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
-.choices.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.choices.cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .choices.cols-5 { grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); } /* 5 cortes numa linha; quebra só em tela estreita */
 .image-field { display: none; margin-block: 8px 24px; } /* a descrição só aparece com "Imagem por IA" marcada */
 form:has(input[name="background"][value="image"]:checked) .image-field { display: block; }
@@ -74,7 +81,7 @@ form:has(input[name="background"][value="image"]:checked) .image-field { display
 .choice input { inline-size: 18px; block-size: 18px; margin: 2px 0 0; flex: none; accent-color: var(--fg); }
 .choice strong { display: block; font-weight: 600; }
 .choice small { display: block; color: var(--muted); }
-.choice:has(input:checked) { border-color: var(--fg); box-shadow: inset 0 0 0 1px var(--fg);
+.choice:has(input:checked) { border-color: var(--selected); box-shadow: inset 0 0 0 1px var(--selected);
   background: color-mix(in oklab, var(--accent) 12%, var(--surface)); }
 .choice:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
 
@@ -103,13 +110,13 @@ summary { font-weight: 600; cursor: pointer; min-block-size: 44px; display: flex
 summary::-webkit-details-marker { display: none; }
 summary::before { content: "▸"; margin-inline-end: 8px; color: var(--muted); }
 details[open] > summary::before { content: "▾"; }
-details.server { margin-block-start: 32px; padding-block-start: 8px; border-block-start: 1px solid var(--line); }
+details.server { margin-block-start: 16px; }
+details.server > summary { display: inline-flex; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; font-weight: 500; }
+@media (min-width: 960px) { details.server { justify-self: end; max-inline-size: 440px; } }
 
 .side { display: grid; gap: 16px; }
-.side-empty { color: var(--muted); border: 1px dashed var(--line); border-radius: 16px; padding: 24px; margin: 0; }
+.side-empty { color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin: 0; }
 .side-empty p { margin: 0; }
-.side-empty ol { margin: 12px 0 0; padding-inline-start: 20px; }
-.side-empty li + li { margin-block-start: 6px; }
 .side:has(.visible, .posting:not([hidden])) .side-empty { display: none; }
 .result, .posting { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px 24px; }
 .result { display: none; }
@@ -145,7 +152,7 @@ button.download { background: none; border: 0; padding: 0; font: inherit; cursor
    (o sticky é limitado pela grade inteira, então ela não pode passar por baixo de uma área vizinha) */
 @media (min-width: 960px) {
   main { max-inline-size: 1280px; padding: 48px 32px 96px; display: grid; gap: 32px; align-items: start;
-    grid-template-columns: minmax(0, 1fr) 440px; grid-template-areas: "head head" "server side" "form side"; }
+    grid-template-columns: minmax(0, 1fr) 440px; grid-template-areas: "head server" "form side"; }
   /* a prévia cresce com a altura da tela; a largura sai da altura, então a proporção 9:16 não estica */
   video { inline-size: min(100%, calc(min(78dvh, 820px) * 9 / 16)); block-size: auto; }
   header { grid-area: head; }
@@ -160,7 +167,6 @@ button.download { background: none; border: 0; padding: 0; font: inherit; cursor
 /* telas largas: Música e Letra à esquerda, Visual à direita; o botão de ações ocupa a largura toda */
 @media (min-width: 1440px) {
   form { display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px; }
-  .choices.cols-4 { grid-template-columns: repeat(2, 1fr); } /* 4 cortes em 2 colunas: o texto de cada cartão não quebra em 3 linhas */
   .col-left { display: flex; flex-direction: column; gap: 32px; }
   .col-left section + section { margin: 0; padding: 0; border: 0; }
   .col-left > section:nth-of-type(2) { display: flex; flex-direction: column; flex: 1; } /* a letra cresce até a altura do Visual */
@@ -175,3 +181,89 @@ button.download { background: none; border: 0; padding: 0; font: inherit; cursor
 .history li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-block: 8px; border-block-end: 1px solid var(--line); }
 .history li span { flex: 1; min-inline-size: 0; overflow-wrap: anywhere; }
 .history li button { min-block-size: 36px; padding: 6px 12px; }
+
+/* marca + etapas: cada etapa acende quando o campo dela fica válido, sem JS */
+.brand { display: flex; align-items: center; gap: 10px; font: 700 1.1rem/1 var(--display); margin-block-end: 24px; }
+.logo { inline-size: 32px; block-size: 32px; border-radius: 9px; background: var(--accent); color: var(--accent-ink);
+  display: grid; place-items: center; font: 800 0.8rem/1 var(--display); }
+h1 { font-weight: 800; }
+.steps { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; max-inline-size: 420px;
+  padding: 0; margin: 20px 0 0; font-size: 0.8rem; font-weight: 600; color: var(--muted); }
+.steps li::before { content: ""; display: block; block-size: 4px; border-radius: 4px; background: var(--line); margin-block-end: 6px; }
+main:has(#audio:valid) [data-step="audio"],
+main:has(#lyrics:valid) [data-step="lyrics"],
+main:has(#audio:valid):has(#lyrics:valid) [data-step="visual"] { color: var(--fg); }
+main:has(#audio:valid) [data-step="audio"]::before,
+main:has(#lyrics:valid) [data-step="lyrics"]::before,
+main:has(#audio:valid):has(#lyrics:valid) [data-step="visual"]::before { background: var(--accent); }
+
+/* seções numeradas 1, 2, 3 */
+form { counter-reset: secao; }
+form h2::before { counter-increment: secao; content: counter(secao); color: var(--muted); margin-inline-end: 8px; }
+
+/* sem itens, o histórico não aparece (evita a mensagem de erro para quem nunca usou) */
+.history:has(#history-list:empty) { display: none; }
+
+/* o seletor de arquivo vira uma área grande, tracejada */
+#audio { padding: 20px; border: 1.5px dashed var(--field-line); border-radius: 14px; background: var(--bg); cursor: pointer; }
+#audio:hover { border-color: var(--fg); }
+#audio:valid { border-style: solid; border-color: var(--accent); }
+
+/* rádio invisível cobrindo o cartão: o cartão inteiro é o alvo do clique */
+.choice { position: relative; }
+.choice input { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; margin: 0; opacity: 0; cursor: pointer; }
+
+/* Formato: desenho da proporção */
+.choice:has(input[name="format"]) { flex-direction: column; align-items: center; text-align: center; padding: 16px 12px; }
+.choice:has(input[name="format"])::before { content: ""; block-size: 40px; aspect-ratio: 9 / 16; border: 2px solid var(--muted); border-radius: 4px; }
+.choice:has(input[value="horizontal"])::before { block-size: 25px; aspect-ratio: 16 / 9; margin-block: 7px; }
+.choice:has(input[name="format"]:checked)::before { border-color: var(--selected); }
+
+/* Legenda: amostra do estilo */
+.choice:has(input[name="style"]) { flex-direction: column; gap: 8px; }
+.choice:has(input[name="style"])::before { font: 700 1.05rem/1.2 var(--display); }
+.choice:has(input[value="karaoke"])::before { content: "acende"; color: var(--selected); }
+.choice:has(input[value="highlight"])::before { content: "linha"; align-self: flex-start; padding: 0 5px; border-radius: 4px;
+  background: var(--accent); color: var(--accent-ink); }
+.choice:has(input[value="oneword"])::before { content: "UMA"; font-weight: 800; }
+
+/* Fundo: miniatura */
+.choice:has(input[name="background"]) { flex-direction: column; gap: 8px; padding: 6px; }
+.choice:has(input[name="background"]) span { padding: 0 6px 6px; }
+.choice:has(input[name="background"])::before { content: ""; inline-size: 100%; block-size: 56px; border-radius: 8px; background: var(--thumb, transparent); }
+.choice:has(input[value="gradient"]) { --thumb: var(--thumb-gradient); }
+.choice:has(input[value="aurora"]) { --thumb: var(--thumb-aurora); }
+.choice:has(input[value="aurora-gl"]) { --thumb: var(--thumb-aurora-gl); }
+.choice:has(input[value="sunrise"]) { --thumb: var(--thumb-sunrise); }
+.choice:has(input[value="solid"]) { --thumb: var(--thumb-solid); }
+.choice:has(input[value="image"])::before { content: "+"; display: grid; place-items: center; font-size: 1.5rem; color: var(--muted);
+  border: 1px dashed var(--field-line); }
+
+/* Cortes: botões compactos numa linha só */
+.choices.cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.choices.cols-5 .choice { justify-content: center; text-align: center; padding: 10px 4px; }
+.choices.cols-5 small { display: none; }
+.choices.cols-5 .choice:has(input:checked) { background: var(--fg); color: var(--bg); border-color: var(--fg); box-shadow: none; }
+
+/* a prévia reage às opções marcadas no formulário, só com CSS */
+.mock { aspect-ratio: 9 / 16; inline-size: min(100%, 270px); margin: 0 auto; border-radius: 20px; display: grid; place-items: center;
+  padding: 24px; box-sizing: border-box; background: var(--thumb, var(--thumb-gradient)); }
+.mock-text { margin: 0; font: 800 1.6rem/1.15 var(--display); text-align: center; color: rgb(255 255 255 / 0.6);
+  text-shadow: 0 2px 12px rgb(0 0 0 / 0.35); }
+.mock-text .on { color: var(--accent); }
+.mock-caption { margin-block-start: 14px !important; font-size: 0.9rem; text-align: center; }
+main:has(#format-horizontal:checked) .mock { aspect-ratio: 16 / 9; inline-size: 100%; }
+main:has(#style-highlight:checked) .mock-text .on { color: var(--accent-ink); background: var(--accent); border-radius: 6px; padding: 0 6px; text-shadow: none; }
+main:has(#style-oneword:checked) .mock-text span:not(.on) { display: none; }
+main:has(#bg-aurora:checked) .mock { --thumb: var(--thumb-aurora); }
+main:has(#bg-aurora-gl:checked) .mock { --thumb: var(--thumb-aurora-gl); }
+main:has(#bg-sunrise:checked) .mock { --thumb: var(--thumb-sunrise); }
+main:has(#bg-solid:checked) .mock { --thumb: var(--thumb-solid); }
+main:has(#bg-image:checked) .mock { --thumb: var(--thumb-solid); }
+
+/* botões de ação */
+.buttons .primary { font-weight: 700; border-radius: 14px; }
+#preview { flex: 1.5; white-space: nowrap; padding-inline: 10px; } /* "Prévia 30 s" numa linha só em 390 px */
+
+/* player do MP3 para marcar o trecho */
+#player { inline-size: 100%; margin-block-start: 12px; }
