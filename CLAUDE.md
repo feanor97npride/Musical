@@ -1,7 +1,7 @@
 # CLAUDE.md — Lyric Video Generator
 
 ## Visão geral
-Ferramenta (CLI + web simples) que recebe um MP3 e a letra da música e gera um vídeo vertical (1080x1920, 30 fps) com legendas palavra por palavra no estilo TikTok e fundo animado coerente com o tema da letra.
+Ferramenta (CLI + web simples) que recebe um MP3 e a letra da música e gera um vídeo vertical (1080x1920, 25 fps) com legendas palavra por palavra no estilo TikTok e fundo animado coerente com o tema da letra.
 
 Pipeline: MP3 + letra → separação de vocais (Demucs) → alinhamento forçado (stable-ts) → `song.json` → tema via Claude API → render (Remotion) → MP4.
 

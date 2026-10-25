@@ -15,7 +15,7 @@ Uso pessoal, com músicas próprias e a letra em mãos. Abrir para o público fi
 
 **Saídas**
 - `song.json` com o tempo de cada palavra (contrato em `ARQUITETURA.md`)
-- Vídeo MP4 1080x1920, 30 fps, com o áudio da música
+- Vídeo MP4 1080x1920, 25 fps, com o áudio da música
 
 ## Dentro do MVP
 1. Alinhamento forçado letra ↔ áudio com tempo por palavra.

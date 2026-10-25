@@ -4,7 +4,7 @@ import { LyricVideo } from "./LyricVideo";
 import { sizeFor } from "./size";
 import type { LyricProps } from "./types";
 
-const FPS = 30;
+const FPS = 25; // 25 em vez de 30: 17% menos quadros para renderizar
 
 const calculateMetadata: CalculateMetadataFunction<LyricProps> = ({ props }) => ({
   ...sizeFor(props.format),

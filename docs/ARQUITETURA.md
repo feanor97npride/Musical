@@ -156,7 +156,7 @@ Regras que `validate_song()` verifica:
 - `clip` pode ser `null` (música inteira). Com `clip`, o vídeo começa em `clip.start` e o tempo das legendas é deslocado de acordo.
 
 ## Regras do renderer
-- Composição `LyricVideo`, 1080x1920, 30 fps. Duração calculada a partir do `clip` ou de `audio.duration` (use `calculateMetadata`).
+- Composição `LyricVideo`, 1080x1920, 25 fps (constante `FPS` em `renderer/src/Root.tsx`). Duração calculada a partir do `clip` ou de `audio.duration` (use `calculateMetadata`).
 - Linha ativa: a que contém o instante atual. Se não houver linha ativa por mais de 0,5 s, não mostrar legenda.
 - Palavra atual: a que contém o instante atual dentro da linha ativa.
 - Área segura: margem de 12% no topo e 22% embaixo; legendas ficam dentro dela.
