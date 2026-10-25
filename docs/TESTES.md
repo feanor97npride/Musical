@@ -107,3 +107,9 @@ O render dos cortes de uma música passou a ser uma execução só (`renderer/sc
 - Trecho de 10 s pelo `render-batch` com `pixelFormat yuv420p`, `colorSpace bt709`, crf 23, maxrate 8M: saída yuv420p, faixa tv, bt709, 300 quadros.
 - Cópia para postar: 0,1 s (só remux, `-c copy`), contra 11 s do caminho antigo (recodificar com libx264). Em música de 4 min, a estimativa é de alguns segundos contra alguns minutos; não medido na música inteira.
 - A faixa de cor muda de completa (`yuvj420p`) para limitada (`tv`). Conferido a olho num quadro do fundo.
+
+## Placa AMD para o Demucs (teste de 25/10/2026)
+- Máquina: Windows, placa AMD Radeon RX 6600, Python 3.11 em ambiente separado, `torch-directml` 0.2.5 (torch 2.4.1).
+- A placa é reconhecida, e numa multiplicação de matrizes foi cerca de 7 vezes mais rápida que o processador.
+- Demucs (htdemucs) em trecho de 30 s: processador **24,0 s**. Com a placa, parou com `Invalid or unsupported data type ComplexFloat`: o Demucs usa números complexos, que o `torch-directml` não suporta.
+- Conclusão: o Demucs e o Whisper (que também usam números complexos) ficam no processador. A placa AMD só entraria com outra versão do torch ou outro backend. Não testado: Whisper com a placa.
