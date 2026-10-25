@@ -17,6 +17,14 @@ def song_files(folder: Path) -> tuple[Path, Path, Path | None] | None:
     return mp3s[0], texts[0], images[0] if images else None
 
 
+def lone_mp3(folder: Path) -> Path | None:
+    """O MP3 de uma pasta que tem só ele (sem TXT): o Drive automático transcreve a letra pelo áudio."""
+    files = [path for path in folder.iterdir() if path.is_file()]
+    mp3s = [path for path in files if path.suffix.lower() == ".mp3"]
+    has_text = any(path.suffix.lower() == ".txt" for path in files)
+    return mp3s[0] if len(mp3s) == 1 and not has_text else None
+
+
 def list_songs(root: Path) -> list[str]:
     if not root.is_dir():
         return []

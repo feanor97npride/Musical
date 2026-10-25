@@ -63,9 +63,11 @@ def test_arquivo_vazio_espera_o_drive_terminar(pasta):
     assert fila.criados == []
 
 
-def test_pasta_sem_mp3_ou_sem_txt_e_ignorada(pasta):
-    folder = musica(pasta)
-    (folder / "a.txt").unlink()
+def test_pasta_sem_mp3_ou_com_duas_letras_e_ignorada(pasta):
+    sem_mp3 = musica(pasta, "Sem MP3")
+    (sem_mp3 / "a.mp3").unlink()
+    duas_letras = musica(pasta, "Duas letras")
+    (duas_letras / "b.txt").write_text("outra letra", encoding="utf-8")
     fila = FilaFalsa()
     varrer(fila, pasta, {}, {}, vezes=3)
     assert fila.criados == []
