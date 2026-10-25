@@ -14,6 +14,7 @@ from engine.pipeline import ROOT
 from engine.props import BACKGROUNDS, SUBTITLE_STYLES as STYLES
 from engine.write_lyrics import write_lyrics
 from web import history
+from web.automacao import start_automation
 from web.biblioteca import build_router
 from web.delivery import deliver_ready
 from web.jobs import Job, JobQueue, QueueFull
@@ -35,6 +36,7 @@ queue.on_ready = deliver_ready  # músicas da pasta do Drive são copiadas para 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     queue.start()
+    start_automation(queue)
     yield
 
 

@@ -63,6 +63,10 @@ Cada etapa lê e escreve arquivos em `output/<slug>/`. Se o arquivo de saída da
 │   ├── app.py         # FastAPI
 │   ├── jobs.py        # fila de jobs (um por vez)
 │   ├── pacote.py      # pacote para postar (ZIP com as cópias e o postar.txt)
+│   ├── automacao.py   # liga as threads de aviso e de Drive automático
+│   ├── avisos.py      # aviso no Telegram quando um vídeo termina
+│   ├── telegram.py    # envio de uma mensagem pelo bot (urllib, sem dependência)
+│   ├── drive_auto.py  # Drive automático: gera sozinho as músicas novas da pasta de entrada
 │   ├── launcher/      # iniciador do Windows (python -m web.launcher)
 │   └── static/        # index.html, style.css, app.js, entrega.js, forms.js, lyrics.js, _headers, termos.html, privacidade.html
 ├── tests/
@@ -186,6 +190,11 @@ Regras que `validate_song()` verifica:
 - `BROWSER_EXECUTABLE` — caminho de um Chrome ou headless shell já instalado, para o render (opcional). Lido por `renderer/scripts/render.mjs` e `render-batch.mjs`
 - `TUNNEL_TOKEN` — token do túnel fixo da Cloudflare. É uma senha: nunca versionar. Vazio = túnel aleatório
 - `TUNNEL_HOSTNAME` — endereço fixo do túnel, ex.: `meu-servidor.seudominio.com`. Obrigatório junto com `TUNNEL_TOKEN`
+- `DRIVE_AUTO` — `1` liga o Drive automático (opcional; exige `DRIVE_INPUT_DIR`). Ligar é declarar que tudo o que entra na pasta é do usuário ou autorizado
+- `DRIVE_AUTO_PRESET` — atalho do Drive automático: `full` (padrão: 16:9 inteiro e 9:16 em cortes de 90 s, dois jobs), `tiktok` ou `yt`
+- `DRIVE_AUTO_INTERVAL` — segundos entre uma varredura e outra da pasta (padrão 60; mínimo 5)
+- `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID` — bot e chat do aviso de vídeo pronto (opcionais; o token é uma senha: nunca versionar)
+- `TELEGRAM_NOTIFY` — `drive` (padrão: só vídeos da pasta do Drive) ou `all` (todos)
 
 ## Publicação em duas partes (opção B1)
 - A página `web/static/` vai para o Cloudflare Pages (projeto Pages com build output directory `web/static`, sem build command).
@@ -198,6 +207,8 @@ Regras que `validate_song()` verifica:
 - `POST /jobs/{id}/variante` (campos `format` e `cuts`, mesmas regras de `POST /jobs`) cria outro job com o MP3, a letra e os textos do job `{id}`: é o segundo formato do preset "full". A pipeline reaproveita o `song.json` do cache, então só o render roda de novo.
 - Presets da página (`web/static/presets.js`, só no navegador): "Full" = 16:9 inteiro + 9:16 em cortes de 90 s; "TikTok" = 9:16 em cortes de 90 s; "YouTube" = 16:9 inteiro; todos com estilo karaokê. Escolher um preset preenche os campos; mudar um campo na mão volta para "Personalizado".
 - Biblioteca (`web/biblioteca.py`, `web/library.py`, `web/delivery.py`): as músicas vêm de uma pasta sincronizada no PC pelo Google Drive para computador (`DRIVE_INPUT_DIR`), com uma subpasta por música contendo exatamente um MP3 e um TXT, e uma imagem opcional (`fundo.jpg`/`.png`). `GET /biblioteca` lista as músicas válidas; `POST /biblioteca/{nome}/jobs` gera uma delas com as mesmas opções de `POST /jobs` (a confirmação continua obrigatória). Quando termina, o job copia os MP4 prontos e o `postar.txt` para `DRIVE_OUTPUT_DIR/<nome>/` (só músicas da biblioteca; uma falha de cópia não derruba o job). Sem `DRIVE_INPUT_DIR`, a rota responde 404; pasta inexistente, 409.
+- Drive automático (`web/drive_auto.py`, `web/automacao.py`): com `DRIVE_AUTO=1`, uma thread olha `DRIVE_INPUT_DIR` a cada `DRIVE_AUTO_INTERVAL` segundos e cria os jobs do atalho (`DRIVE_AUTO_PRESET`) para cada pasta com um MP3 e um TXT. A pasta só é gerada quando tamanho e data dos arquivos são iguais em duas varreduras seguidas e nenhum arquivo está vazio (o Drive ainda grava). O que já foi processado fica em `output/drive-auto.json` (assinatura por pasta; fora do Git): reiniciar não repete, e arquivo alterado gera de novo. Na primeira ativação, as músicas que já estão na pasta só são registradas, sem gerar. Estilo karaokê; fundo `image` se a pasta tem `fundo.jpg` ou `fundo.png`, senão `gradient`. Fila sem lugar para todos os jobs da música espera o próximo ciclo; música grande demais ou sem letra é ignorada até a pasta mudar. A cópia para `DRIVE_OUTPUT_DIR` é a da biblioteca; o texto do 16:9 sai como `postar-16x9.txt` (o do 9:16 continua `postar.txt`).
+- Aviso no Telegram (`web/avisos.py`, `web/telegram.py`): com `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID`, uma thread olha a fila e manda uma mensagem por job de vídeo que terminou sozinho (pronto ou com erro; cancelado e job de letra não avisam). Por padrão só os da pasta do Drive. Falha de rede ou token errado só vai para o log, sem o token.
 - Letra pelo áudio (`engine/transcribe.py`, `web/letra.py`): `python -m engine.transcribe --audio <mp3> --out <txt>` separa a voz (pasta `<nome>-voz/` ao lado do texto), transcreve com Whisper (`WHISPER_MODEL`) e agrupa as palavras em versos (pausa de 1 s ou 8 palavras). O texto sai sem marcadores de seção. No site, `POST /letra` (MP3) cria um job de tipo `letra` (`kind` no status) e `GET /jobs/{id}/letra` devolve o texto; a página põe o texto no campo de letra para revisão antes de gerar o vídeo.
 - `GET /historico` (lista: id, data, título), `GET /historico/{id}` (letra completa) e `DELETE /historico/{id}` (204) ficam com a senha. Cada `POST /lyrics` com sucesso grava a letra em `output/historico/letras.json` (fora do Git); arquivo corrompido vai para `letras.corrompido.json`.
 - Todo job roda a pipeline com `--export`: cada vídeo ganha a cópia para postar em `output/<slug>/para-postar/` (H.264 yuv420p, moov no começo). O render já sai em yuv420p com cores bt709 (`render-batch.mjs`), então a cópia só remuxa com `-c copy`; vídeo que não está nesse formato (ex.: `yuvj420p` de renders antigos) é recodificado.

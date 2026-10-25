@@ -15,7 +15,9 @@ def deliver(job: Job, root: Path) -> Path:
     dest.mkdir(parents=True, exist_ok=True)
     for video, name in zip(job.ready_videos, names):
         shutil.copyfile(exported_path(video, job.audio), dest / name)
-    (dest / "postar.txt").write_text(parts_text(names, song_of(job), job.draft), encoding="utf-8-sig")
+    # o atalho full entrega os dois formatos na mesma pasta: o 16:9 não pode sobrescrever o texto do 9:16
+    text_name = "postar-16x9.txt" if job.format == "horizontal" else "postar.txt"
+    (dest / text_name).write_text(parts_text(names, song_of(job), job.draft), encoding="utf-8-sig")
     return dest
 
 

@@ -29,6 +29,14 @@ def test_entrega_copia_o_video_e_o_postar_txt(tmp_path):
     assert (dest / "postar.txt").exists()
 
 
+def test_job_16x9_grava_postar_16x9_e_nao_sobrescreve_o_vertical(tmp_path):
+    vertical, horizontal = job_pronto(tmp_path), job_pronto(tmp_path / "outro")
+    horizontal.format = "horizontal"
+    dest = delivery.deliver(vertical, tmp_path / "saida")
+    delivery.deliver(horizontal, tmp_path / "saida")
+    assert (dest / "postar.txt").exists() and (dest / "postar-16x9.txt").exists()
+
+
 def test_sem_pasta_de_saida_nao_cria_nada(tmp_path, monkeypatch):
     monkeypatch.setenv("DRIVE_OUTPUT_DIR", str(tmp_path / "saida"))
     delivery.deliver_ready(job_pronto(tmp_path, library_name=None))  # envio pelo formulário não vai para o Drive
