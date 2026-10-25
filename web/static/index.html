@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Figtree:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=13">
+  <link rel="stylesheet" href="style.css?v=14">
   <link rel="stylesheet" href="v3.css?v=1">
 </head>
 <body>
@@ -55,6 +55,9 @@
         <button type="button" data-mark="clip_end">Marcar fim aqui</button>
         <p class="error-msg" id="clip-error">O fim precisa ser depois do início.</p>
       </fieldset>
+
+      <button type="button" id="drive-open" hidden>Do Drive</button>
+      <div id="library" hidden></div>
     </section>
 
     <section>
@@ -121,7 +124,6 @@
 
     </section>
 
-    <div id="library" hidden></div>
     <div class="actions">
       <label class="check">
         <input type="checkbox" id="confirm" name="confirm" required aria-errormessage="confirm-error">
@@ -201,7 +203,7 @@
 <script src="app.js?v=8"></script>
 <script src="entrega.js?v=3"></script>
 <script src="presets.js?v=2"></script>
-<script src="library.js?v=2"></script>
+<script src="library.js?v=3"></script>
 <script src="letra-auto.js?v=1"></script>
 <script src="forms.js?v=1"></script>
 <script src="lyrics.js?v=4"></script>

@@ -263,6 +263,12 @@ main:has(#bg-image:checked) .mock { --thumb: var(--thumb-solid); }
 
 /* botões de ação */
 .buttons .primary { font-weight: 700; border-radius: 14px; }
+/* lista do Drive dentro do cartão Música: sem cartão próprio, com título menor */
+form section #library { background: none; box-shadow: none; padding: 0; margin-block-start: 16px; }
+form section #library h3 { font: 700 1.05rem/1.2 var(--display); margin: 0 0 12px; }
+form section #library select { inline-size: 100%; min-block-size: 44px; padding: 10px 12px; font: inherit; color: var(--fg);
+  background: var(--bg); border: 1px solid var(--field-line); border-radius: 10px; }
+form section #library .primary { inline-size: 100%; margin-block-start: 12px; }
 #preview { flex: 1.5; white-space: nowrap; padding-inline: 10px; } /* "Prévia 30 s" numa linha só em 390 px */
 
 /* player do MP3 para marcar o trecho */
