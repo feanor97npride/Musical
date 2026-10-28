@@ -1,60 +1,80 @@
-# Fluxo n8n: avisar quando o lyric video fica pronto
+# Fluxo n8n: enviar a música e avisar quando ficar pronta
 
-O arquivo `aviso-video-pronto.json` é um fluxo para o [n8n](https://n8n.io). Você abre uma página com um formulário, envia o MP3 e a letra, e o n8n manda o vídeo para o servidor do seu PC. Depois, ele confere de tempos em tempos e manda uma mensagem no Telegram quando termina (ou quando dá erro).
+O n8n roda num VPS (um servidor alugado na Hostinger, ligado 24 horas). Você abre o formulário pelo celular ou pelo computador, envia o MP3, a letra e escolhe um atalho (TikTok, YouTube ou Full). O n8n manda para o servidor do seu PC, acompanha e avisa no Telegram quando termina.
 
-**Antes de começar:** o PC com o `iniciar.bat` precisa estar ligado. Se o servidor reiniciar no meio, o envio se perde e o fluxo avisa pelo tempo esgotado.
+**Antes de começar:** o PC com o `iniciar.bat` precisa estar ligado e com o túnel aberto. Sem ele, o n8n não alcança o servidor e avisa que o tempo esgotou.
 
-## 1. Criar a conta no n8n
+## 1. Criar o VPS na Hostinger
+1. No painel da Hostinger, contrate um **VPS** com **Ubuntu** e **Docker** (há um modelo pronto de Docker na hora de criar).
+2. Anote o **IP** do VPS (aparece na página do serviço).
 
-1. Entre em n8n.io e crie uma conta (há plano de teste).
-2. Abra o painel. Ele tem uma barra lateral com **Workflows** (fluxos).
+## 2. Apontar um subdomínio para o VPS
+1. No painel onde está o seu domínio (pode ser a própria Hostinger), crie um registro **A**: nome `n8n`, valor = o IP do VPS.
+2. Deixe em **somente DNS**, se o painel perguntar. Isso é o que faz o endereço apontar para o VPS.
+3. Seu endereço do n8n será `n8n.SEU-DOMINIO`.
 
-## 2. Importar o fluxo
+## 3. Subir o n8n no VPS
+Conecte no VPS pelo terminal do painel da Hostinger (botão **Terminal**), depois rode:
 
-1. Em **Workflows**, clique em **Add workflow** (ou o menu de três pontos → **Import from file**).
-2. Escolha o arquivo `aviso-video-pronto.json`. Os blocos aparecem na tela.
+1. Crie a pasta e entre nela:
+   ```
+   mkdir -p ~/n8n && cd ~/n8n
+   ```
+   (cria uma pasta para os arquivos do n8n)
+2. Copie para essa pasta os arquivos `docker-compose.yml`, `Caddyfile` e `.env.example` de `docs/n8n/vps/` do projeto. O mais fácil é colar o conteúdo de cada um com `nano`.
+3. Crie o arquivo de configuração:
+   ```
+   cp .env.example .env
+   nano .env
+   ```
+   Troque `SEU-DOMINIO` pelo seu subdomínio (nos três lugares). Em `N8N_ENCRYPTION_KEY`, gere uma chave com:
+   ```
+   openssl rand -hex 32
+   ```
+   e cole o resultado no lugar de `TROQUE_POR_UMA_CHAVE_LONGA`. Essa chave protege as senhas salvas no n8n: guarde num lugar seguro.
+4. Troque também `n8n.SEU-DOMINIO` no arquivo `Caddyfile`.
+5. Suba o n8n:
+   ```
+   docker compose up -d
+   ```
+   Na primeira vez baixa as imagens e pode levar alguns minutos. O Caddy cuida do HTTPS (o cadeado) sozinho.
 
-## 3. Criar a senha do servidor (credencial)
+## 4. Criar a conta do n8n
+Abra `https://n8n.SEU-DOMINIO` no navegador e crie a conta de dono (e-mail e senha só seus).
 
-O servidor pede a senha do site em um cabeçalho chamado `X-Access-Token`. Esse cabeçalho é a forma de o servidor saber que é você.
+## 5. Importar o fluxo
+1. No n8n, clique em **Add workflow** → menu de três pontos → **Import from file**.
+2. Escolha `docs/n8n/aviso-video-pronto.json`. Os blocos aparecem na tela.
+3. Se algum bloco ficar vermelho, tire print e me mande.
 
-1. No menu **Credentials** (credenciais), crie uma do tipo **Header Auth**.
-2. Em **Name**, escreva exatamente: `X-Access-Token`.
-3. Em **Value**, cole a senha que está no `ACCESS_TOKEN` do `.env` do seu PC.
-4. Salve com o nome **Senha do servidor (X-Access-Token)**. Esse é o nome que o fluxo procura.
+## 6. Criar as credenciais
+- **Senha do servidor:** menu **Credentials** → nova do tipo **Header Auth**. Em **Name** escreva `X-Access-Token`; em **Value**, cole a senha que está no `ACCESS_TOKEN` do `.env` do seu PC. Salve com o nome **Senha do servidor (X-Access-Token)**.
+- **Bot do Telegram:** nova do tipo **Telegram API** com o token do bot (pegue no @BotFather, comando `/newbot`). Salve com o nome **Bot do Telegram**.
+- **Número do chat:** em cada um dos três blocos **Avisar** (pronto, erro e tempo esgotado), troque `COLE_O_ID_DO_CHAT` pelo seu número de chat.
 
-Não cole a senha em nenhum bloco do fluxo: ela fica só nas credenciais.
+Não cole senha nem token em nenhum bloco do fluxo: eles ficam só nas credenciais.
 
-## 4. Criar o bot do Telegram
+## 7. Proteger o formulário
+O formulário fica na internet, então qualquer pessoa com o endereço poderia enviar música. Proteja-o:
+- No bloco **Enviar música**, procure a opção de **autenticação** (login e senha básicos). Se a sua versão do n8n não tiver essa opção, confirme no menu de ajuda do n8n e me avise.
+- Mantenha a pergunta de autorização: a pessoa precisa digitar `SIM` para confirmar que a música é dela.
 
-1. No Telegram, procure **@BotFather** e mande `/newbot`. Siga as perguntas e copie o token que ele devolve.
-2. No n8n, em **Credentials**, crie uma do tipo **Telegram API** com esse token. Dê o nome **Bot do Telegram**.
-3. Mande qualquer mensagem para o seu bot. Depois, descubra o seu número de chat (o `chat id`): peça ao bot **@userinfobot** ou use o `getUpdates` do próprio bot.
+## 8. Publicar e testar
+1. Clique em **Publish** no topo do fluxo.
+2. Clique no bloco **Enviar música** e copie o **Production URL**. Abra em outra aba.
+3. Envie um MP3 curto, a letra, escolha **YouTube** e digite `SIM`.
+4. Espere. O aviso chega no Telegram quando o vídeo estiver pronto.
+5. Teste **Full**: chegam dois avisos (16:9 e 9:16).
 
-## 5. Colar o número do chat
-
-No fluxo, há três blocos de Telegram (**Avisar pronto**, **Avisar erro** e **Avisar tempo esgotado**). Em cada um, troque `COLE_O_ID_DO_CHAT` pelo seu número.
-
-## 6. Ativar e usar
-
-1. Clique em **Publish** (publicar) no topo. O fluxo passa a funcionar sozinho.
-2. Clique no bloco **Enviar música** e copie o endereço do formulário (**Production URL**). Abra em uma aba nova.
-3. Envie o MP3, cole a letra e digite `SIM` no campo de autorização. Só envie músicas suas ou com autorização.
-4. Espere. A mensagem chega no Telegram quando o vídeo estiver pronto.
-
-## O que o fluxo não faz ainda
-
-- **Não baixa o pacote para você.** As cópias para postar ficam no PC, na pasta `output/` (dentro da pasta da música, em `para-postar/`). Pegue por lá. Baixar e entregar o pacote automaticamente fica para o próximo passo.
-- **Não confere a letra.** O fluxo manda a letra como ela foi escrita.
-- **Não posta em lugar nenhum.** Publicar no TikTok e no YouTube fica para depois.
+## 9. Desligar o Activepieces
+Depois que o n8n estiver funcionando, desligue os fluxos antigos do Activepieces para não receber aviso duplicado.
 
 ## Se algo der errado
-
-- **Mensagem de erro no Telegram:** veja a janela do `iniciar.bat` no PC. O erro completo fica lá.
-- **Mensagem de tempo esgotado:** confira se o PC está ligado e o `iniciar.bat` aberto. Se o servidor reiniciou, envie de novo.
+- **Aviso de erro no Telegram:** veja a janela do `iniciar.bat` no PC: o erro completo fica lá.
+- **Aviso de tempo esgotado:** confira se o PC está ligado e o `iniciar.bat` aberto. Se o servidor reiniciou, envie de novo.
 - **Página do formulário não abre:** confira se o fluxo está **publicado** (Publish), e não só salvo.
+- **Bloco vermelho ao importar:** os nomes dos campos podem mudar entre versões do n8n. Tire print e me mande.
 
 ## Observações
-
-- Este fluxo foi montado sem ser testado dentro de um n8n real. Os nomes dos campos podem mudar um pouco conforme a versão do n8n. Se algum bloco ficar vermelho ao importar, me envie a mensagem que aparece.
-- A senha do servidor e o token do bot são segredos. Não os envie para ninguém nem em conversas.
+- Este fluxo foi montado sem ser testado dentro de um n8n real. Teste com uma música curta antes de usar.
+- A chave de criptografia, a senha do servidor e o token do bot são segredos. Não os envie para ninguém nem em conversas.

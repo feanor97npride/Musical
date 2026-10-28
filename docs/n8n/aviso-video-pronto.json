@@ -19,6 +19,24 @@
               "requiredField": true
             },
             {
+              "fieldLabel": "atalho",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "TikTok"
+                  },
+                  {
+                    "option": "YouTube"
+                  },
+                  {
+                    "option": "Full"
+                  }
+                ]
+              }
+            },
+            {
               "fieldLabel": "autorizacao",
               "fieldType": "text",
               "placeholder": "Digite SIM para confirmar que a música é sua ou que você tem autorização",
@@ -73,7 +91,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://whimsical.musicas.space/jobs",
+        "url": "={{ $json.server }}/jobs",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -103,7 +121,11 @@
             },
             {
               "name": "format",
-              "value": "vertical"
+              "value": "={{ $json.format }}"
+            },
+            {
+              "name": "cuts",
+              "value": "={{ $json.cuts }}"
             }
           ]
         },
@@ -114,8 +136,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        440,
-        -100
+        660,
+        0
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -135,13 +157,13 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        660,
+        1100,
         -100
       ]
     },
     {
       "parameters": {
-        "url": "=https://whimsical.musicas.space/jobs/{{ $('Enviar para o servidor').first().json.id }}",
+        "url": "={{ $('Guardar envio').item.json.server }}/jobs/{{ $('Guardar envio').item.json.id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {}
@@ -151,7 +173,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        880,
+        1320,
         -100
       ],
       "onError": "continueRegularOutput",
@@ -190,7 +212,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        1100,
+        1540,
         -100
       ]
     },
@@ -222,7 +244,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        1320,
+        1760,
         60
       ]
     },
@@ -254,21 +276,21 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        1540,
+        1980,
         160
       ]
     },
     {
       "parameters": {
         "chatId": "COLE_O_ID_DO_CHAT",
-        "text": "=Lyric video pronto no servidor (envio {{ $('Enviar para o servidor').first().json.id }}). O download do pacote ainda não é automático: pegue no PC ou no próximo passo do fluxo."
+        "text": "=Lyric video pronto no servidor ({{ $('Guardar envio').item.json.format === 'horizontal' ? '16:9' : '9:16' }}, envio {{ $('Guardar envio').item.json.id }}). As cópias para postar estão no PC, na pasta de saída do Drive (ou em output/<música>/para-postar/)."
       },
       "id": "avisa-pronto",
       "name": "Avisar pronto",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1320,
+        1760,
         -200
       ],
       "credentials": {
@@ -281,14 +303,14 @@
     {
       "parameters": {
         "chatId": "COLE_O_ID_DO_CHAT",
-        "text": "=Não consegui gerar o lyric video do envio {{ $('Enviar para o servidor').first().json.id }}. Veja a janela do iniciador no PC: a mensagem de erro fica lá."
+        "text": "=Não consegui gerar o lyric video ({{ $('Guardar envio').item.json.format === 'horizontal' ? '16:9' : '9:16' }}, envio {{ $('Guardar envio').item.json.id }}). Veja a janela do iniciador no PC: a mensagem de erro fica lá."
       },
       "id": "avisa-erro",
       "name": "Avisar erro",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1540,
+        1980,
         0
       ],
       "credentials": {
@@ -301,14 +323,14 @@
     {
       "parameters": {
         "chatId": "COLE_O_ID_DO_CHAT",
-        "text": "=Passaram cerca de 20 minutos e o envio {{ $('Enviar para o servidor').first().json.id }} ainda não ficou pronto. Confira o PC: o servidor pode ter reiniciado, e nesse caso o envio se perde."
+        "text": "=Passaram cerca de 20 minutos e o envio {{ $('Guardar envio').item.json.id }} ({{ $('Guardar envio').item.json.format === 'horizontal' ? '16:9' : '9:16' }}) ainda não ficou pronto. Confira o PC: o servidor pode ter reiniciado, e nesse caso o envio se perde."
       },
       "id": "avisa-tempo",
       "name": "Avisar tempo esgotado",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1760,
+        2200,
         100
       ],
       "credentials": {
@@ -317,6 +339,54 @@
           "name": "Bot do Telegram"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Endereço do servidor (o túnel do PC): é o único lugar onde ele aparece neste fluxo.\nconst SERVER = \"https://whimsical.musicas.space\";\nconst shortcuts = {\n  TikTok: [{ format: \"vertical\", cuts: \"90\" }],\n  YouTube: [{ format: \"horizontal\", cuts: \"\" }],\n  Full: [{ format: \"horizontal\", cuts: \"\" }, { format: \"vertical\", cuts: \"90\" }],\n};\nconst base = $input.first();\nconst plans = shortcuts[base.json.atalho] || shortcuts.TikTok;\nreturn plans.map((plan) => ({ json: { ...base.json, ...plan, server: SERVER }, binary: base.binary, pairedItem: { item: 0 } }));"
+      },
+      "id": "montar",
+      "name": "Montar envios",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "g1",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "g2",
+              "name": "server",
+              "value": "={{ $('Montar envios').item.json.server }}",
+              "type": "string"
+            },
+            {
+              "id": "g3",
+              "name": "format",
+              "value": "={{ $('Montar envios').item.json.format }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "guardar",
+      "name": "Guardar envio",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        -100
+      ]
     }
   ],
   "connections": {
@@ -335,7 +405,7 @@
       "main": [
         [
           {
-            "node": "Enviar para o servidor",
+            "node": "Montar envios",
             "type": "main",
             "index": 0
           }
@@ -347,7 +417,7 @@
       "main": [
         [
           {
-            "node": "Esperar 30 s",
+            "node": "Guardar envio",
             "type": "main",
             "index": 0
           }
@@ -421,6 +491,28 @@
             "index": 0
           }
         ],
+        [
+          {
+            "node": "Esperar 30 s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar envios": {
+      "main": [
+        [
+          {
+            "node": "Enviar para o servidor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar envio": {
+      "main": [
         [
           {
             "node": "Esperar 30 s",

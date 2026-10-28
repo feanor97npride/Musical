@@ -1,0 +1,30 @@
+# n8n self-hosted com HTTPS automático (Caddy). Sobe com: docker compose up -d
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    restart: always
+    env_file: .env
+    environment:
+      - N8N_PROTOCOL=https
+      - N8N_PORT=5678
+      - N8N_SECURE_COOKIE=true
+    volumes:
+      - n8n_data:/home/node/.n8n  # guarda fluxos, credenciais (criptografadas) e histórico
+    expose:
+      - "5678"
+
+  caddy:
+    image: caddy:2
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on:
+      - n8n
+
+volumes:
+  n8n_data:
+  caddy_data:

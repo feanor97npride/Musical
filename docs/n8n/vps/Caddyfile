@@ -1,0 +1,4 @@
+# Troque n8n.SEU-DOMINIO pelo subdomínio que você apontou para o VPS (ex.: n8n.exemplo.com).
+n8n.SEU-DOMINIO {
+	reverse_proxy n8n:5678
+}
