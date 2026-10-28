@@ -71,7 +71,7 @@ Uso pessoal, com músicas próprias e a letra em mãos. Abrir para o público fi
 - **Direitos autorais da música.** Aviso na interface e uso apenas de material próprio ou autorizado.
 
 ## Decisões tomadas
-- Alinhamento forçado (stable-ts) em vez de transcrição, porque há letra.
+- Alinhamento forçado (stable-ts) em vez de transcrição, porque há letra. A transcrição pelo áudio existe como apoio (`engine.transcribe`, botão no site e Drive automático sem TXT), com a letra sempre para revisar.
 - Remotion para o render, porque legenda palavra por palavra e fundo animado ficam simples em React.
 - Fundo procedural no MVP: grátis, rápido e previsível.
 - Web com FastAPI e uma página estática, para manter o MVP pequeno. Next.js entra depois.
@@ -80,6 +80,6 @@ Uso pessoal, com músicas próprias e a letra em mãos. Abrir para o público fi
 ## Depois do MVP
 1. Editor de legendas com ajuste de tempo por verso.
 2. Imagens por seção (Flux, SDXL) com movimento suave.
-3. Formatos 1:1 e 16:9.
-4. Modo sem letra com Whisper.
+3. Formato 1:1 (o 16:9 já existe).
+4. Modo sem letra com Whisper, sem revisão (a transcrição para revisar já existe).
 5. Front em Next.js, contas e limites por usuário.

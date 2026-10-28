@@ -6,7 +6,7 @@ Ferramenta (CLI + web simples) que recebe um MP3 e a letra da música e gera um 
 Pipeline: MP3 + letra → separação de vocais (Demucs) → alinhamento forçado (stable-ts) → `song.json` → tema via Claude API → render (Remotion) → MP4.
 
 ## Estado atual
-- **Fase atual:** MVP concluído (F6: web mínima com FastAPI). Plano 6 (automações): Fases A, B e C concluídas; Fase D (postagem pela API) pausada. Planos 8 e 10 a 23 (letra por IA, visual, layout, progresso, cache, segurança, formato 16:9, imagem enviada, cortes em ZIP, histórico de letras e pacote para postar) concluídos e publicados  <!-- atualize esta linha ao concluir cada fase -->
+- **Fase atual:** MVP concluído (F6: web mínima com FastAPI). Plano 6 (automações): Fases A, B e C concluídas; Fase D (postagem pela API) pausada. Planos 8 e 10 a 23 (letra por IA, visual, layout, progresso, cache, segurança, formato 16:9, imagem enviada, cortes em ZIP, histórico de letras e pacote para postar) concluídos e publicados. Depois: biblioteca do Google Drive (entrada e saída), letra pelo áudio, fila e site endurecidos, motor com cache de voz por áudio, render em 25 fps, redesign V3 do site, Drive automático (inclusive sem TXT) e aviso no Telegram  <!-- atualize esta linha ao concluir cada fase -->
 - Escopo e critérios de aceite: `docs/ESCOPO.md`
 - Contratos de dados, pastas e CLI: `docs/ARQUITETURA.md`
 - Prompts de cada fase: `docs/PROMPTS.md`
@@ -32,6 +32,7 @@ Detalhes e árvore completa em `docs/ARQUITETURA.md`.
 Passam a existir conforme as fases avançam. Quando um comando mudar, atualize esta seção.
 
 - Gerar letra a partir de um contexto: `python -m engine.write_lyrics --context "tema, história, estilo, idioma" --out samples/nome.txt` (grava também `samples/nome.estilo.txt` para o Suno e `samples/nome.postar.txt` com títulos, descrição, legenda e hashtags)
+- Letra pelo áudio (para revisar): `python -m engine.transcribe --audio samples/a.mp3 --out samples/a.txt`
 - Alinhar: `python -m engine.align --audio samples/a.mp3 --lyrics samples/a.txt --out output/a/song.json`
 - Pipeline completa: `python -m engine.pipeline --audio samples/a.mp3 --lyrics samples/a.txt`
 - Lote (cada `.mp3` com `.txt` de mesmo nome na pasta): `python -m engine.batch --folder samples --variants "background=gradient,aurora;style=karaoke,oneword"` (`--variants` é opcional: um vídeo por combinação; `--export` gera também a cópia para postar em `para-postar/`)
