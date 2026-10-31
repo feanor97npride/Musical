@@ -34,7 +34,7 @@ def run_pipeline(job: "Job") -> int:
         command += ["--clip", f"{job.clip[0]}:{job.clip[1]}"]
     if job.cuts:
         command += ["--cuts", str(job.cuts)]
-    if job.background == "image":
+    if job.background in ("image", "video"):  # o vídeo cortado no envio também chega ao motor como fundo
         command += ["--background-image", str(job.background_image)]
     if job.kind == "letra":  # transcrição: troca o comando; as opções de vídeo acima não se aplicam
         command = [sys.executable, "-m", "engine.transcribe", "--audio", str(job.audio), "--out", str(job.transcript), "--force"]

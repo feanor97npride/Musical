@@ -81,3 +81,44 @@ def test_recusa_extensao_que_nao_e_mp3_nem_mp4(client):
                            data={"lyrics": "um", "confirm": "true"})
     assert resposta.status_code == 400
     assert ".mp3 ou .mp4" in resposta.json()["detail"]
+
+
+def test_fundo_video_chega_ao_motor_e_o_job_termina(client, tmp_path, monkeypatch):
+    recebidos = []
+
+    def pipeline_que_confere(job):  # o motor real não roda aqui; conferimos o que ele recebe
+        recebidos.append(job.background_image)
+        job.video.parent.mkdir(parents=True)
+        job.video.write_bytes(b"mp4")
+        return 0
+
+    monkeypatch.setattr(jobs, "run_pipeline", pipeline_que_confere)
+    resposta = enviar(client, video_bytes(tmp_path), format="horizontal")
+    job = esperar(client, resposta.json()["id"])
+    assert job["status"] == "done"  # antes da correção, o job falhava em "Montando props"
+    assert recebidos and recebidos[0].suffix == ".mp4" and recebidos[0].exists()
+
+
+def test_comando_do_motor_leva_o_fundo_video(tmp_path):
+    from web import runner
+    job = jobs.Job("id", tmp_path, tmp_path / "a.mp3", "karaoke", "video", None, format="horizontal",
+                   background_image=tmp_path / "fundo-horizontal.mp4")
+    comando = []
+
+    class Falso:
+        def __init__(self, cmd, **kwargs):
+            comando.extend(cmd)
+            self.stdout = iter([])
+
+        def wait(self):
+            return 0
+
+    import pytest as _pytest
+    mp = _pytest.MonkeyPatch()
+    mp.setattr(runner.subprocess, "Popen", Falso)
+    try:
+        runner.run_pipeline(job)
+    finally:
+        mp.undo()
+    assert "--background-image" in comando
+    assert comando[comando.index("--background-image") + 1].endswith("fundo-horizontal.mp4")
