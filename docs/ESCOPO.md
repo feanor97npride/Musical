@@ -80,6 +80,6 @@ Uso pessoal, com músicas próprias e a letra em mãos. Abrir para o público fi
 ## Depois do MVP
 1. Editor de legendas com ajuste de tempo por verso.
 2. Imagens por seção (Flux, SDXL) com movimento suave.
-3. Formato 1:1 (o 16:9 já existe).
+3. Formato 1:1 (o 16:9 já existe). O envio de vídeo com a música já existe: o vídeo vira o fundo, cortado no centro.
 4. Modo sem letra com Whisper, sem revisão (a transcrição para revisar já existe).
 5. Front em Next.js, contas e limites por usuário.

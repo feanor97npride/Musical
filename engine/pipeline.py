@@ -92,7 +92,10 @@ def _theme(job: Job) -> str | None:
 
 
 def _props(job: Job) -> str | None:
-    background = image.ensure_background(job.out, job.args.background_image, job.args.force, job.args.format) if job.args.background == "image" else None
+    if job.args.background == "video":  # o vídeo já foi cortado no envio (web/video_in.py + engine/image.crop_video)
+        background = job.args.background_image
+    else:
+        background = image.ensure_background(job.out, job.args.background_image, job.args.force, job.args.format) if job.args.background == "image" else None
     props = build_props(job.song, job.args.audio, job.args.style, job.args.background, job.args.clip, background_image=background, fmt=job.args.format)
     job.new_props = json.dumps(props, ensure_ascii=False, indent=2)
     return None
@@ -154,8 +157,8 @@ def build_options() -> argparse.ArgumentParser:
     """Opções que valem para cada música (sem o áudio e a letra). O lote reaproveita esta lista."""
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--style", default="karaoke", choices=sorted(SUBTITLE_STYLES), help="highlight, oneword ou karaoke")
-    parser.add_argument("--background", default="gradient", choices=sorted(BACKGROUNDS), help="gradient (animado), solid, aurora, aurora-gl, sunrise ou image (imagem enviada)")
-    parser.add_argument("--background-image", type=Path, default=None, help="imagem JPG ou PNG para o fundo image (cortada no centro)")
+    parser.add_argument("--background", default="gradient", choices=sorted(BACKGROUNDS), help="gradient (animado), solid, aurora, aurora-gl, sunrise, image (imagem enviada) ou video (vídeo enviado, sem som)")
+    parser.add_argument("--background-image", type=Path, default=None, help="imagem JPG/PNG para o fundo image, ou vídeo MP4 cortado para o fundo video")
     parser.add_argument("--format", default="vertical", choices=["vertical", "horizontal"], help="vertical 9:16 (Shorts, TikTok) ou horizontal 16:9 (YouTube)")
     parser.add_argument("--clip", type=parse_clip, default=None, help="início:fim em segundos, ex.: 30:75")
     parser.add_argument("--cuts", type=float, default=None, help="um vídeo por corte de cerca de N segundos, ex.: 30")

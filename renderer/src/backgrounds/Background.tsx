@@ -6,6 +6,7 @@ import { Aurora } from "./Aurora";
 import { AuroraGL } from "./AuroraGL";
 import { Gradient } from "./Gradient";
 import { ImageBackground } from "./ImageBackground";
+import { VideoBackground } from "./VideoBackground";
 import { Particles } from "./Particles";
 import { Sunrise } from "./Sunrise";
 
@@ -15,7 +16,7 @@ type Props = {
   intensity: number;
   pulse: number;
   progress: number; // 0 no início do vídeo, 1 no fim; só o sol usa
-  file?: string; // imagem enviada pelo usuário; só o fundo "image" usa
+  file?: string; // imagem ou vídeo enviado pelo usuário; só os fundos "image" e "video" usam
 };
 
 export const Background: React.FC<Props> = ({ kind, palette, intensity, pulse, progress, file }) => {
@@ -36,6 +37,9 @@ export const Background: React.FC<Props> = ({ kind, palette, intensity, pulse, p
     case "image":
       if (!file) throw new Error("fundo de imagem sem backgroundFile");
       return <ImageBackground file={file} />;
+    case "video":
+      if (!file) throw new Error("fundo de vídeo sem backgroundFile");
+      return <VideoBackground file={file} />;
     case "solid":
       return (
         <AbsoluteFill style={{ backgroundColor: palette[0], filter: `brightness(${lightFactor(pulse, intensity)})` }} />

@@ -34,8 +34,9 @@ export type Clip = { start: number; end: number };
 export type LyricProps = {
   song: Song;
   audioFile: string;
-  style: { subtitle: "highlight" | "oneword" | "karaoke"; background: "solid" | "gradient" | "aurora" | "aurora-gl" | "sunrise" | "image" };
-  backgroundFile?: string; // caminho da imagem enviada, dentro de public/ (só com background "image")
+  style: { subtitle: "highlight" | "oneword" | "karaoke"; background: "solid" | "gradient" | "aurora" | "aurora-gl" | "sunrise" | "image" | "video" };
+  backgroundFile?: string; // caminho da imagem ou do vídeo enviado, dentro de public/ (com background "image" ou "video")
+  backgroundKind?: "image" | "video"; // o que o arquivo é, para o renderer escolher o componente
   format?: "vertical" | "horizontal"; // ausente = vertical
   clip: Clip | null;
 };

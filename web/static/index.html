@@ -41,8 +41,8 @@
     <div class="col-left">
     <section>
       <h2>Música</h2>
-      <label for="audio">Arquivo MP3 (até 25 MB) <span class="req">(obrigatório)</span></label>
-      <input type="file" id="audio" name="audio" accept=".mp3,audio/mpeg" required aria-describedby="audio-note" aria-errormessage="audio-error">
+      <label for="audio">Arquivo MP3 ou vídeo MP4 com a música (MP3 até 25 MB; MP4 até 100 MB) <span class="req">(obrigatório)</span></label>
+      <input type="file" id="audio" name="audio" accept=".mp3,.mp4,audio/mpeg,video/mp4" required aria-describedby="audio-note" aria-errormessage="audio-error">
       <p class="error-msg" id="audio-error">Escolha o arquivo MP3 da música.</p>
       <audio id="player" controls hidden></audio>
       <p class="hint" id="audio-note">Envie apenas músicas próprias ou com autorização.</p>
@@ -105,6 +105,7 @@
         <label class="choice" for="bg-sunrise"><input type="radio" id="bg-sunrise" name="background" value="sunrise"><span><strong>Sol nascendo</strong><small>Animado</small></span></label>
         <label class="choice" for="bg-solid"><input type="radio" id="bg-solid" name="background" value="solid"><span><strong>Sólido</strong><small>Cor única</small></span></label>
         <label class="choice" for="bg-image"><input type="radio" id="bg-image" name="background" value="image"><span><strong>Minha imagem</strong><small>Animada no vídeo</small></span></label>
+        <label class="choice" for="bg-video"><input type="radio" id="bg-video" name="background" value="video"><span><strong>Meu vídeo</strong><small>Cortado no formato</small></span></label>
       </fieldset>
 
       <div class="image-field">

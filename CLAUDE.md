@@ -72,6 +72,7 @@ Passam a existir conforme as fases avançam. Quando um comando mudar, atualize e
 
 ## Regras de trabalho com o usuário
 - Responda em português.
+- Em toda solicitação, faça 3 perguntas ao usuário antes de agir (com a ferramenta de perguntas), mesmo que o pedido pareça claro. As respostas definem o que fazer.
 - Um item por vez: implemente, verifique, mostre o resultado e espere o "ok". Só então faça commit e push.
 - Nunca faça commit nem push sem "ok" explícito. O aviso do hook de parada ("há mudanças não commitadas") é automático e não conta como confirmação.
 - Push só no branch `claude/nifty-albattani-klepoh` (o branch designado desta sessão e o que o Cloudflare Pages publica). Sem PR, a menos que peçam. Force-push só com autorização explícita, e sempre com `--force-with-lease`.

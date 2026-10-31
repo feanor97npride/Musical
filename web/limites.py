@@ -4,7 +4,8 @@ from fastapi.responses import JSONResponse
 
 MAX_BYTES = 25 * 1024 * 1024  # MP3
 MAX_IMAGE_BYTES = 10 * 1024 * 1024  # imagem de fundo
-MAX_REQUEST = 40 * 1024 * 1024  # shortcut: MP3 + imagem + letra num envio; subir se o MP3 passar de 25 MB
+MAX_VIDEO_BYTES = 100 * 1024 * 1024  # vídeo com a música (MP4)
+MAX_REQUEST = 110 * 1024 * 1024  # shortcut: vídeo + letra num envio; subir se o vídeo passar de 100 MB
 
 
 async def read_limited(upload: UploadFile, limit: int = MAX_BYTES) -> bytes:
@@ -19,5 +20,5 @@ async def read_limited(upload: UploadFile, limit: int = MAX_BYTES) -> bytes:
 async def check_request_size(request: Request, call_next):
     size = request.headers.get("content-length", "0")
     if size.isdigit() and int(size) > MAX_REQUEST:  # recusa antes de o corpo ser lido, mesmo sem senha
-        return JSONResponse({"detail": "envio grande demais: o limite é 40 MB"}, status_code=413)
+        return JSONResponse({"detail": "envio grande demais: o limite é 110 MB"}, status_code=413)
     return await call_next(request)

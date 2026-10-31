@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PUBLIC_AUDIO = ROOT / "renderer" / "public" / "audio"
 PUBLIC_BG = ROOT / "renderer" / "public" / "bg"
 SUBTITLE_STYLES = {"highlight", "oneword", "karaoke"}
-BACKGROUNDS = {"solid", "gradient", "aurora", "aurora-gl", "sunrise", "image"}
+BACKGROUNDS = {"solid", "gradient", "aurora", "aurora-gl", "sunrise", "image", "video"}
 
 
 def build_props(song_path: Path, audio_path: Path, subtitle: str = "highlight", background: str = "gradient",
@@ -27,8 +27,8 @@ def build_props(song_path: Path, audio_path: Path, subtitle: str = "highlight", 
         raise ValueError(f"estilo de legenda desconhecido: {subtitle}")
     if background not in BACKGROUNDS:
         raise ValueError(f"fundo desconhecido: {background}")
-    if background == "image" and (background_image is None or not background_image.exists()):
-        raise ValueError("fundo de imagem sem o arquivo da imagem enviada")
+    if background in ("image", "video") and (background_image is None or not background_image.exists()):
+        raise ValueError(f"fundo {background} sem o arquivo enviado")
     if clip is not None and not 0 <= clip[0] < clip[1] <= song["audio"]["duration"]:
         raise ValueError("clip fora da duração da música")
     name = _audio_name(audio_path, song)
@@ -42,13 +42,15 @@ def build_props(song_path: Path, audio_path: Path, subtitle: str = "highlight", 
     }
     if fmt == "horizontal":
         props["format"] = "horizontal"  # ausente = vertical, para os props antigos continuarem iguais
-    if background == "image":
-        # a pasta da música (output/<slug>) dá um nome único à imagem no renderer; 16:9 leva sufixo próprio
+    if background in ("image", "video"):
+        # a pasta da música (output/<slug>) dá um nome único ao arquivo no renderer; 16:9 leva sufixo próprio
         suffix = "-16x9" if fmt == "horizontal" else ""
-        bg_name = f"{background_image.parent.name}{suffix}.jpg"
+        ext = background_image.suffix.lower()  # .jpg/.png na imagem; .mp4 no vídeo cortado
+        bg_name = f"{background_image.parent.name}{suffix}{ext}"
         public_bg.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(background_image, public_bg / bg_name)
         props["backgroundFile"] = f"bg/{bg_name}"
+        props["backgroundKind"] = background  # "image" ou "video": o renderer escolhe o componente
     return props
 
 

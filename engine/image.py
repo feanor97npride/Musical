@@ -36,3 +36,13 @@ def ensure_background(out: Path, source: Path | None, force: bool, fmt: str = "v
         tmp.unlink(missing_ok=True)
     hash_file.write_text(digest, encoding="utf-8")
     return target
+
+
+def crop_video(source: Path, target: Path, width: int, height: int) -> None:
+    """Corta o vídeo no centro para width x height, sem som (a música vem do MP3), em H.264."""
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg is None:
+        raise RuntimeError("ffmpeg não encontrado no PATH")
+    subprocess.run([ffmpeg, "-y", "-loglevel", "error", "-i", str(source), "-an", "-vf",
+                    f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height}",
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p", "-preset", "veryfast", "-crf", "23", str(target)], check=True)

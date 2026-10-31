@@ -19,8 +19,9 @@ from web.biblioteca import build_router
 from web.delivery import deliver_ready
 from web.jobs import Job, JobQueue, QueueFull
 from web.letra import build_router as letra_router
-from web.limites import MAX_IMAGE_BYTES, check_request_size, read_limited
+from web.limites import MAX_BYTES, MAX_IMAGE_BYTES, MAX_VIDEO_BYTES, check_request_size, read_limited
 from web.pacote import build_pack, parse_draft
+from web.video_in import create_from_video
 
 load_dotenv(ROOT / ".env")
 CUTS = {"": None, "15": 15, "30": 30, "60": 60, "90": 90}  # segundos por corte; vazio = um vídeo só
@@ -67,8 +68,6 @@ def _clip(start: str, end: str) -> tuple[float, float] | None:
     return begin, finish
 
 
-
-
 def _find(job_id: str) -> Job:
     job = queue.jobs.get(job_id)
     if job is None:
@@ -103,8 +102,9 @@ async def create_job(audio: UploadFile = File(...), lyrics: str = Form(""), styl
         texts = parse_draft(draft)  # textos da letra, para o pacote; vazio = sem eles
     except ValueError as error:
         raise HTTPException(400, f"textos para postar: {error}")
-    if not (audio.filename or "").lower().endswith(".mp3"):
-        raise HTTPException(400, "envie um arquivo .mp3")
+    name = (audio.filename or "").lower()
+    if not name.endswith((".mp3", ".mp4")):
+        raise HTTPException(400, "envie um arquivo .mp3 ou .mp4")
     if not lyrics.strip():
         raise HTTPException(400, "a letra não pode estar vazia")
     _check_options(style, background, cuts, video_format)
@@ -117,8 +117,11 @@ async def create_job(audio: UploadFile = File(...), lyrics: str = Form(""), styl
     clip = _clip(clip_start, clip_end)
     if CUTS[cuts] and clip:
         raise HTTPException(400, "use trecho ou cortes, não os dois")
-    job = queue.create(audio.filename or "musica.mp3", await read_limited(audio), lyrics, style, background, clip,
-                       CUTS[cuts], image, video_format, texts)
+    data = await read_limited(audio, MAX_VIDEO_BYTES if name.endswith(".mp4") else MAX_BYTES)
+    if name.endswith(".mp4"):
+        return create_from_video(queue, data, audio.filename or "musica.mp4", lyrics, style, background, clip, CUTS[cuts],
+                                 video_format, texts)
+    job = queue.create(audio.filename or "musica.mp3", data, lyrics, style, background, clip, CUTS[cuts], image, video_format, texts)
     return {"id": job.id}
 
 
